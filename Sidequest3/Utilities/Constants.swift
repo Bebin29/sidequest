@@ -7,7 +7,7 @@ import Foundation
 
 enum Constants {
     enum API {
-        static let baseURL = "https://api.example.com"
+        static let baseURL = "http://217.154.243.150"
         static let timeoutInterval: TimeInterval = 30
     }
 

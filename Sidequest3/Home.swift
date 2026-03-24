@@ -19,6 +19,9 @@ struct Home: View {
             Tab("Profil", systemImage: "person.fill") {
                 Profile()
             }
+            Tab("Admin", systemImage: "gearshape.fill") {
+                AdminView()
+            }
         }.tint(Color(.systemIndigo))
     }
 }

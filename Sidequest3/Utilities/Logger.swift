@@ -4,6 +4,7 @@
 //
 
 import os
+import Foundation
 
 enum Log {
     private static let subsystem = Bundle.main.bundleIdentifier ?? "com.sidequest"

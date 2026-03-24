@@ -66,5 +66,5 @@ struct Karte: View {
 }
 
 #Preview {
-    Home()
+    Home(authViewModel: AuthViewModel())
 }

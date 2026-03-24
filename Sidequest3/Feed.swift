@@ -23,5 +23,5 @@ struct Feed: View {
 }
 
 #Preview {
-    Home()
+    Home(authViewModel: AuthViewModel())
 }

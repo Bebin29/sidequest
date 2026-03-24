@@ -9,10 +9,19 @@ import SwiftUI
 
 struct Feed: View {
     var body: some View {
-        Text("Feed")
+        
+        HStack {
+            Text("Feed")
+                .fontWeight(.semibold)
+                .padding()
+                .foregroundStyle(Color(.white))
+        }
+        .background(Color(.systemIndigo))
+        .cornerRadius(15)
+        
     }
 }
 
 #Preview {
-    Feed()
+    Home()
 }

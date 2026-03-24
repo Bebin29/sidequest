@@ -14,5 +14,5 @@ struct Profile: View {
 }
 
 #Preview {
-    Profile()
+    Home()
 }

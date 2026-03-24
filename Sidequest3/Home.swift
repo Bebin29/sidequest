@@ -19,7 +19,7 @@ struct Home: View {
             Tab("Profil", systemImage: "person.fill") {
                 Profile()
             }
-        }
+        }.tint(Color(.systemIndigo))
     }
 }
 

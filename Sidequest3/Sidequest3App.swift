@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct Sidequest3App: App {
+    @StateObject private var container = DependencyContainer()
+
     var body: some Scene {
         WindowGroup {
             Home()
+                .environmentObject(container)
         }
     }
 }

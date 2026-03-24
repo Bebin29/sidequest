@@ -1,0 +1,135 @@
+@startuml Sidequest ERD
+!theme plain
+skinparam linetype ortho
+
+entity "users" as users {
+    *id : UUID <<PK>>
+    --
+    *email : TEXT <<UNIQUE>>
+    *username : TEXT <<UNIQUE>>
+    *display_name : TEXT
+    profile_image_url : TEXT
+    *created_at : TIMESTAMPTZ
+    updated_at : TIMESTAMPTZ
+    last_seen_at : TIMESTAMPTZ
+    bio : TEXT
+    preferences : JSONB
+    *favorite_categories : TEXT[]
+    *is_verified : BOOLEAN
+    *is_moderator : BOOLEAN
+    *is_private : BOOLEAN
+    fcm_token : TEXT
+    *stats : JSONB
+}
+
+entity "locations" as locations {
+    *id : UUID <<PK>>
+    --
+    *name : TEXT
+    *address : TEXT
+    *latitude : DOUBLE PRECISION
+    *longitude : DOUBLE PRECISION
+    *coordinates : POINT
+    *geohash : TEXT
+    *category : TEXT
+    *average_rating : DOUBLE PRECISION
+    *total_ratings : INT
+    *created_at : TIMESTAMPTZ
+    updated_at : TIMESTAMPTZ
+    *created_by : UUID <<FK>>
+    *image_urls : TEXT[]
+    thumbnail_url : TEXT
+    *tags : TEXT[]
+    price_range : TEXT
+    opening_hours : JSONB
+    parking_info : JSONB
+    accessibility : JSONB
+    noise_level : TEXT
+    wifi_available : BOOLEAN
+    is_dog_friendly : BOOLEAN
+    is_family_friendly : BOOLEAN
+    phone_number : TEXT
+    website : TEXT
+    instagram_handle : TEXT
+    *is_verified : BOOLEAN
+    *report_count : INT
+    trending_score : DOUBLE PRECISION
+}
+
+entity "ratings" as ratings {
+    *id : UUID <<PK>>
+    --
+    *location_id : UUID <<FK>>
+    *location_name : TEXT
+    *user_id : UUID <<FK>>
+    *username : TEXT
+    user_profile_image_url : TEXT
+    *rating : SMALLINT [1-5]
+    comment : TEXT
+    *image_urls : TEXT[]
+    *thumbnail_urls : TEXT[]
+    *created_at : TIMESTAMPTZ
+    updated_at : TIMESTAMPTZ
+    trip_id : UUID <<FK>>
+    *is_verified : BOOLEAN
+    verified_at : TIMESTAMPTZ
+    *report_count : INT
+    *is_hidden : BOOLEAN
+    *reaction_count : INT
+    *comment_count : INT
+    *helpful_count : INT
+    visit_date : TIMESTAMPTZ
+    price_spent : DOUBLE PRECISION
+    would_recommend : BOOLEAN
+}
+
+entity "friendships" as friendships {
+    *id : UUID <<PK>>
+    --
+    *requester_id : UUID <<FK>>
+    *receiver_id : UUID <<FK>>
+    *status : TEXT [pending|accepted|declined|blocked]
+    *created_at : TIMESTAMPTZ
+    accepted_at : TIMESTAMPTZ
+    *requester_username : TEXT
+    *receiver_username : TEXT
+}
+
+entity "trips" as trips {
+    *id : UUID <<PK>>
+    --
+    *user_id : UUID <<FK>>
+    *username : TEXT
+    *name : TEXT
+    description : TEXT
+    *location_count : INT
+    *created_at : TIMESTAMPTZ
+    updated_at : TIMESTAMPTZ
+    start_date : TIMESTAMPTZ
+    end_date : TIMESTAMPTZ
+    cover_image_url : TEXT
+    *is_collaborative : BOOLEAN
+    *is_public : BOOLEAN
+    *view_count : INT
+    reminder_date : TIMESTAMPTZ
+}
+
+entity "trip_participants" as trip_participants {
+    *trip_id : UUID <<PK, FK>>
+    *user_id : UUID <<PK, FK>>
+    --
+    *joined_at : TIMESTAMPTZ
+}
+
+' Relationships
+users ||--o{ locations : "created_by"
+users ||--o{ ratings : "user_id"
+locations ||--o{ ratings : "location_id"
+users ||--o{ friendships : "requester_id"
+users ||--o{ friendships : "receiver_id"
+users ||--o{ trips : "user_id"
+trips ||--o{ trip_participants : "trip_id"
+users ||--o{ trip_participants : "user_id"
+trips ||--o{ ratings : "trip_id"
+
+@enduml

@@ -32,6 +32,7 @@ jobs:
             -project Sidequest3.xcodeproj \
             -scheme Sidequest3 \
             -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -only-testing:Sidequest3Tests \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO
 

@@ -8,11 +8,28 @@
 import SwiftUI
 
 struct Profile: View {
-    var body: some View {
-        Text("Profile")
-    }
-}
+    @Bindable var authViewModel: AuthViewModel
 
-#Preview {
-    Home()
+    var body: some View {
+        NavigationStack {
+            List {
+                if let user = authViewModel.currentUser {
+                    Section("Account") {
+                        Text(user.displayName)
+                        Text("@\(user.username)")
+                            .foregroundStyle(.secondary)
+                        Text(user.email)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Section {
+                    Button("Abmelden", role: .destructive) {
+                        authViewModel.signOut()
+                    }
+                }
+            }
+            .navigationTitle("Profil")
+        }
+    }
 }

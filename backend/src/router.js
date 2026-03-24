@@ -1,6 +1,7 @@
 const url = require('url');
 const { sendJSON, sendError } = require('./helpers');
 const userController = require('./controllers/userController');
+const authController = require('./controllers/authController');
 
 function route(req, res) {
     const parsed = url.parse(req.url, true);
@@ -20,6 +21,11 @@ function route(req, res) {
     // Health Check
     if (pathname === '/api/health' && method === 'GET') {
         return sendJSON(res, 200, { status: 'ok', timestamp: new Date().toISOString() });
+    }
+
+    // Auth routes
+    if (pathname === '/api/auth/apple' && method === 'POST') {
+        return authController.signInWithApple(req, res);
     }
 
     // Users routes

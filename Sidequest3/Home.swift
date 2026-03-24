@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct Home: View {
+    @Bindable var authViewModel: AuthViewModel
+
     var body: some View {
         TabView {
             Tab("Feed", systemImage: "house.fill") {
@@ -17,7 +19,7 @@ struct Home: View {
                 Karte()
             }
             Tab("Profil", systemImage: "person.fill") {
-                Profile()
+                Profile(authViewModel: authViewModel)
             }
             Tab("Admin", systemImage: "gearshape.fill") {
                 AdminView()
@@ -27,5 +29,5 @@ struct Home: View {
 }
 
 #Preview {
-    Home()
+    Home(authViewModel: AuthViewModel())
 }

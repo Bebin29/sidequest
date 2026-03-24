@@ -13,7 +13,7 @@ struct Sidequest3App: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            Home()
                 .environmentObject(container)
         }
     }

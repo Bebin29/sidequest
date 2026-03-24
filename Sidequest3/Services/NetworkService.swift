@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import os
 
 final class NetworkService: NetworkServiceProtocol {
     private let session: URLSession

@@ -8,6 +8,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     private var hasSetInitialPosition = false
 
+    @Published var lastLocation: CLLocation?
     @Published var position: MapCameraPosition = .region(MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 52.5200, longitude: 13.4050),
         span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
@@ -27,6 +28,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         manager.stopUpdatingLocation()
 
         DispatchQueue.main.async {
+            self.lastLocation = location
             self.position = .region(MKCoordinateRegion(
                 center: location.coordinate,
                 span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
@@ -123,9 +125,28 @@ struct Karte: View {
 // Autocomplete Service
 class SearchCompleter: NSObject, ObservableObject, MKLocalSearchCompleterDelegate {
 
-    @Published var results: [MKLocalSearchCompletion] = []
+    @Published var results: [SearchResult] = []
+    var userLocation: CLLocation?
 
     private let completer = MKLocalSearchCompleter()
+
+    struct SearchResult: Identifiable, Hashable {
+        let id = UUID()
+        let completion: MKLocalSearchCompletion
+        var distance: CLLocationDistance?
+
+        var formattedDistance: String? {
+            guard let distance else { return nil }
+            if distance < 1000 {
+                return "\(Int(distance)) m"
+            } else {
+                return String(format: "%.1f km", distance / 1000)
+            }
+        }
+
+        static func == (lhs: SearchResult, rhs: SearchResult) -> Bool { lhs.id == rhs.id }
+        func hash(into hasher: inout Hasher) { hasher.combine(id) }
+    }
 
     override init() {
         super.init()
@@ -138,7 +159,33 @@ class SearchCompleter: NSObject, ObservableObject, MKLocalSearchCompleterDelegat
     }
 
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-        results = completer.results
+        let completions = completer.results
+        guard let userLoc = userLocation else {
+            results = completions.map { SearchResult(completion: $0, distance: nil) }
+            return
+        }
+
+        // Resolve distances
+        let group = DispatchGroup()
+        var searchResults: [SearchResult] = []
+
+        for completion in completions {
+            group.enter()
+            let request = MKLocalSearch.Request(completion: completion)
+            let search = MKLocalSearch(request: request)
+            search.start { response, _ in
+                var dist: CLLocationDistance?
+                if let coord = response?.mapItems.first?.placemark.location {
+                    dist = userLoc.distance(from: coord)
+                }
+                searchResults.append(SearchResult(completion: completion, distance: dist))
+                group.leave()
+            }
+        }
+
+        group.notify(queue: .main) {
+            self.results = searchResults.sorted { ($0.distance ?? .greatestFiniteMagnitude) < ($1.distance ?? .greatestFiniteMagnitude) }
+        }
     }
 }
 
@@ -147,6 +194,7 @@ struct PlaceSearchView: View {
 
     @State private var searchText = ""
     @StateObject private var completer = SearchCompleter()
+    @StateObject private var locationManager = LocationManager()
     @State private var selectedItem: MKMapItem?
     @State private var selectedCategory = ""
     @Bindable var mapViewModel: MapViewModel
@@ -170,20 +218,29 @@ struct PlaceSearchView: View {
                         .textFieldStyle(.roundedBorder)
                         .padding()
                         .onChange(of: searchText) { _, newValue in
+                            completer.userLocation = locationManager.lastLocation
                             completer.update(query: newValue)
                         }
 
-                    List(completer.results, id: \.self) { completion in
+                    List(completer.results) { result in
                         Button {
-                            resolveAndSelect(completion)
+                            resolveAndSelect(result.completion)
                         } label: {
-                            VStack(alignment: .leading) {
-                                Text(completion.title)
-                                    .font(.headline)
-                                    .foregroundStyle(.primary)
-                                Text(completion.subtitle)
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(result.completion.title)
+                                        .font(.headline)
+                                        .foregroundStyle(.primary)
+                                    Text(result.completion.subtitle)
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                                Spacer()
+                                if let distance = result.formattedDistance {
+                                    Text(distance)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         }
                         .padding(.vertical, 5)

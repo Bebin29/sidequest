@@ -11,6 +11,7 @@ struct LocationDetailView: View {
 
     @State private var viewModel = LocationDetailViewModel()
     @State private var newComment = ""
+    @State private var showFullImage = false
 
     var body: some View {
         ScrollView {
@@ -22,17 +23,19 @@ struct LocationDetailView: View {
                         case .success(let image):
                             image
                                 .resizable()
-                                .scaledToFit()
-                                .frame(maxWidth: .infinity)
+                                .scaledToFill()
+                                .frame(maxWidth: .infinity, maxHeight: 220)
+                                .clipped()
+                                .onTapGesture { showFullImage = true }
                         case .failure:
                             Image(systemName: "photo")
                                 .font(.largeTitle)
                                 .foregroundStyle(.tertiary)
-                                .frame(maxWidth: .infinity, minHeight: 200)
+                                .frame(maxWidth: .infinity, minHeight: 150)
                                 .background(Color(.systemGray6))
                         case .empty:
                             ProgressView()
-                                .frame(maxWidth: .infinity, minHeight: 200)
+                                .frame(maxWidth: .infinity, minHeight: 150)
                         @unknown default:
                             EmptyView()
                         }
@@ -173,6 +176,29 @@ struct LocationDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await viewModel.loadComments(locationId: location.id)
+        }
+        .fullScreenCover(isPresented: $showFullImage) {
+            if let firstUrl = location.imageUrls.first, let url = URL(string: firstUrl) {
+                ZStack(alignment: .topTrailing) {
+                    Color.black.ignoresSafeArea()
+                    AsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } placeholder: {
+                        ProgressView()
+                    }
+                    Button {
+                        showFullImage = false
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title)
+                            .foregroundStyle(.white.opacity(0.8))
+                            .padding()
+                    }
+                }
+            }
         }
     }
 }

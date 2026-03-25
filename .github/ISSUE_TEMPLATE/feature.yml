@@ -1,0 +1,34 @@
+name: Feature
+description: Neues Feature oder Erweiterung
+labels: []
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Beschreibung
+      description: Was soll implementiert werden?
+    validations:
+      required: true
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Anforderungen
+      description: Was muss erfüllt sein?
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Abhängigkeiten
+      description: Welche Issues müssen vorher erledigt sein?
+      placeholder: "Keine"
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Akzeptanzkriterien
+      description: Wann ist das Feature fertig?
+    validations:
+      required: true

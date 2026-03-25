@@ -13,6 +13,7 @@ import Combine
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
     private let manager = CLLocationManager()
+    private var hasSetInitialPosition = false
 
     @Published var position: MapCameraPosition = .region(MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 52.5200, longitude: 13.4050),
@@ -28,7 +29,9 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.first else { return }
+        guard let location = locations.first, !hasSetInitialPosition else { return }
+        hasSetInitialPosition = true
+        manager.stopUpdatingLocation()
 
         DispatchQueue.main.async {
             self.position = .region(MKCoordinateRegion(

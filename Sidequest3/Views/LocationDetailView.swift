@@ -24,7 +24,7 @@ struct LocationDetailView: View {
                             image
                                 .resizable()
                                 .scaledToFill()
-                                .frame(maxWidth: .infinity, maxHeight: 220)
+                                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
                                 .clipped()
                                 .onTapGesture { showFullImage = true }
                         case .failure:

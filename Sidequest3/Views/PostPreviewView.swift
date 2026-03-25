@@ -10,24 +10,49 @@ struct PostPreviewView: View {
     let address: String
     let category: String
     let description: String
-    let image: UIImage?
+    let images: [UIImage]
     @Environment(\.dismiss) private var dismiss
+    @State private var currentPage = 0
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 0) {
-                    // Bild 1:1
-                    if let image {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
-                            .clipped()
+                    if !images.isEmpty {
+                        ZStack(alignment: .bottom) {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                LazyHStack(spacing: 0) {
+                                    ForEach(0..<images.count, id: \.self) { index in
+                                        Image(uiImage: images[index])
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
+                                            .clipped()
+                                    }
+                                }
+                                .scrollTargetLayout()
+                            }
+                            .scrollTargetBehavior(.paging)
+                            .scrollPosition(id: Binding(
+                                get: { currentPage },
+                                set: { if let v = $0 { currentPage = v } }
+                            ))
+                            .frame(height: UIScreen.main.bounds.width)
+
+                            if images.count > 1 {
+                                HStack(spacing: 6) {
+                                    ForEach(0..<images.count, id: \.self) { index in
+                                        Circle()
+                                            .fill(index == currentPage ? Color.white : Color.white.opacity(0.5))
+                                            .frame(width: 7, height: 7)
+                                    }
+                                }
+                                .padding(.bottom, 12)
+                            }
+                        }
                     }
 
                     VStack(alignment: .leading, spacing: 12) {
-                        // Header
                         VStack(alignment: .leading, spacing: 6) {
                             Text(name)
                                 .font(.title.bold())
@@ -50,7 +75,6 @@ struct PostPreviewView: View {
                                 .clipShape(Capsule())
                         }
 
-                        // Beschreibung
                         if !description.isEmpty {
                             Divider()
                             Text(description)

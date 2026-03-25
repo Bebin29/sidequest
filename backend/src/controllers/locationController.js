@@ -79,6 +79,48 @@ async function create(req, res) {
     }
 }
 
+async function update(req, res, id) {
+    try {
+        const body = await parseBody(req);
+        if (!body) return sendError(res, 400, 'Request body required');
+
+        const fields = [];
+        const values = [];
+        let idx = 1;
+
+        const allowed = ['name', 'description', 'category', 'image_urls',
+                         'price_range', 'phone_number', 'website', 'instagram_handle', 'tags'];
+
+        for (const key of allowed) {
+            if (body[key] !== undefined) {
+                fields.push(`${key} = $${idx}`);
+                values.push(body[key]);
+                idx++;
+            }
+        }
+
+        if (fields.length === 0) {
+            return sendError(res, 400, 'No valid fields to update');
+        }
+
+        fields.push('updated_at = CURRENT_TIMESTAMP');
+        values.push(id);
+
+        const result = await pool.query(
+            `UPDATE locations SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`,
+            values
+        );
+
+        if (result.rowCount === 0) {
+            return sendError(res, 404, 'Location not found');
+        }
+        sendJSON(res, 200, { data: result.rows[0] });
+    } catch (err) {
+        console.error('update location error:', err);
+        sendError(res, 500, 'Internal server error');
+    }
+}
+
 async function remove(req, res, id) {
     try {
         const result = await pool.query('DELETE FROM locations WHERE id = $1 RETURNING id', [id]);
@@ -92,4 +134,4 @@ async function remove(req, res, id) {
     }
 }
 
-module.exports = { getAll, getById, create, remove };
+module.exports = { getAll, getById, create, update, remove };

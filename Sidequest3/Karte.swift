@@ -90,7 +90,10 @@ struct Karte: View {
             await mapViewModel.loadLocations(userId: userId)
         }
         .navigationDestination(item: $selectedLocation) { location in
-            LocationDetailView(location: location, currentUserId: userId)
+            LocationDetailView(location: location, currentUserId: userId) {
+                mapViewModel.locations.removeAll { $0.id == location.id }
+                selectedLocation = nil
+            }
         }
         }
     }

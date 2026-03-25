@@ -8,10 +8,18 @@ import SwiftUI
 struct LocationDetailView: View {
     let location: Location
     var currentUserId: UUID?
+    var onDelete: (() -> Void)?
 
     @State private var viewModel = LocationDetailViewModel()
     @State private var newComment = ""
     @State private var showFullImage = false
+    @State private var showEditSheet = false
+    @State private var showDeleteConfirm = false
+    @Environment(\.dismiss) private var dismiss
+
+    private var isOwner: Bool {
+        currentUserId == location.createdBy
+    }
 
     var body: some View {
         ScrollView {
@@ -134,6 +142,46 @@ struct LocationDetailView: View {
         }
         .navigationTitle(location.name)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if isOwner {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button {
+                            showEditSheet = true
+                        } label: {
+                            Label("Bearbeiten", systemImage: "pencil")
+                        }
+                        Button(role: .destructive) {
+                            showDeleteConfirm = true
+                        } label: {
+                            Label("Löschen", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                }
+            }
+        }
+        .confirmationDialog("Location löschen?", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
+            Button("Löschen", role: .destructive) {
+                Task {
+                    do {
+                        try await LocationService().deleteLocation(id: location.id)
+                        onDelete?()
+                        dismiss()
+                    } catch {
+                        viewModel.errorMessage = error.localizedDescription
+                    }
+                }
+            }
+        } message: {
+            Text("Diese Location wird unwiderruflich gelöscht.")
+        }
+        .sheet(isPresented: $showEditSheet) {
+            EditLocationView(location: location) { updatedLocation in
+                showEditSheet = false
+            }
+        }
         .task {
             await viewModel.loadComments(locationId: location.id)
         }

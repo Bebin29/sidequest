@@ -12,8 +12,8 @@ final class LocationService {
         self.session = session
     }
 
-    func fetchLocations() async throws -> [Location] {
-        guard let url = URL(string: "\(Constants.API.baseURL)/api/locations") else {
+    func fetchLocations(userId: UUID) async throws -> [Location] {
+        guard let url = URL(string: "\(Constants.API.baseURL)/api/locations?user_id=\(userId.uuidString)") else {
             throw AppError.unknown(underlying: nil)
         }
 

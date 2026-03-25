@@ -11,23 +11,29 @@ struct Home: View {
     @Bindable var authViewModel: AuthViewModel
 
     var body: some View {
-        TabView {
-            Tab("Feed", systemImage: "house.fill") {
-                Feed()
-            }
-            Tab("Karte", systemImage: "map.fill") {
-                Karte(userId: authViewModel.currentUser?.id)
-            }
-            Tab("Freunde", systemImage: "person.2.fill") {
-                FriendsView(currentUser: authViewModel.currentUser)
-            }
-            Tab("Profil", systemImage: "person.fill") {
-                Profile(authViewModel: authViewModel)
-            }
-            Tab("Admin", systemImage: "gearshape.fill") {
-                AdminView()
-            }
-        }.tint(Color(.systemIndigo))
+        
+            TabView {
+                Tab("Home", systemImage: "house.fill") {
+                    Feed()
+                }
+                Tab("Map", systemImage: "map.fill") {
+                    Karte(userId: authViewModel.currentUser?.id)
+                }
+                Tab("Friends", systemImage: "person.2.fill") {
+                    FriendsView(currentUser: authViewModel.currentUser)
+                }
+                Tab("Profile", systemImage: "person.fill") {
+                    Profile(authViewModel: authViewModel)
+                }
+                if let user = authViewModel.currentUser {
+                    if(user.isModerator) {
+                        Tab("Admin", systemImage: "gearshape.fill") {
+                            AdminView()
+                        }
+                    }
+                }
+            }.tint(Color(.systemIndigo))
+        
     }
 }
 

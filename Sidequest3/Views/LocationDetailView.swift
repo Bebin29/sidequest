@@ -31,6 +31,29 @@ struct LocationDetailView: View {
                 }
             }
 
+            // Bilder
+            if !location.imageUrls.isEmpty {
+                Section {
+                    ScrollView(.horizontal) {
+                        HStack(spacing: 8) {
+                            ForEach(location.imageUrls, id: \.self) { urlString in
+                                AsyncImage(url: URL(string: urlString)) { image in
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 250, height: 180)
+                                        .cornerRadius(8)
+                                        .clipped()
+                                } placeholder: {
+                                    ProgressView()
+                                        .frame(width: 250, height: 180)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // Beschreibung
             if let description = location.description, !description.isEmpty {
                 Section("Beschreibung") {

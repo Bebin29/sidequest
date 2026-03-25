@@ -5,6 +5,7 @@ const authController = require('./controllers/authController');
 const friendshipController = require('./controllers/friendshipController');
 const locationController = require('./controllers/locationController');
 const commentController = require('./controllers/commentController');
+const uploadController = require('./controllers/uploadController');
 
 function route(req, res) {
     const parsed = url.parse(req.url, true);
@@ -106,6 +107,11 @@ function route(req, res) {
         const id = friendshipIdMatch[1];
         if (method === 'PATCH') return friendshipController.updateStatus(req, res, id);
         if (method === 'DELETE') return friendshipController.remove(req, res, id);
+    }
+
+    // Upload
+    if (pathname === '/api/uploads' && method === 'POST') {
+        return uploadController.upload(req, res);
     }
 
     // 404

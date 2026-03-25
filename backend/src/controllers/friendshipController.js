@@ -132,8 +132,7 @@ async function searchUsers(req, res, query) {
         }
 
         const result = await pool.query(
-            `SELECT id, username, display_name, profile_image_url, is_verified
-             FROM users WHERE username ILIKE $1 LIMIT 20`,
+            `SELECT * FROM users WHERE username ILIKE $1 LIMIT 20`,
             [`%${search}%`]
         );
         sendJSON(res, 200, { data: result.rows, count: result.rowCount });

@@ -207,6 +207,7 @@ struct AddLocationFormView: View {
     @State private var description = ""
     @State private var selectedImage: UIImage?
     @State private var showImagePicker = false
+    @State private var showPreview = false
     @State private var isUploading = false
 
     private let imageUploadService = ImageUploadService()
@@ -216,17 +217,18 @@ struct AddLocationFormView: View {
             Section("Ort") {
                 Text(mapItem.name ?? "Unbekannt")
                     .font(.headline)
-                if let placemark = mapItem.placemark.location {
+                if mapItem.placemark.location != nil {
                     Text(mapItem.placemark.title ?? "")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Text(category)
-                    .font(.caption)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .font(.caption.weight(.medium))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
                     .background(.blue.opacity(0.1))
-                    .cornerRadius(8)
+                    .foregroundStyle(.blue)
+                    .clipShape(Capsule())
             }
 
             Section("Beschreibung") {
@@ -238,8 +240,10 @@ struct AddLocationFormView: View {
                 if let image = selectedImage {
                     Image(uiImage: image)
                         .resizable()
-                        .scaledToFit()
-                        .frame(maxHeight: 200)
+                        .scaledToFill()
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 200)
+                        .clipped()
                         .cornerRadius(8)
 
                     Button("Foto ändern") {
@@ -250,6 +254,18 @@ struct AddLocationFormView: View {
                         showImagePicker = true
                     } label: {
                         Label("Foto hinzufügen", systemImage: "camera")
+                    }
+                }
+            }
+
+            // Preview Button
+            if selectedImage != nil || !description.isEmpty {
+                Section {
+                    Button {
+                        showPreview = true
+                    } label: {
+                        Label("Vorschau anzeigen", systemImage: "eye")
+                            .frame(maxWidth: .infinity)
                     }
                 }
             }
@@ -271,6 +287,15 @@ struct AddLocationFormView: View {
             }
         }
         .navigationTitle("Ort hinzufügen")
+        .sheet(isPresented: $showPreview) {
+            PostPreviewView(
+                name: mapItem.name ?? "Unbekannt",
+                address: mapItem.placemark.title ?? "",
+                category: category,
+                description: description,
+                image: selectedImage
+            )
+        }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button("Zurück") { onBack() }

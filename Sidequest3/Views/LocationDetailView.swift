@@ -6,16 +6,23 @@
 import SwiftUI
 
 struct LocationDetailView: View {
-    let location: Location
+    @State var location: Location
     var currentUserId: UUID?
     var onDelete: (() -> Void)?
+    var onUpdate: ((Location) -> Void)?
 
     @State private var viewModel = LocationDetailViewModel()
     @State private var newComment = ""
     @State private var showFullImage = false
-    @State private var showEditSheet = false
+    @State private var isEditing = false
     @State private var showDeleteConfirm = false
+    @State private var editDescription = ""
+    @State private var editCategory = ""
+    @State private var displayDescription: String?
+    @State private var displayCategory: String?
     @Environment(\.dismiss) private var dismiss
+
+    private let locationService = LocationService()
 
     private var isOwner: Bool {
         currentUserId == location.createdBy
@@ -47,17 +54,36 @@ struct LocationDetailView: View {
                                 .foregroundStyle(.secondary)
                         }
 
-                        Text(location.category)
-                            .font(.caption.weight(.medium))
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(.blue.opacity(0.1))
-                            .foregroundStyle(.blue)
-                            .clipShape(Capsule())
+                        if isEditing {
+                            Picker("Kategorie", selection: $editCategory) {
+                                ForEach(["Restaurant", "Café", "Bar", "Club", "Bäckerei", "Fast Food",
+                                         "Eisdiele", "Park", "Museum", "Shopping", "Aussichtspunkt",
+                                         "Strand", "Sonstiges"], id: \.self) { cat in
+                                    Text(cat).tag(cat)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                        } else {
+                            Text(displayCategory ?? location.category)
+                                .font(.caption.weight(.medium))
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(.blue.opacity(0.1))
+                                .foregroundStyle(.blue)
+                                .clipShape(Capsule())
+                        }
                     }
 
                     // Beschreibung
-                    if let description = location.description, !description.isEmpty {
+                    if isEditing {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Beschreibung")
+                                .font(.headline)
+                            TextField("Beschreibung", text: $editDescription, axis: .vertical)
+                                .lineLimit(3...6)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                    } else if let description = displayDescription ?? location.description, !description.isEmpty {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Beschreibung")
                                 .font(.headline)
@@ -145,19 +171,35 @@ struct LocationDetailView: View {
         .toolbar {
             if isOwner {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Button {
-                            showEditSheet = true
-                        } label: {
-                            Label("Bearbeiten", systemImage: "pencil")
+                    if isEditing {
+                        Button("Speichern") {
+                            Task { await saveEdit() }
                         }
-                        Button(role: .destructive) {
-                            showDeleteConfirm = true
+                        .bold()
+                    } else {
+                        Menu {
+                            Button {
+                                editDescription = displayDescription ?? location.description ?? ""
+                                editCategory = displayCategory ?? location.category
+                                isEditing = true
+                            } label: {
+                                Label("Bearbeiten", systemImage: "pencil")
+                            }
+                            Button(role: .destructive) {
+                                showDeleteConfirm = true
+                            } label: {
+                                Label("Löschen", systemImage: "trash")
+                            }
                         } label: {
-                            Label("Löschen", systemImage: "trash")
+                            Image(systemName: "ellipsis.circle")
                         }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
+                    }
+                }
+                if isEditing {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Abbrechen") {
+                            isEditing = false
+                        }
                     }
                 }
             }
@@ -177,13 +219,12 @@ struct LocationDetailView: View {
         } message: {
             Text("Diese Location wird unwiderruflich gelöscht.")
         }
-        .sheet(isPresented: $showEditSheet) {
-            EditLocationView(location: location) { updatedLocation in
-                showEditSheet = false
-            }
-        }
+        .scrollDismissesKeyboard(.immediately)
         .task {
             await viewModel.loadComments(locationId: location.id)
+        }
+        .refreshable {
+            await reloadLocation()
         }
         .fullScreenCover(isPresented: $showFullImage) {
             ZStack(alignment: .topTrailing) {
@@ -214,6 +255,33 @@ struct LocationDetailView: View {
                         .padding()
                 }
             }
+        }
+    }
+
+    func saveEdit() async {
+        let body: [String: Any] = [
+            "category": editCategory,
+            "description": editDescription
+        ]
+        do {
+            let updated = try await locationService.updateLocation(id: location.id, body: body)
+            displayDescription = updated.description
+            displayCategory = updated.category
+            location = updated
+            onUpdate?(updated)
+            isEditing = false
+        } catch {
+            print("Save error: \(error)")
+        }
+    }
+
+    func reloadLocation() async {
+        do {
+            let updated = try await locationService.getLocation(id: location.id)
+            location = updated
+            onUpdate?(updated)
+        } catch {
+            print("Reload failed: \(error)")
         }
     }
 }

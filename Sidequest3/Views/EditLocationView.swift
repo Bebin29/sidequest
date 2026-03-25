@@ -9,7 +9,7 @@ struct EditLocationView: View {
     let location: Location
     var onSave: (Location) -> Void
 
-    @State private var description: String
+    @State private var locationDescription: String
     @State private var category: String
     @State private var isSaving = false
     @State private var errorMessage: String?
@@ -20,7 +20,7 @@ struct EditLocationView: View {
     init(location: Location, onSave: @escaping (Location) -> Void) {
         self.location = location
         self.onSave = onSave
-        _description = State(initialValue: location.description ?? "")
+        _locationDescription = State(initialValue: location.description ?? "")
         _category = State(initialValue: location.category)
     }
 
@@ -44,7 +44,7 @@ struct EditLocationView: View {
                 }
 
                 Section("Beschreibung") {
-                    TextField("Beschreibung", text: $description, axis: .vertical)
+                    TextField("Beschreibung", text: $locationDescription, axis: .vertical)
                         .lineLimit(3...6)
                 }
 
@@ -55,6 +55,7 @@ struct EditLocationView: View {
                     }
                 }
             }
+            .scrollDismissesKeyboard(.immediately)
             .navigationTitle("Bearbeiten")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -68,6 +69,12 @@ struct EditLocationView: View {
                     .bold()
                     .disabled(isSaving)
                 }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Fertig") {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+                }
             }
         }
     }
@@ -76,15 +83,20 @@ struct EditLocationView: View {
         isSaving = true
         errorMessage = nil
 
-        var body: [String: Any] = [
+        let body: [String: Any] = [
             "category": category,
-            "description": description
+            "description": locationDescription
         ]
+
+        print("Saving location \(location.id) with body: \(body)")
 
         do {
             let updated = try await locationService.updateLocation(id: location.id, body: body)
+            print("Save success: \(updated.id)")
             onSave(updated)
+            dismiss()
         } catch {
+            print("Save error: \(error)")
             errorMessage = error.localizedDescription
         }
 

@@ -40,23 +40,28 @@ struct Karte: View {
     @StateObject private var locationManager = LocationManager()
     @State private var mapViewModel = MapViewModel()
     @State private var showSearchSheet = false
-    @State private var selectedLocation: Location?
+    @State private var selectedLocationId: UUID?
+    @State private var showDetail = false
     var userId: UUID?
 
     var body: some View {
-        NavigationStack {
         ZStack {
-            Map(position: $locationManager.position, selection: $selectedLocation) {
+            Map(position: $locationManager.position, selection: $selectedLocationId) {
                 UserAnnotation()
                 ForEach(mapViewModel.locations) { location in
                     Marker(location.name, coordinate: CLLocationCoordinate2D(
                         latitude: location.latitude,
                         longitude: location.longitude
                     ))
-                    .tag(location)
+                    .tag(location.id)
                 }
             }
             .ignoresSafeArea()
+            .onChange(of: selectedLocationId) { _, newValue in
+                if newValue != nil {
+                    showDetail = true
+                }
+            }
 
             VStack {
                 Spacer()
@@ -89,12 +94,23 @@ struct Karte: View {
             guard let userId else { return }
             await mapViewModel.loadLocations(userId: userId)
         }
-        .navigationDestination(item: $selectedLocation) { location in
-            LocationDetailView(location: location, currentUserId: userId) {
-                mapViewModel.locations.removeAll { $0.id == location.id }
-                selectedLocation = nil
+        .sheet(isPresented: $showDetail, onDismiss: {
+            selectedLocationId = nil
+            guard let userId else { return }
+            Task { await mapViewModel.loadLocations(userId: userId) }
+        }) {
+            if let location = mapViewModel.locations.first(where: { $0.id == selectedLocationId }) {
+                NavigationStack {
+                    LocationDetailView(location: location, currentUserId: userId, onDelete: {
+                        mapViewModel.locations.removeAll { $0.id == location.id }
+                        showDetail = false
+                    }, onUpdate: { updated in
+                        if let index = mapViewModel.locations.firstIndex(where: { $0.id == updated.id }) {
+                            mapViewModel.locations[index] = updated
+                        }
+                    })
+                }
             }
-        }
         }
     }
 }

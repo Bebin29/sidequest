@@ -19,6 +19,9 @@ struct Sidequest3App: App {
                     .environmentObject(container)
             } else {
                 LoginView(authViewModel: authViewModel)
+                    .task {
+                        await authViewModel.checkExistingSession()
+                    }
             }
         }
     }

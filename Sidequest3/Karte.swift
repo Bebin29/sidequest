@@ -49,11 +49,16 @@ struct Karte: View {
             Map(position: $locationManager.position, selection: $selectedLocationId) {
                 UserAnnotation()
                 ForEach(mapViewModel.locations) { location in
-                    Marker(location.name, coordinate: CLLocationCoordinate2D(
+                    Annotation(location.name, coordinate: CLLocationCoordinate2D(
                         latitude: location.latitude,
                         longitude: location.longitude
-                    ))
-                    .tag(location.id)
+                    )) {
+                        LocationPin(imageUrl: location.imageUrls.first)
+                            .onTapGesture {
+                                selectedLocationId = location.id
+                                showDetail = true
+                            }
+                    }
                 }
             }
             .ignoresSafeArea()

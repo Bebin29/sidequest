@@ -9,6 +9,11 @@ struct FriendsView: View {
     @State private var viewModel = FriendsViewModel()
     @State private var searchText = ""
     @State private var showSearch = false
+    
+    // NEU: für Bestätigung
+    @State private var friendToRemove: Friendship?
+    @State private var showRemoveConfirmation = false
+    
     var currentUser: User?
 
     var body: some View {
@@ -53,12 +58,15 @@ struct FriendsView: View {
                                 let friendName = friendship.requesterId == currentUser?.id
                                     ? friendship.receiverUsername
                                     : friendship.requesterUsername
+                                
                                 Text("@\(friendName)")
                                     .font(.headline)
+                                
                                 Spacer()
+                                
                                 Button("Entfernen", role: .destructive) {
-                                    guard let userId = currentUser?.id else { return }
-                                    Task { await viewModel.removeFriend(friendshipId: friendship.id, userId: userId) }
+                                    friendToRemove = friendship
+                                    showRemoveConfirmation = true
                                 }
                                 .controlSize(.small)
                             }
@@ -90,6 +98,26 @@ struct FriendsView: View {
                 guard let userId = currentUser?.id else { return }
                 await viewModel.loadFriends(userId: userId)
                 await viewModel.loadPendingRequests(userId: userId)
+            }
+            
+            // NEU: Bestätigungsdialog
+            .confirmationDialog(
+                "Freund wirklich entfernen?",
+                isPresented: $showRemoveConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Freund entfernen", role: .destructive) {
+                    guard
+                        let friendship = friendToRemove,
+                        let userId = currentUser?.id
+                    else { return }
+
+                    Task {
+                        await viewModel.removeFriend(friendshipId: friendship.id, userId: userId)
+                    }
+                }
+
+                Button("Abbrechen", role: .cancel) { }
             }
         }
     }
@@ -136,7 +164,12 @@ struct FriendSearchView: View {
                         if user.id != currentUser?.id {
                             Button("Anfrage senden") {
                                 guard let requesterId = currentUser?.id else { return }
-                                Task { await viewModel.sendRequest(requesterId: requesterId, receiverUsername: user.username) }
+                                Task {
+                                    await viewModel.sendRequest(
+                                        requesterId: requesterId,
+                                        receiverUsername: user.username
+                                    )
+                                }
                             }
                             .buttonStyle(.borderedProminent)
                             .controlSize(.small)
@@ -152,4 +185,8 @@ struct FriendSearchView: View {
             }
         }
     }
+}
+
+#Preview {
+    Home(authViewModel: AuthViewModel())
 }

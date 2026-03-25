@@ -198,5 +198,5 @@ struct PlaceSearchView: View {
 }
 
 #Preview {
-    Home(authViewModel: AuthViewModel())
+    Karte()
 }

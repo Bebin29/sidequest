@@ -66,6 +66,7 @@ function route(req, res) {
     if (locationIdMatch) {
         const id = locationIdMatch[1];
         if (method === 'GET') return locationController.getById(req, res, id);
+        if (method === 'PUT') return locationController.update(req, res, id);
         if (method === 'DELETE') return locationController.remove(req, res, id);
     }
 

@@ -40,17 +40,20 @@ struct Karte: View {
     @StateObject private var locationManager = LocationManager()
     @State private var mapViewModel = MapViewModel()
     @State private var showSearchSheet = false
+    @State private var selectedLocation: Location?
     var userId: UUID?
 
     var body: some View {
+        NavigationStack {
         ZStack {
-            Map(position: $locationManager.position) {
+            Map(position: $locationManager.position, selection: $selectedLocation) {
                 UserAnnotation()
                 ForEach(mapViewModel.locations) { location in
                     Marker(location.name, coordinate: CLLocationCoordinate2D(
                         latitude: location.latitude,
                         longitude: location.longitude
                     ))
+                    .tag(location)
                 }
             }
             .ignoresSafeArea()
@@ -85,6 +88,10 @@ struct Karte: View {
         .task {
             guard let userId else { return }
             await mapViewModel.loadLocations(userId: userId)
+        }
+        .navigationDestination(item: $selectedLocation) { location in
+            LocationDetailView(location: location, currentUserId: userId)
+        }
         }
     }
 }

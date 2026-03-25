@@ -123,69 +123,61 @@ struct PlaceSearchView: View {
 
     @State private var searchText = ""
     @StateObject private var completer = SearchCompleter()
+    @State private var selectedItem: MKMapItem?
+    @State private var selectedCategory = ""
     @Bindable var mapViewModel: MapViewModel
     var userId: UUID?
     var onDismiss: () -> Void
 
     var body: some View {
         NavigationStack {
-            VStack {
-
-                TextField("Ort suchen", text: $searchText)
-                    .textFieldStyle(.roundedBorder)
-                    .padding()
-                    .onChange(of: searchText) { _, newValue in
-                        completer.update(query: newValue)
-                    }
-
-                List(completer.results, id: \.self) { completion in
-                    VStack(alignment: .leading) {
-                        Text(completion.title)
-                            .font(.headline)
-
-                        Text(completion.subtitle)
-                            .font(.caption)
-                            .foregroundColor(.gray)
-
-                        Button("Hinzufügen") {
-                            searchAndAdd(completion)
+            if let item = selectedItem {
+                AddLocationFormView(
+                    mapItem: item,
+                    category: selectedCategory,
+                    mapViewModel: mapViewModel,
+                    userId: userId,
+                    onDismiss: onDismiss,
+                    onBack: { selectedItem = nil }
+                )
+            } else {
+                VStack {
+                    TextField("Ort suchen", text: $searchText)
+                        .textFieldStyle(.roundedBorder)
+                        .padding()
+                        .onChange(of: searchText) { _, newValue in
+                            completer.update(query: newValue)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .padding(.top, 5)
+
+                    List(completer.results, id: \.self) { completion in
+                        Button {
+                            resolveAndSelect(completion)
+                        } label: {
+                            VStack(alignment: .leading) {
+                                Text(completion.title)
+                                    .font(.headline)
+                                    .foregroundStyle(.primary)
+                                Text(completion.subtitle)
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                        .padding(.vertical, 5)
                     }
-                    .padding(.vertical, 5)
                 }
+                .navigationTitle("Ort suchen")
             }
-            .navigationTitle("Ort suchen")
         }
     }
 
-    func searchAndAdd(_ completion: MKLocalSearchCompletion) {
+    func resolveAndSelect(_ completion: MKLocalSearchCompletion) {
         let request = MKLocalSearch.Request(completion: completion)
         let search = MKLocalSearch(request: request)
 
         search.start { response, error in
-            guard let item = response?.mapItems.first,
-                  let coordinate = item.placemark.location?.coordinate else { return }
-
-            let address = [item.placemark.thoroughfare, item.placemark.subThoroughfare, item.placemark.postalCode, item.placemark.locality]
-                .compactMap { $0 }.joined(separator: " ")
-
-            let body: [String: Any] = [
-                "name": item.name ?? completion.title,
-                "address": address.isEmpty ? completion.subtitle : address,
-                "latitude": coordinate.latitude,
-                "longitude": coordinate.longitude,
-                "category": mapCategory(from: item.pointOfInterestCategory),
-                "created_by": userId?.uuidString ?? ""
-            ]
-
-            Task {
-                let success = await mapViewModel.addLocation(body)
-                if success {
-                    onDismiss()
-                }
-            }
+            guard let item = response?.mapItems.first else { return }
+            selectedCategory = mapCategory(from: item.pointOfInterestCategory)
+            selectedItem = item
         }
     }
 
@@ -200,6 +192,133 @@ struct PlaceSearchView: View {
         case .museum: return "Museum"
         case .store: return "Shopping"
         default: return "Sonstiges"
+        }
+    }
+}
+
+struct AddLocationFormView: View {
+    let mapItem: MKMapItem
+    let category: String
+    @Bindable var mapViewModel: MapViewModel
+    var userId: UUID?
+    var onDismiss: () -> Void
+    var onBack: () -> Void
+
+    @State private var description = ""
+    @State private var selectedImage: UIImage?
+    @State private var showImagePicker = false
+    @State private var isUploading = false
+
+    private let imageUploadService = ImageUploadService()
+
+    var body: some View {
+        List {
+            Section("Ort") {
+                Text(mapItem.name ?? "Unbekannt")
+                    .font(.headline)
+                if let placemark = mapItem.placemark.location {
+                    Text(mapItem.placemark.title ?? "")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Text(category)
+                    .font(.caption)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(.blue.opacity(0.1))
+                    .cornerRadius(8)
+            }
+
+            Section("Beschreibung") {
+                TextField("Warum empfiehlst du diesen Ort?", text: $description, axis: .vertical)
+                    .lineLimit(3...6)
+            }
+
+            Section("Foto") {
+                if let image = selectedImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxHeight: 200)
+                        .cornerRadius(8)
+
+                    Button("Foto ändern") {
+                        showImagePicker = true
+                    }
+                } else {
+                    Button {
+                        showImagePicker = true
+                    } label: {
+                        Label("Foto hinzufügen", systemImage: "camera")
+                    }
+                }
+            }
+
+            Section {
+                Button {
+                    Task { await submit() }
+                } label: {
+                    if isUploading {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                    } else {
+                        Text("Ort hinzufügen")
+                            .frame(maxWidth: .infinity)
+                            .bold()
+                    }
+                }
+                .disabled(isUploading)
+            }
+        }
+        .navigationTitle("Ort hinzufügen")
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Zurück") { onBack() }
+            }
+        }
+        .sheet(isPresented: $showImagePicker) {
+            ImagePicker(image: $selectedImage)
+        }
+    }
+
+    func submit() async {
+        guard let coordinate = mapItem.placemark.location?.coordinate else { return }
+        isUploading = true
+
+        var imageUrls: [String] = []
+
+        if let image = selectedImage {
+            do {
+                let url = try await imageUploadService.upload(image: image)
+                imageUrls.append(url)
+            } catch {
+                print("Image upload failed:", error)
+            }
+        }
+
+        let address = [mapItem.placemark.thoroughfare, mapItem.placemark.subThoroughfare, mapItem.placemark.postalCode, mapItem.placemark.locality]
+            .compactMap { $0 }.joined(separator: " ")
+
+        var body: [String: Any] = [
+            "name": mapItem.name ?? "Unbekannt",
+            "address": address.isEmpty ? (mapItem.placemark.title ?? "") : address,
+            "latitude": coordinate.latitude,
+            "longitude": coordinate.longitude,
+            "category": category,
+            "created_by": userId?.uuidString ?? ""
+        ]
+
+        if !description.isEmpty {
+            body["description"] = description
+        }
+        if !imageUrls.isEmpty {
+            body["image_urls"] = imageUrls
+        }
+
+        let success = await mapViewModel.addLocation(body)
+        isUploading = false
+        if success {
+            onDismiss()
         }
     }
 }

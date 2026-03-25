@@ -297,7 +297,8 @@ struct AddLocationFormView: View {
                 .disabled(isUploading)
             }
         }
-        .scrollDismissesKeyboard(.interactively)
+        .scrollDismissesKeyboard(.immediately)
+        .onTapGesture { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
         .navigationTitle("Ort hinzufügen")
         .sheet(isPresented: $showPreview) {
             PostPreviewView(

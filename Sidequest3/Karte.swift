@@ -35,29 +35,22 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 }
 
-struct PlaceMarker: Identifiable {
-    let id = UUID()
-    let coordinate: CLLocationCoordinate2D
-}
-
 struct Karte: View {
 
     @StateObject private var locationManager = LocationManager()
+    @State private var mapViewModel = MapViewModel()
     @State private var showSearchSheet = false
-
-    let places = [
-        PlaceMarker(coordinate: CLLocationCoordinate2D(latitude: 53.49987, longitude: 10.00258)),
-        PlaceMarker(coordinate: CLLocationCoordinate2D(latitude: 53.49987, longitude: 10.00268)),
-        PlaceMarker(coordinate: CLLocationCoordinate2D(latitude: 53.49987, longitude: 10.00278))
-    ]
+    var userId: UUID?
 
     var body: some View {
         ZStack {
-
             Map(position: $locationManager.position) {
                 UserAnnotation()
-                ForEach(places) { place in
-                    Marker("", coordinate: place.coordinate)
+                ForEach(mapViewModel.locations) { location in
+                    Marker(location.name, coordinate: CLLocationCoordinate2D(
+                        latitude: location.latitude,
+                        longitude: location.longitude
+                    ))
                 }
             }
             .ignoresSafeArea()
@@ -85,12 +78,17 @@ struct Karte: View {
             }
         }
         .sheet(isPresented: $showSearchSheet) {
-            PlaceSearchView()
+            PlaceSearchView(mapViewModel: mapViewModel, userId: userId) {
+                showSearchSheet = false
+            }
+        }
+        .task {
+            await mapViewModel.loadLocations()
         }
     }
 }
 
-// 🔥 NEU: Autocomplete Service
+// Autocomplete Service
 class SearchCompleter: NSObject, ObservableObject, MKLocalSearchCompleterDelegate {
 
     @Published var results: [MKLocalSearchCompletion] = []
@@ -112,11 +110,14 @@ class SearchCompleter: NSObject, ObservableObject, MKLocalSearchCompleterDelegat
     }
 }
 
-// 🔍 Suche mit Live Vorschlägen
+// Suche mit Live Vorschlägen
 struct PlaceSearchView: View {
 
     @State private var searchText = ""
     @StateObject private var completer = SearchCompleter()
+    @Bindable var mapViewModel: MapViewModel
+    var userId: UUID?
+    var onDismiss: () -> Void
 
     var body: some View {
         NavigationStack {
@@ -125,7 +126,7 @@ struct PlaceSearchView: View {
                 TextField("Ort suchen", text: $searchText)
                     .textFieldStyle(.roundedBorder)
                     .padding()
-                    .onChange(of: searchText) { newValue in
+                    .onChange(of: searchText) { _, newValue in
                         completer.update(query: newValue)
                     }
 
@@ -151,14 +152,44 @@ struct PlaceSearchView: View {
         }
     }
 
-    // 🔁 wandelt Vorschlag → echte Location
     func searchAndAdd(_ completion: MKLocalSearchCompletion) {
         let request = MKLocalSearch.Request(completion: completion)
         let search = MKLocalSearch(request: request)
 
         search.start { response, error in
-            guard let item = response?.mapItems.first else { return }
-            print("Selected:", item.name ?? "")
+            guard let item = response?.mapItems.first,
+                  let coordinate = item.placemark.location?.coordinate else { return }
+
+            let body: [String: Any] = [
+                "name": item.name ?? completion.title,
+                "address": [item.placemark.thoroughfare, item.placemark.subThoroughfare, item.placemark.locality]
+                    .compactMap { $0 }.joined(separator: " "),
+                "latitude": coordinate.latitude,
+                "longitude": coordinate.longitude,
+                "category": mapCategory(from: item.pointOfInterestCategory),
+                "created_by": userId?.uuidString ?? ""
+            ]
+
+            Task {
+                let success = await mapViewModel.addLocation(body)
+                if success {
+                    onDismiss()
+                }
+            }
+        }
+    }
+
+    func mapCategory(from category: MKPointOfInterestCategory?) -> String {
+        guard let category else { return "Sonstiges" }
+        switch category {
+        case .restaurant: return "Restaurant"
+        case .cafe: return "Café"
+        case .nightlife: return "Bar"
+        case .bakery: return "Bäckerei"
+        case .park: return "Park"
+        case .museum: return "Museum"
+        case .store: return "Shopping"
+        default: return "Sonstiges"
         }
     }
 }

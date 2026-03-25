@@ -3,22 +3,31 @@ const { parseBody, sendJSON, sendError } = require('../helpers');
 
 async function getAll(req, res, query) {
     try {
-        const limit = Math.min(parseInt(query.limit, 10) || 50, 100);
-        const offset = parseInt(query.offset, 10) || 0;
-        const category = query.category || null;
+        const userId = query.user_id;
 
-        let sql = 'SELECT * FROM locations';
-        const values = [];
-
-        if (category) {
-            sql += ' WHERE category = $1';
-            values.push(category);
+        if (!userId) {
+            return sendError(res, 400, 'user_id is required');
         }
 
-        sql += ` ORDER BY created_at DESC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`;
-        values.push(limit, offset);
+        // Eigene + Freunde IDs sammeln
+        const friendsResult = await pool.query(
+            `SELECT CASE
+                WHEN requester_id = $1 THEN receiver_id
+                ELSE requester_id
+             END AS friend_id
+             FROM friendships
+             WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'`,
+            [userId]
+        );
 
-        const result = await pool.query(sql, values);
+        const allowedIds = [userId, ...friendsResult.rows.map(r => r.friend_id)];
+        const placeholders = allowedIds.map((_, i) => `$${i + 1}`).join(', ');
+
+        const result = await pool.query(
+            `SELECT * FROM locations WHERE created_by IN (${placeholders}) ORDER BY created_at DESC`,
+            allowedIds
+        );
+
         sendJSON(res, 200, { data: result.rows, count: result.rowCount });
     } catch (err) {
         console.error('getAll locations error:', err);

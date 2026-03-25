@@ -13,12 +13,12 @@ final class MapViewModel {
 
     private let locationService = LocationService()
 
-    func loadLocations() async {
+    func loadLocations(userId: UUID) async {
         isLoading = true
         errorMessage = nil
 
         do {
-            locations = try await locationService.fetchLocations()
+            locations = try await locationService.fetchLocations(userId: userId)
         } catch {
             errorMessage = error.localizedDescription
         }

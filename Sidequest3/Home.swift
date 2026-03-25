@@ -18,6 +18,9 @@ struct Home: View {
             Tab("Karte", systemImage: "map.fill") {
                 Karte(userId: authViewModel.currentUser?.id)
             }
+            Tab("Freunde", systemImage: "person.2.fill") {
+                FriendsView(currentUser: authViewModel.currentUser)
+            }
             Tab("Profil", systemImage: "person.fill") {
                 Profile(authViewModel: authViewModel)
             }

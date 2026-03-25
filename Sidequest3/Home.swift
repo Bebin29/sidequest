@@ -16,7 +16,7 @@ struct Home: View {
                 Feed()
             }
             Tab("Karte", systemImage: "map.fill") {
-                Karte()
+                Karte(userId: authViewModel.currentUser?.id)
             }
             Tab("Profil", systemImage: "person.fill") {
                 Profile(authViewModel: authViewModel)

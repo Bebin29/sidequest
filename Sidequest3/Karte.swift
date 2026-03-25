@@ -160,10 +160,12 @@ struct PlaceSearchView: View {
             guard let item = response?.mapItems.first,
                   let coordinate = item.placemark.location?.coordinate else { return }
 
+            let address = [item.placemark.thoroughfare, item.placemark.subThoroughfare, item.placemark.postalCode, item.placemark.locality]
+                .compactMap { $0 }.joined(separator: " ")
+
             let body: [String: Any] = [
                 "name": item.name ?? completion.title,
-                "address": [item.placemark.thoroughfare, item.placemark.subThoroughfare, item.placemark.locality]
-                    .compactMap { $0 }.joined(separator: " "),
+                "address": address.isEmpty ? completion.subtitle : address,
                 "latitude": coordinate.latitude,
                 "longitude": coordinate.longitude,
                 "category": mapCategory(from: item.pointOfInterestCategory),

@@ -16,30 +16,12 @@ struct LocationDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                // Hero Image
-                if let firstUrl = location.imageUrls.first, let url = URL(string: firstUrl) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
-                                .clipped()
-                                .onTapGesture { showFullImage = true }
-                        case .failure:
-                            Image(systemName: "photo")
-                                .font(.largeTitle)
-                                .foregroundStyle(.tertiary)
-                                .frame(maxWidth: .infinity, minHeight: 150)
-                                .background(Color(.systemGray6))
-                        case .empty:
-                            ProgressView()
-                                .frame(maxWidth: .infinity, minHeight: 150)
-                        @unknown default:
-                            EmptyView()
-                        }
-                    }
+                // Bilder Carousel
+                if !location.imageUrls.isEmpty {
+                    ImageCarouselRemote(
+                        urls: location.imageUrls,
+                        onTap: { showFullImage = true }
+                    )
                 }
 
                 VStack(alignment: .leading, spacing: 16) {
@@ -64,28 +46,6 @@ struct LocationDetailView: View {
                             .background(.blue.opacity(0.1))
                             .foregroundStyle(.blue)
                             .clipShape(Capsule())
-                    }
-
-                    // Weitere Bilder (falls mehr als 1)
-                    if location.imageUrls.count > 1 {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 10) {
-                                ForEach(Array(location.imageUrls.dropFirst()), id: \.self) { urlString in
-                                    AsyncImage(url: URL(string: urlString)) { image in
-                                        image
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 140, height: 140)
-                                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    } placeholder: {
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .fill(Color(.systemGray5))
-                                            .frame(width: 140, height: 140)
-                                            .overlay(ProgressView())
-                                    }
-                                }
-                            }
-                        }
                     }
 
                     // Beschreibung
@@ -178,26 +138,91 @@ struct LocationDetailView: View {
             await viewModel.loadComments(locationId: location.id)
         }
         .fullScreenCover(isPresented: $showFullImage) {
-            if let firstUrl = location.imageUrls.first, let url = URL(string: firstUrl) {
-                ZStack(alignment: .topTrailing) {
-                    Color.black.ignoresSafeArea()
-                    AsyncImage(url: url) { image in
-                        image
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } placeholder: {
-                        ProgressView()
+            ZStack(alignment: .topTrailing) {
+                Color.black.ignoresSafeArea()
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: 0) {
+                        ForEach(0..<location.imageUrls.count, id: \.self) { index in
+                            AsyncImage(url: URL(string: location.imageUrls[index])) { image in
+                                image
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            } placeholder: {
+                                ProgressView()
+                            }
+                            .frame(width: UIScreen.main.bounds.width)
+                        }
                     }
-                    Button {
-                        showFullImage = false
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title)
-                            .foregroundStyle(.white.opacity(0.8))
-                            .padding()
+                    .scrollTargetLayout()
+                }
+                .scrollTargetBehavior(.paging)
+                Button {
+                    showFullImage = false
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title)
+                        .foregroundStyle(.white.opacity(0.8))
+                        .padding()
+                }
+            }
+        }
+    }
+}
+
+// Remote Bilder Carousel (URLs)
+struct ImageCarouselRemote: View {
+    let urls: [String]
+    var onTap: () -> Void = {}
+    @State private var currentPage = 0
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 0) {
+                    ForEach(0..<urls.count, id: \.self) { index in
+                        AsyncImage(url: URL(string: urls[index])) { phase in
+                            switch phase {
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
+                                    .clipped()
+                                    .onTapGesture { onTap() }
+                            case .failure:
+                                Image(systemName: "photo")
+                                    .font(.largeTitle)
+                                    .foregroundStyle(.tertiary)
+                                    .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
+                                    .background(Color(.systemGray6))
+                            case .empty:
+                                ProgressView()
+                                    .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
+                            @unknown default:
+                                EmptyView()
+                            }
+                        }
                     }
                 }
+                .scrollTargetLayout()
+            }
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: Binding(
+                get: { currentPage },
+                set: { if let v = $0 { currentPage = v } }
+            ))
+            .frame(height: UIScreen.main.bounds.width)
+
+            if urls.count > 1 {
+                HStack(spacing: 6) {
+                    ForEach(0..<urls.count, id: \.self) { index in
+                        Circle()
+                            .fill(index == currentPage ? Color.white : Color.white.opacity(0.5))
+                            .frame(width: 7, height: 7)
+                    }
+                }
+                .padding(.bottom, 12)
             }
         }
     }

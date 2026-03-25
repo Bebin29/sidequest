@@ -298,7 +298,14 @@ struct AddLocationFormView: View {
             }
         }
         .scrollDismissesKeyboard(.immediately)
-        .onTapGesture { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Fertig") {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
+            }
+        }
         .navigationTitle("Ort hinzufügen")
         .sheet(isPresented: $showPreview) {
             PostPreviewView(
@@ -306,7 +313,7 @@ struct AddLocationFormView: View {
                 address: mapItem.placemark.title ?? "",
                 category: category,
                 description: description,
-                image: selectedImages.first
+                images: selectedImages
             )
         }
         .toolbar {

@@ -205,7 +205,7 @@ struct AddLocationFormView: View {
     var onBack: () -> Void
 
     @State private var description = ""
-    @State private var selectedImage: UIImage?
+    @State private var selectedImages: [UIImage] = []
     @State private var showImagePicker = false
     @State private var showPreview = false
     @State private var isUploading = false
@@ -236,30 +236,41 @@ struct AddLocationFormView: View {
                     .lineLimit(3...6)
             }
 
-            Section("Foto") {
-                if let image = selectedImage {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 200)
-                        .clipped()
-                        .cornerRadius(8)
+            Section("Fotos (\(selectedImages.count))") {
+                if !selectedImages.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(Array(selectedImages.enumerated()), id: \.offset) { index, image in
+                                ZStack(alignment: .topTrailing) {
+                                    Image(uiImage: image)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 120, height: 120)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                    Button("Foto ändern") {
-                        showImagePicker = true
+                                    Button {
+                                        selectedImages.remove(at: index)
+                                    } label: {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundStyle(.white, .red)
+                                            .font(.title3)
+                                    }
+                                    .offset(x: 6, y: -6)
+                                }
+                            }
+                        }
                     }
-                } else {
-                    Button {
-                        showImagePicker = true
-                    } label: {
-                        Label("Foto hinzufügen", systemImage: "camera")
-                    }
+                }
+
+                Button {
+                    showImagePicker = true
+                } label: {
+                    Label("Foto hinzufügen", systemImage: "camera")
                 }
             }
 
             // Preview Button
-            if selectedImage != nil || !description.isEmpty {
+            if !selectedImages.isEmpty || !description.isEmpty {
                 Section {
                     Button {
                         showPreview = true
@@ -286,6 +297,7 @@ struct AddLocationFormView: View {
                 .disabled(isUploading)
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .navigationTitle("Ort hinzufügen")
         .sheet(isPresented: $showPreview) {
             PostPreviewView(
@@ -293,7 +305,7 @@ struct AddLocationFormView: View {
                 address: mapItem.placemark.title ?? "",
                 category: category,
                 description: description,
-                image: selectedImage
+                image: selectedImages.first
             )
         }
         .toolbar {
@@ -302,7 +314,7 @@ struct AddLocationFormView: View {
             }
         }
         .sheet(isPresented: $showImagePicker) {
-            ImagePicker(image: $selectedImage)
+            ImagePickerAppend(images: $selectedImages)
         }
     }
 
@@ -312,7 +324,7 @@ struct AddLocationFormView: View {
 
         var imageUrls: [String] = []
 
-        if let image = selectedImage {
+        for image in selectedImages {
             do {
                 let url = try await imageUploadService.upload(image: image)
                 imageUrls.append(url)

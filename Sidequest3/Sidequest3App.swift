@@ -9,9 +9,17 @@ import SwiftUI
 
 @main
 struct Sidequest3App: App {
+    @StateObject private var container = DependencyContainer()
+    @State private var authViewModel = AuthViewModel()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            if authViewModel.isAuthenticated {
+                Home(authViewModel: authViewModel)
+                    .environmentObject(container)
+            } else {
+                LoginView(authViewModel: authViewModel)
+            }
         }
     }
 }

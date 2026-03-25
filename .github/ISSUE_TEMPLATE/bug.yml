@@ -1,0 +1,41 @@
+name: Bug
+description: Fehler melden
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Beschreibung
+      description: Was ist passiert?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Schritte zum Reproduzieren
+      description: Wie kann der Fehler nachgestellt werden?
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Erwartetes Verhalten
+      description: Was hätte passieren sollen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Tatsächliches Verhalten
+      description: Was ist stattdessen passiert?
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Gerät / Simulator
+      placeholder: "z.B. iPhone 16 Simulator, iOS 18"

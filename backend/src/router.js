@@ -2,6 +2,7 @@ const url = require('url');
 const { sendJSON, sendError } = require('./helpers');
 const userController = require('./controllers/userController');
 const authController = require('./controllers/authController');
+const friendshipController = require('./controllers/friendshipController');
 
 function route(req, res) {
     const parsed = url.parse(req.url, true);
@@ -43,6 +44,36 @@ function route(req, res) {
         if (method === 'GET') return userController.getById(req, res, id);
         if (method === 'PUT') return userController.update(req, res, id);
         if (method === 'DELETE') return userController.remove(req, res, id);
+    }
+
+    // User search
+    if (pathname === '/api/users/search' && method === 'GET') {
+        return friendshipController.searchUsers(req, res, parsed.query);
+    }
+
+    // Friendships routes
+    if (pathname === '/api/friendships' && method === 'POST') {
+        return friendshipController.sendRequest(req, res);
+    }
+
+    // Friends list: GET /api/friends/:userId
+    const friendsMatch = pathname.match(/^\/api\/friends\/([^/]+)$/);
+    if (friendsMatch && method === 'GET') {
+        return friendshipController.getFriends(req, res, friendsMatch[1]);
+    }
+
+    // Pending requests: GET /api/friendships/pending/:userId
+    const pendingMatch = pathname.match(/^\/api\/friendships\/pending\/([^/]+)$/);
+    if (pendingMatch && method === 'GET') {
+        return friendshipController.getPendingRequests(req, res, pendingMatch[1]);
+    }
+
+    // Update friendship: PATCH /api/friendships/:id
+    const friendshipIdMatch = pathname.match(/^\/api\/friendships\/([^/]+)$/);
+    if (friendshipIdMatch) {
+        const id = friendshipIdMatch[1];
+        if (method === 'PATCH') return friendshipController.updateStatus(req, res, id);
+        if (method === 'DELETE') return friendshipController.remove(req, res, id);
     }
 
     // 404

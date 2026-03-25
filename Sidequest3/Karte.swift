@@ -255,7 +255,7 @@ struct PlaceSearchView: View {
         let request = MKLocalSearch.Request(completion: completion)
         let search = MKLocalSearch(request: request)
 
-        search.start { response, error in
+        search.start { response, _ in
             guard let item = response?.mapItems.first else { return }
             selectedCategory = mapCategory(from: item.pointOfInterestCategory)
             selectedItem = item

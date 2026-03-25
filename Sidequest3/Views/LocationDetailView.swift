@@ -326,7 +326,7 @@ struct ImageCarouselRemote: View {
             .scrollTargetBehavior(.paging)
             .scrollPosition(id: Binding(
                 get: { currentPage },
-                set: { if let v = $0 { currentPage = v } }
+                set: { if let page = $0 { currentPage = page } }
             ))
             .frame(height: UIScreen.main.bounds.width)
 

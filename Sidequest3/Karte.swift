@@ -83,7 +83,8 @@ struct Karte: View {
             }
         }
         .task {
-            await mapViewModel.loadLocations()
+            guard let userId else { return }
+            await mapViewModel.loadLocations(userId: userId)
         }
     }
 }

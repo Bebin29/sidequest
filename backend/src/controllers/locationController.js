@@ -54,7 +54,7 @@ async function create(req, res) {
         if (!body) return sendError(res, 400, 'Request body required');
 
         const { name, address, latitude, longitude, category, created_by,
-                price_range, phone_number, website, instagram_handle, tags } = body;
+                description, price_range, phone_number, website, instagram_handle, tags } = body;
 
         if (!name || !address || latitude == null || longitude == null || !category || !created_by) {
             return sendError(res, 400, 'name, address, latitude, longitude, category and created_by are required');
@@ -65,11 +65,11 @@ async function create(req, res) {
 
         const result = await pool.query(
             `INSERT INTO locations (name, address, latitude, longitude, coordinates, geohash, category, created_by,
-                price_range, phone_number, website, instagram_handle, tags)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                description, price_range, phone_number, website, instagram_handle, tags)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
              RETURNING *`,
             [name, address, latitude, longitude, coordinates, geohash, category, created_by,
-             price_range || null, phone_number || null, website || null, instagram_handle || null, tags || []]
+             description || null, price_range || null, phone_number || null, website || null, instagram_handle || null, tags || []]
         );
 
         sendJSON(res, 201, { data: result.rows[0] });

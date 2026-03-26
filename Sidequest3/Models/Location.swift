@@ -83,7 +83,9 @@ struct AccessibilityInfo: Codable {
     }
 }
 
-struct Location: Codable, Identifiable {
+struct Location: Codable, Identifiable, Hashable {
+    static func == (lhs: Location, rhs: Location) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
     let id: UUID
     let name: String
     let address: String
@@ -98,6 +100,8 @@ struct Location: Codable, Identifiable {
     let createdAt: String
     let updatedAt: String?
     let createdBy: UUID
+
+    let description: String?
 
     let imageUrls: [String]
     let thumbnailUrl: String?
@@ -122,7 +126,7 @@ struct Location: Codable, Identifiable {
     let trendingScore: Double?
 
     enum CodingKeys: String, CodingKey {
-        case id, name, address, latitude, longitude, geohash, category, tags, website
+        case id, name, address, latitude, longitude, geohash, category, tags, website, description
         case averageRating = "average_rating"
         case totalRatings = "total_ratings"
         case createdAt = "created_at"

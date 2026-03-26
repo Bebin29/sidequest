@@ -54,7 +54,7 @@ async function create(req, res) {
         if (!body) return sendError(res, 400, 'Request body required');
 
         const { name, address, latitude, longitude, category, created_by,
-                price_range, phone_number, website, instagram_handle, tags } = body;
+                description, image_urls, price_range, phone_number, website, instagram_handle, tags } = body;
 
         if (!name || !address || latitude == null || longitude == null || !category || !created_by) {
             return sendError(res, 400, 'name, address, latitude, longitude, category and created_by are required');
@@ -65,16 +65,58 @@ async function create(req, res) {
 
         const result = await pool.query(
             `INSERT INTO locations (name, address, latitude, longitude, coordinates, geohash, category, created_by,
-                price_range, phone_number, website, instagram_handle, tags)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                description, image_urls, price_range, phone_number, website, instagram_handle, tags)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
              RETURNING *`,
             [name, address, latitude, longitude, coordinates, geohash, category, created_by,
-             price_range || null, phone_number || null, website || null, instagram_handle || null, tags || []]
+             description || null, image_urls || [], price_range || null, phone_number || null, website || null, instagram_handle || null, tags || []]
         );
 
         sendJSON(res, 201, { data: result.rows[0] });
     } catch (err) {
         console.error('create location error:', err);
+        sendError(res, 500, 'Internal server error');
+    }
+}
+
+async function update(req, res, id) {
+    try {
+        const body = await parseBody(req);
+        if (!body) return sendError(res, 400, 'Request body required');
+
+        const fields = [];
+        const values = [];
+        let idx = 1;
+
+        const allowed = ['name', 'description', 'category', 'image_urls',
+                         'price_range', 'phone_number', 'website', 'instagram_handle', 'tags'];
+
+        for (const key of allowed) {
+            if (body[key] !== undefined) {
+                fields.push(`${key} = $${idx}`);
+                values.push(body[key]);
+                idx++;
+            }
+        }
+
+        if (fields.length === 0) {
+            return sendError(res, 400, 'No valid fields to update');
+        }
+
+        fields.push('updated_at = CURRENT_TIMESTAMP');
+        values.push(id);
+
+        const result = await pool.query(
+            `UPDATE locations SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`,
+            values
+        );
+
+        if (result.rowCount === 0) {
+            return sendError(res, 404, 'Location not found');
+        }
+        sendJSON(res, 200, { data: result.rows[0] });
+    } catch (err) {
+        console.error('update location error:', err);
         sendError(res, 500, 'Internal server error');
     }
 }
@@ -92,4 +134,4 @@ async function remove(req, res, id) {
     }
 }
 
-module.exports = { getAll, getById, create, remove };
+module.exports = { getAll, getById, create, update, remove };

@@ -7,7 +7,6 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
     private let manager = CLLocationManager()
     private var hasSetInitialPosition = false
-
     @Published var lastLocation: CLLocation?
     @Published var position: MapCameraPosition = .region(MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 52.5200, longitude: 13.4050),
@@ -33,6 +32,18 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                 center: location.coordinate,
                 span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
             ))
+        }
+    }
+    func centerOnUser() {
+        guard let location = lastLocation else { return }
+
+        withAnimation(.easeInOut(duration: 0.6)) {
+            self.position = .region(
+                MKCoordinateRegion(
+                    center: location.coordinate,
+                    span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)
+                )
+            )
         }
     }
 }
@@ -77,20 +88,35 @@ struct Karte: View {
                 HStack {
                     Spacer()
                   
-                     Button(action: {
-                         showSearchSheet = true
-                     }) {
-                         Image(systemName: "plus")
-                             .font(.title2)
-                             .foregroundColor(.white)
-                             .padding()
-                             
-                             .background(Color.indigo)
-                             .clipShape(Circle())
-                             .shadow(radius: 5)
-                     }
-                     .padding()
-                     
+                    VStack(spacing: 12) {
+                        
+                        Button(action: {
+                            locationManager.centerOnUser()
+                        }) {
+                            Image(systemName: "location.fill")
+                                .font(.title2)
+                                .foregroundColor(Color.indigo)
+                                .frame(width: 50, height: 50)
+                                .background(Color.white)
+                                .clipShape(Circle())
+                                .shadow(radius: 5)
+                                .fontWeight(.semibold)
+                        }
+
+                        Button(action: {
+                            showSearchSheet = true
+                        }) {
+                            Image(systemName: "plus")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                                .frame(width: 50, height: 50)
+                                .background(Color.indigo)
+                                .clipShape(Circle())
+                                .shadow(radius: 5)
+                                .fontWeight(.semibold)
+                        }
+
+                    }.padding()
                     
                 }
             }

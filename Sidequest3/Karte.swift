@@ -54,6 +54,7 @@ struct Karte: View {
                     Annotation(location.name, coordinate: CLLocationCoordinate2D(
                         latitude: location.latitude,
                         longitude: location.longitude
+                            
                     )) {
                         LocationPin(imageUrl: location.imageUrls.first)
                             .onTapGesture {
@@ -72,23 +73,25 @@ struct Karte: View {
 
             VStack {
                 Spacer()
-
+                
                 HStack {
                     Spacer()
-
-                    Button(action: {
-                        showSearchSheet = true
-                    }) {
-                        Image(systemName: "plus")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                            .padding()
-                            .background(.ultraThinMaterial)
-                            .background(Color.blue)
-                            .clipShape(Circle())
-                            .shadow(radius: 5)
-                    }
-                    .padding()
+                  
+                     Button(action: {
+                         showSearchSheet = true
+                     }) {
+                         Image(systemName: "plus")
+                             .font(.title2)
+                             .foregroundColor(.white)
+                             .padding()
+                             
+                             .background(Color.indigo)
+                             .clipShape(Circle())
+                             .shadow(radius: 5)
+                     }
+                     .padding()
+                     
+                    
                 }
             }
         }
@@ -450,5 +453,33 @@ struct AddLocationFormView: View {
 }
 
 #Preview {
-    Karte()
+    let vm = AuthViewModel()
+    vm.currentUser = .preview2
+    return Home(authViewModel: vm)
 }
+
+
+extension User {
+    static let preview2 = User(
+        id: UUID(uuidString: "e5f9bcaa-20f7-4296-a7f1-f2caf539d474")!,
+        email: "oleboehm4321@icloud.com",
+        username: "oleboehm4321",
+        displayName: "Ole Böhm",
+        profileImageUrl: nil,
+        createdAt: "2026-01-01T12:00:00Z",
+        updatedAt: nil,
+        lastSeenAt: nil,
+        bio: "This is a preview user",
+        preferences: ["theme": "dark"],
+        favoriteCategories: ["gaming", "sports"],
+        isVerified: true,
+        isModerator: false,
+        isPrivate: false,
+        fcmToken: nil,
+        stats: ["quests": 12, "friends": 5]
+    )
+}
+
+
+
+

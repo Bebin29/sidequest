@@ -11,6 +11,14 @@ struct LocationPin: View {
     var body: some View {
         VStack(spacing: 0) {
             if let urlString = imageUrl, let url = URL(string: urlString) {
+                /*
+                 Image(systemName: "triangle.fill")
+                     .font(.system(size: 10))
+                     .foregroundStyle(.white)
+                     .rotationEffect(.degrees(180))
+                     .offset(y: 54)
+                     .shadow(radius: 3)
+                 */
                 AsyncImage(url: url) { image in
                     image
                         .resizable()
@@ -30,7 +38,7 @@ struct LocationPin: View {
                     .fill(.blue)
                     .frame(width: 44, height: 44)
                     .overlay(
-                        Image(systemName: "mappin")
+                        Image(systemName: "mappin.and.ellipse")
                             .foregroundStyle(.white)
                             .font(.body.bold())
                     )
@@ -38,13 +46,11 @@ struct LocationPin: View {
                     .shadow(radius: 3)
             }
 
-            // Kleiner Pfeil nach unten
-            Image(systemName: "triangle.fill")
-                .font(.system(size: 10))
-                .foregroundStyle(.white)
-                .rotationEffect(.degrees(180))
-                .offset(y: -3)
-                .shadow(radius: 2)
+            
+            
         }
     }
+}
+#Preview {
+    LocationPin(imageUrl: "Image01")
 }

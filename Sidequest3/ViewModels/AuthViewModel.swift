@@ -10,6 +10,7 @@ import AuthenticationServices
 final class AuthViewModel {
     var currentUser: User?
     var isAuthenticated = false
+    var needsOnboarding = false
     var isLoading = false
     var errorMessage: String?
 
@@ -44,13 +45,14 @@ final class AuthViewModel {
         errorMessage = nil
 
         do {
-            let (user, _) = try await authService.signInWithApple(
+            let (user, isNewUser) = try await authService.signInWithApple(
                 appleUserId: appleUserId,
                 email: email,
                 displayName: displayName
             )
             currentUser = user
             isAuthenticated = true
+            needsOnboarding = isNewUser
         } catch {
             errorMessage = error.localizedDescription
         }

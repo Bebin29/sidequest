@@ -116,4 +116,23 @@ async function remove(req, res, id) {
     }
 }
 
-module.exports = { getAll, getById, create, update, remove };
+async function checkUsername(req, res, query) {
+    try {
+        const username = query.username;
+        if (!username || username.length < 3) {
+            return sendError(res, 400, 'Username must be at least 3 characters');
+        }
+
+        const result = await pool.query(
+            'SELECT id FROM users WHERE username = $1',
+            [username.toLowerCase()]
+        );
+
+        sendJSON(res, 200, { available: result.rowCount === 0 });
+    } catch (err) {
+        console.error('checkUsername error:', err);
+        sendError(res, 500, 'Internal server error');
+    }
+}
+
+module.exports = { getAll, getById, create, update, remove, checkUsername };

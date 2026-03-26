@@ -13,12 +13,7 @@ struct LoginView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                //Color.white
-                    //.ignoresSafeArea()
-                
-               
-                  
-                      VStack {
+                VStack {
                           Text("Sidequest")
                               .font(.title)
                               .fontWeight(.bold)
@@ -141,11 +136,7 @@ struct LoginView: View {
                       }
                       .padding()
                 }
-            
-
         }
-        
-     
     }
 }
 

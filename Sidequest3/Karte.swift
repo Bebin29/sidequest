@@ -8,6 +8,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     private var hasSetInitialPosition = false
 
+    @Published var lastLocation: CLLocation?
     @Published var position: MapCameraPosition = .region(MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 52.5200, longitude: 13.4050),
         span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
@@ -27,6 +28,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         manager.stopUpdatingLocation()
 
         DispatchQueue.main.async {
+            self.lastLocation = location
             self.position = .region(MKCoordinateRegion(
                 center: location.coordinate,
                 span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
@@ -40,20 +42,33 @@ struct Karte: View {
     @StateObject private var locationManager = LocationManager()
     @State private var mapViewModel = MapViewModel()
     @State private var showSearchSheet = false
+    @State private var selectedLocationId: UUID?
+    @State private var showDetail = false
     var userId: UUID?
 
     var body: some View {
         ZStack {
-            Map(position: $locationManager.position) {
+            Map(position: $locationManager.position, selection: $selectedLocationId) {
                 UserAnnotation()
                 ForEach(mapViewModel.locations) { location in
-                    Marker(location.name, coordinate: CLLocationCoordinate2D(
+                    Annotation(location.name, coordinate: CLLocationCoordinate2D(
                         latitude: location.latitude,
                         longitude: location.longitude
-                    ))
+                    )) {
+                        LocationPin(imageUrl: location.imageUrls.first)
+                            .onTapGesture {
+                                selectedLocationId = location.id
+                                showDetail = true
+                            }
+                    }
                 }
             }
             .ignoresSafeArea()
+            .onChange(of: selectedLocationId) { _, newValue in
+                if newValue != nil {
+                    showDetail = true
+                }
+            }
 
             VStack {
                 Spacer()
@@ -86,15 +101,52 @@ struct Karte: View {
             guard let userId else { return }
             await mapViewModel.loadLocations(userId: userId)
         }
+        .sheet(isPresented: $showDetail, onDismiss: {
+            selectedLocationId = nil
+            guard let userId else { return }
+            Task { await mapViewModel.loadLocations(userId: userId) }
+        }) {
+            if let location = mapViewModel.locations.first(where: { $0.id == selectedLocationId }) {
+                NavigationStack {
+                    LocationDetailView(location: location, currentUserId: userId, onDelete: {
+                        mapViewModel.locations.removeAll { $0.id == location.id }
+                        showDetail = false
+                    }, onUpdate: { updated in
+                        if let index = mapViewModel.locations.firstIndex(where: { $0.id == updated.id }) {
+                            mapViewModel.locations[index] = updated
+                        }
+                    })
+                }
+            }
+        }
     }
 }
 
 // Autocomplete Service
 class SearchCompleter: NSObject, ObservableObject, MKLocalSearchCompleterDelegate {
 
-    @Published var results: [MKLocalSearchCompletion] = []
+    @Published var results: [SearchResult] = []
+    var userLocation: CLLocation?
 
     private let completer = MKLocalSearchCompleter()
+
+    struct SearchResult: Identifiable, Hashable {
+        let id = UUID()
+        let completion: MKLocalSearchCompletion
+        var distance: CLLocationDistance?
+
+        var formattedDistance: String? {
+            guard let distance else { return nil }
+            if distance < 1000 {
+                return "\(Int(distance)) m"
+            } else {
+                return String(format: "%.1f km", distance / 1000)
+            }
+        }
+
+        static func == (lhs: SearchResult, rhs: SearchResult) -> Bool { lhs.id == rhs.id }
+        func hash(into hasher: inout Hasher) { hasher.combine(id) }
+    }
 
     override init() {
         super.init()
@@ -107,7 +159,33 @@ class SearchCompleter: NSObject, ObservableObject, MKLocalSearchCompleterDelegat
     }
 
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-        results = completer.results
+        let completions = completer.results
+        guard let userLoc = userLocation else {
+            results = completions.map { SearchResult(completion: $0, distance: nil) }
+            return
+        }
+
+        // Resolve distances
+        let group = DispatchGroup()
+        var searchResults: [SearchResult] = []
+
+        for completion in completions {
+            group.enter()
+            let request = MKLocalSearch.Request(completion: completion)
+            let search = MKLocalSearch(request: request)
+            search.start { response, _ in
+                var dist: CLLocationDistance?
+                if let coord = response?.mapItems.first?.placemark.location {
+                    dist = userLoc.distance(from: coord)
+                }
+                searchResults.append(SearchResult(completion: completion, distance: dist))
+                group.leave()
+            }
+        }
+
+        group.notify(queue: .main) {
+            self.results = searchResults.sorted { ($0.distance ?? .greatestFiniteMagnitude) < ($1.distance ?? .greatestFiniteMagnitude) }
+        }
     }
 }
 
@@ -116,69 +194,71 @@ struct PlaceSearchView: View {
 
     @State private var searchText = ""
     @StateObject private var completer = SearchCompleter()
+    @StateObject private var locationManager = LocationManager()
+    @State private var selectedItem: MKMapItem?
+    @State private var selectedCategory = ""
     @Bindable var mapViewModel: MapViewModel
     var userId: UUID?
     var onDismiss: () -> Void
 
     var body: some View {
         NavigationStack {
-            VStack {
-
-                TextField("Ort suchen", text: $searchText)
-                    .textFieldStyle(.roundedBorder)
-                    .padding()
-                    .onChange(of: searchText) { _, newValue in
-                        completer.update(query: newValue)
-                    }
-
-                List(completer.results, id: \.self) { completion in
-                    VStack(alignment: .leading) {
-                        Text(completion.title)
-                            .font(.headline)
-
-                        Text(completion.subtitle)
-                            .font(.caption)
-                            .foregroundColor(.gray)
-
-                        Button("Hinzufügen") {
-                            searchAndAdd(completion)
+            if let item = selectedItem {
+                AddLocationFormView(
+                    mapItem: item,
+                    category: selectedCategory,
+                    mapViewModel: mapViewModel,
+                    userId: userId,
+                    onDismiss: onDismiss,
+                    onBack: { selectedItem = nil }
+                )
+            } else {
+                VStack {
+                    TextField("Ort suchen", text: $searchText)
+                        .textFieldStyle(.roundedBorder)
+                        .padding()
+                        .onChange(of: searchText) { _, newValue in
+                            completer.userLocation = locationManager.lastLocation
+                            completer.update(query: newValue)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .padding(.top, 5)
+
+                    List(completer.results) { result in
+                        Button {
+                            resolveAndSelect(result.completion)
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(result.completion.title)
+                                        .font(.headline)
+                                        .foregroundStyle(.primary)
+                                    Text(result.completion.subtitle)
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                                Spacer()
+                                if let distance = result.formattedDistance {
+                                    Text(distance)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 5)
                     }
-                    .padding(.vertical, 5)
                 }
+                .navigationTitle("Ort suchen")
             }
-            .navigationTitle("Ort suchen")
         }
     }
 
-    func searchAndAdd(_ completion: MKLocalSearchCompletion) {
+    func resolveAndSelect(_ completion: MKLocalSearchCompletion) {
         let request = MKLocalSearch.Request(completion: completion)
         let search = MKLocalSearch(request: request)
 
-        search.start { response, error in
-            guard let item = response?.mapItems.first,
-                  let coordinate = item.placemark.location?.coordinate else { return }
-
-            let address = [item.placemark.thoroughfare, item.placemark.subThoroughfare, item.placemark.postalCode, item.placemark.locality]
-                .compactMap { $0 }.joined(separator: " ")
-
-            let body: [String: Any] = [
-                "name": item.name ?? completion.title,
-                "address": address.isEmpty ? completion.subtitle : address,
-                "latitude": coordinate.latitude,
-                "longitude": coordinate.longitude,
-                "category": mapCategory(from: item.pointOfInterestCategory),
-                "created_by": userId?.uuidString ?? ""
-            ]
-
-            Task {
-                let success = await mapViewModel.addLocation(body)
-                if success {
-                    onDismiss()
-                }
-            }
+        search.start { response, _ in
+            guard let item = response?.mapItems.first else { return }
+            selectedCategory = mapCategory(from: item.pointOfInterestCategory)
+            selectedItem = item
         }
     }
 
@@ -193,6 +273,178 @@ struct PlaceSearchView: View {
         case .museum: return "Museum"
         case .store: return "Shopping"
         default: return "Sonstiges"
+        }
+    }
+}
+
+struct AddLocationFormView: View {
+    let mapItem: MKMapItem
+    let category: String
+    @Bindable var mapViewModel: MapViewModel
+    var userId: UUID?
+    var onDismiss: () -> Void
+    var onBack: () -> Void
+
+    @State private var description = ""
+    @State private var selectedImages: [UIImage] = []
+    @State private var showImagePicker = false
+    @State private var showPreview = false
+    @State private var isUploading = false
+
+    private let imageUploadService = ImageUploadService()
+
+    var body: some View {
+        List {
+            Section("Ort") {
+                Text(mapItem.name ?? "Unbekannt")
+                    .font(.headline)
+                if mapItem.placemark.location != nil {
+                    Text(mapItem.placemark.title ?? "")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Text(category)
+                    .font(.caption.weight(.medium))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(.blue.opacity(0.1))
+                    .foregroundStyle(.blue)
+                    .clipShape(Capsule())
+            }
+
+            Section("Beschreibung") {
+                TextField("Warum empfiehlst du diesen Ort?", text: $description, axis: .vertical)
+                    .lineLimit(3...6)
+            }
+
+            Section("Fotos (\(selectedImages.count))") {
+                if !selectedImages.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(Array(selectedImages.enumerated()), id: \.offset) { index, image in
+                                ZStack(alignment: .topTrailing) {
+                                    Image(uiImage: image)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 120, height: 120)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                                    Button {
+                                        selectedImages.remove(at: index)
+                                    } label: {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundStyle(.white, .red)
+                                            .font(.title3)
+                                    }
+                                    .offset(x: 6, y: -6)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Button {
+                    showImagePicker = true
+                } label: {
+                    Label("Foto hinzufügen", systemImage: "camera")
+                }
+            }
+
+            // Preview Button
+            if !selectedImages.isEmpty || !description.isEmpty {
+                Section {
+                    Button {
+                        showPreview = true
+                    } label: {
+                        Label("Vorschau anzeigen", systemImage: "eye")
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+            }
+
+            Section {
+                Button {
+                    Task { await submit() }
+                } label: {
+                    if isUploading {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                    } else {
+                        Text("Ort hinzufügen")
+                            .frame(maxWidth: .infinity)
+                            .bold()
+                    }
+                }
+                .disabled(isUploading)
+            }
+        }
+        .scrollDismissesKeyboard(.immediately)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Fertig") {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
+            }
+        }
+        .navigationTitle("Ort hinzufügen")
+        .sheet(isPresented: $showPreview) {
+            PostPreviewView(
+                name: mapItem.name ?? "Unbekannt",
+                address: mapItem.placemark.title ?? "",
+                category: category,
+                description: description,
+                images: selectedImages
+            )
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Zurück") { onBack() }
+            }
+        }
+        .sheet(isPresented: $showImagePicker) {
+            ImagePickerAppend(images: $selectedImages)
+        }
+    }
+
+    func submit() async {
+        guard let coordinate = mapItem.placemark.location?.coordinate else { return }
+        isUploading = true
+
+        var imageUrls: [String] = []
+
+        for image in selectedImages {
+            do {
+                let url = try await imageUploadService.upload(image: image)
+                imageUrls.append(url)
+            } catch {
+                print("Image upload failed:", error)
+            }
+        }
+
+        let address = [mapItem.placemark.thoroughfare, mapItem.placemark.subThoroughfare, mapItem.placemark.postalCode, mapItem.placemark.locality]
+            .compactMap { $0 }.joined(separator: " ")
+
+        var body: [String: Any] = [
+            "name": mapItem.name ?? "Unbekannt",
+            "address": address.isEmpty ? (mapItem.placemark.title ?? "") : address,
+            "latitude": coordinate.latitude,
+            "longitude": coordinate.longitude,
+            "category": category,
+            "created_by": userId?.uuidString ?? ""
+        ]
+
+        if !description.isEmpty {
+            body["description"] = description
+        }
+        if !imageUrls.isEmpty {
+            body["image_urls"] = imageUrls
+        }
+
+        let success = await mapViewModel.addLocation(body)
+        isUploading = false
+        if success {
+            onDismiss()
         }
     }
 }

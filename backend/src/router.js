@@ -3,6 +3,9 @@ const { sendJSON, sendError } = require('./helpers');
 const userController = require('./controllers/userController');
 const authController = require('./controllers/authController');
 const friendshipController = require('./controllers/friendshipController');
+const locationController = require('./controllers/locationController');
+const commentController = require('./controllers/commentController');
+const uploadController = require('./controllers/uploadController');
 
 function route(req, res) {
     const parsed = url.parse(req.url, true);
@@ -51,6 +54,37 @@ function route(req, res) {
         if (method === 'DELETE') return userController.remove(req, res, id);
     }
 
+    // Locations routes
+    if (pathname === '/api/locations' && method === 'GET') {
+        return locationController.getAll(req, res, parsed.query);
+    }
+    if (pathname === '/api/locations' && method === 'POST') {
+        return locationController.create(req, res);
+    }
+
+    const locationIdMatch = pathname.match(/^\/api\/locations\/([^/]+)$/);
+    if (locationIdMatch) {
+        const id = locationIdMatch[1];
+        if (method === 'GET') return locationController.getById(req, res, id);
+        if (method === 'PUT') return locationController.update(req, res, id);
+        if (method === 'DELETE') return locationController.remove(req, res, id);
+    }
+
+    // Comments routes: GET /api/locations/:id/comments
+    const commentsMatch = pathname.match(/^\/api\/locations\/([^/]+)\/comments$/);
+    if (commentsMatch) {
+        if (method === 'GET') return commentController.getByLocation(req, res, commentsMatch[1]);
+    }
+
+    if (pathname === '/api/comments' && method === 'POST') {
+        return commentController.create(req, res);
+    }
+
+    const commentIdMatch = pathname.match(/^\/api\/comments\/([^/]+)$/);
+    if (commentIdMatch && method === 'DELETE') {
+        return commentController.remove(req, res, commentIdMatch[1]);
+    }
+
     // Friendships routes
     if (pathname === '/api/friendships' && method === 'POST') {
         return friendshipController.sendRequest(req, res);
@@ -74,6 +108,11 @@ function route(req, res) {
         const id = friendshipIdMatch[1];
         if (method === 'PATCH') return friendshipController.updateStatus(req, res, id);
         if (method === 'DELETE') return friendshipController.remove(req, res, id);
+    }
+
+    // Upload
+    if (pathname === '/api/uploads' && method === 'POST') {
+        return uploadController.upload(req, res);
     }
 
     // 404

@@ -9,320 +9,322 @@ import SwiftUI
 
 struct Profile: View {
     @Bindable var authViewModel: AuthViewModel
-    @State private var viewModel = FriendsViewModel()
+    @State private var friendsViewModel = FriendsViewModel()
+    @State private var mapViewModel = MapViewModel()
     @State private var showLogoutAlert = false
     @State private var showEditProfile = false
-    var currentUser: User?
-    
+
     var body: some View {
-        
-            NavigationStack {
-                VStack(spacing: 20) {
-                    if let user = authViewModel.currentUser {
-                        
-                        
-                        VStack {
-                            HStack {
-                                Text("Profil")
-                                Spacer()
-                            }
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .padding()
-                            HStack(alignment: .center) {
-                                Group {
-                                    if let urlString = user.profileImageUrl,
-                                       let url = URL(string: urlString) {
-                                        AsyncImage(url: url) { image in
-                                            image
-                                                .resizable()
-                                                .scaledToFill()
-                                        } placeholder: {
-                                            Circle()
-                                                .fill(Color(.systemGray4))
-                                                .overlay(Image(systemName: "person.fill").foregroundStyle(.white))
-                                        }
-                                    } else {
-                                        Circle()
-                                            .fill(Color(.systemGray4))
-                                            .overlay(Image(systemName: "person.fill").font(.title2).foregroundStyle(.white))
-                                    }
-                                }
-                                .frame(width: 80, height: 80)
-                                .clipShape(Circle())
-                                .overlay(
-                                    Circle().stroke(.gray.opacity(0.2), lineWidth: 2)
-                                )
-                                Spacer()
-                                VStack (alignment: .leading) {
-                                    HStack {
-                                        Spacer()
-                                        Text("@\(user.username)")
-                                            .fontWeight(.bold)
-                                        Spacer()
-                                        Spacer()
-                                        Spacer()
-                                        Spacer()
-                                        Spacer()
-                                        
-                                    }
-                                    HStack  {
-                                        Spacer()
-                                        VStack (alignment: .leading){
-                                            Text("\(viewModel.friends.count)")
-                                                .fontWeight(.semibold)
-                                            Text("Freunde")
-                                                .font(.subheadline)
-                                        }
-                                        Spacer()
-                                        VStack (alignment: .leading) {
-                                            Text("27")
-                                                .fontWeight(.semibold)
-                                            Text("Bewertet")
-                                                .font(.subheadline)
-                                        }
-                                        Spacer()
-                                        VStack (alignment: .leading) {
-                                            Text("XX")
-                                                .fontWeight(.semibold)
-                                            Text("KPI")
-                                                .font(.subheadline)
-                                        }
-                                        Spacer()
-                                    }
-                                }
-                                Spacer()
-                            }
+        NavigationStack {
+            ScrollView {
+                if let user = authViewModel.currentUser {
+                    VStack(spacing: 0) {
+                        // Profile Header
+                        profileHeader(user: user)
+
+                        // Stats Bar
+                        statsBar(user: user)
+                            .padding(.top, 4)
+
+                        // Action Buttons
+                        actionButtons
                             .padding(.horizontal)
-                            HStack(spacing: 8) {
-                                Button(action: {
-                                    showEditProfile = true
-                                }) {
-                                    Text("Bearbeiten")
-                                        .font(.subheadline)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 8)
-                                        .background(Color(.systemGray6))
-                                        .cornerRadius(15)
-                                        .foregroundStyle(Color(.systemIndigo))
-                                }
-                                Button(action: {
-                                    print("Profil teilen")
-                                }) {
-                                    Text("Profil teilen")
-                                        .font(.subheadline)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 8)
-                                        .background(Color(.systemGray6))
-                                        .cornerRadius(15)
-                                        .foregroundStyle(Color(.systemIndigo))
-                                }
-                            }
-                            .padding()
-                        }
-                        .frame(maxWidth: .infinity)
-                        .background(Color(.systemIndigo))
-                        .cornerRadius(15)
-                        .foregroundStyle(Color(.white))
-                        .fontWeight(.semibold)
-                        
-                        
-                        VStack {
-                            HStack {
-                                Text("Orte")
-                                Spacer()
-                            }
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .padding()
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 20) {
-                                    VStack {
-                                        Image("IMGSTART01")
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 60, height: 60)
-                                            .clipShape(Circle())
-                                    }
-                                    VStack {
-                                        Image("IMGSTART02")
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 60, height: 60)
-                                            .clipShape(Circle())
-                                    }
-                                    VStack {
-                                        Image("IMGSTART03")
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 60, height: 60)
-                                            .clipShape(Circle())
-                                    }
-                                    VStack {
-                                        Image("IMGSTART04")
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 60, height: 60)
-                                            .clipShape(Circle())
-                                    }
-                                    VStack {
-                                        Image("IMGSTART05")
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 60, height: 60)
-                                            .clipShape(Circle())
-                                    }
-                                    VStack {
-                                        Image("IMGSTART06")
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 60, height: 60)
-                                            .clipShape(Circle())
-                                    }
-                                    VStack {
-                                        Image("IMGSTART07")
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 60, height: 60)
-                                            .clipShape(Circle())
-                                    }
-                                    VStack {
-                                        Image("IMGSTART08")
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 60, height: 60)
-                                            .clipShape(Circle())
-                                    }
-                                    VStack {
-                                        Image("IMGSTART09")
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 60, height: 60)
-                                            .clipShape(Circle())
-                                    }
-                                }
-                                .padding(.horizontal)
-                                .padding(.bottom)
-                            }
-                            
-                            
-                        }
-                        .frame(maxWidth: .infinity)
-                        .background(Color(.systemIndigo))
-                        .cornerRadius(15)
-                        .foregroundStyle(Color(.white))
-                        .fontWeight(.semibold)
-                     
-                        
-                        VStack {
-                            HStack {
-                                Text("Weiteres")
-                                Spacer()
-                            }
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .padding()
-                            
-                            VStack {
-                                Text("Datenschutz")
-                            }
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color(.white))
-                            .cornerRadius(15)
-                            .foregroundStyle(Color(.systemIndigo))
-                            .fontWeight(.semibold)
+                            .padding(.top, 16)
+
+                        // Meine Orte
+                        myLocations
+                            .padding(.top, 24)
+
+                        // Settings Section
+                        settingsSection
+                            .padding(.top, 24)
                             .padding(.horizontal)
-                            
-                            VStack {
-                                Text("Impressum")
-                            }
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color(.white))
-                            .cornerRadius(15)
-                            .foregroundStyle(Color(.systemIndigo))
-                            .fontWeight(.semibold)
-                            .padding(.horizontal)
-                            
-                            HStack {
-                                Button(role: .destructive) {
-                                    showLogoutAlert = true
-                                } label: {
-                                    Text("Abmelden")
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                        .background(Color(.systemRed))
-                                        .cornerRadius(15)
-                                        .foregroundStyle(Color(.white))
-                                        .fontWeight(.semibold)
-                                }
-                                .alert("Abmelden?", isPresented: $showLogoutAlert) {
-                                    
-                                    Button("Abmelden", role: .destructive) {
-                                        authViewModel.signOut()
-                                    }
-                                    
-                                    Button("Abbrechen", role: .cancel) { }
-                                    
-                                } message: {
-                                    Text("Möchtest du dich wirklich abmelden?")
-                                }
-                            }
-                            .padding()
-                        }
-                        .frame(maxWidth: .infinity)
-                        .background(Color(.systemIndigo))
-                        .cornerRadius(15)
-                        .foregroundStyle(Color(.white))
-                        .fontWeight(.semibold)
-                        Spacer()
+
+                        Spacer(minLength: 32)
                     }
                 }
-                .padding()
             }
-        
-        .sheet(isPresented: $showEditProfile) {
-            EditProfileView(authViewModel: authViewModel)
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Profil")
+            .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $showEditProfile) {
+                EditProfileView(authViewModel: authViewModel)
+            }
+            .task {
+                guard let userId = authViewModel.currentUser?.id else { return }
+                await friendsViewModel.loadFriends(userId: userId)
+                await mapViewModel.loadLocations(userId: userId)
+            }
+            .refreshable {
+                guard let userId = authViewModel.currentUser?.id else { return }
+                await friendsViewModel.loadFriends(userId: userId)
+                await mapViewModel.loadLocations(userId: userId)
+            }
         }
-        .task {
-            guard let userId = authViewModel.currentUser?.id else { return }
-            await viewModel.loadFriends(userId: userId)
-            await viewModel.loadPendingRequests(userId: userId)
+    }
+
+    // MARK: - Profile Header
+
+    private func profileHeader(user: User) -> some View {
+        VStack(spacing: 12) {
+            // Avatar
+            Group {
+                if let urlString = user.profileImageUrl,
+                   let url = URL(string: urlString) {
+                    AsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } placeholder: {
+                        profilePlaceholder
+                    }
+                } else {
+                    profilePlaceholder
+                }
+            }
+            .frame(width: 96, height: 96)
+            .clipShape(Circle())
+            .overlay(Circle().stroke(Color(.systemGray4), lineWidth: 0.5))
+            .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
+
+            // Name & Username
+            VStack(spacing: 4) {
+                Text(user.displayName)
+                    .font(.title2.bold())
+
+                Text("@\(user.username)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            // Bio
+            if let bio = user.bio, !bio.isEmpty {
+                Text(bio)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
         }
-        .refreshable {
-            guard let userId = authViewModel.currentUser?.id else { return }
-            await viewModel.loadFriends(userId: userId)
-            await viewModel.loadPendingRequests(userId: userId)
+        .padding(.top, 16)
+        .padding(.bottom, 8)
+    }
+
+    // MARK: - Stats
+
+    private func statsBar(user: User) -> some View {
+        HStack {
+            statItem(value: "\(friendsViewModel.friends.count)", label: "Freunde")
+            Divider()
+                .frame(height: 32)
+            statItem(value: "\(myLocationCount)", label: "Orte")
         }
-        
+        .padding(.vertical, 12)
+        .padding(.horizontal, 32)
+    }
+
+    private var myLocationCount: Int {
+        guard let userId = authViewModel.currentUser?.id else { return 0 }
+        return mapViewModel.locations.filter { $0.createdBy == userId }.count
+    }
+
+    private func statItem(value: String, label: String) -> some View {
+        VStack(spacing: 2) {
+            Text(value)
+                .font(.title3.bold())
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Action Buttons
+
+    private var actionButtons: some View {
+        HStack(spacing: 8) {
+            Button {
+                showEditProfile = true
+            } label: {
+                Text("Profil bearbeiten")
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(Color(.systemGray5))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                // Share
+            } label: {
+                Image(systemName: "square.and.arrow.up")
+                    .font(.subheadline.weight(.semibold))
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 16)
+                    .background(Color(.systemGray5))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - My Locations
+
+    private var myLocations: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Meine Orte")
+                .font(.headline)
+                .padding(.horizontal)
+
+            let ownLocations = mapViewModel.locations.filter { $0.createdBy == authViewModel.currentUser?.id }
+
+            if ownLocations.isEmpty {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 8) {
+                        Image(systemName: "mappin.slash")
+                            .font(.title)
+                            .foregroundStyle(.tertiary)
+                        Text("Noch keine Orte hinzugefuegt")
+                            .font(.subheadline)
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.vertical, 24)
+                    Spacer()
+                }
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: 12) {
+                        ForEach(ownLocations) { location in
+                            locationCard(location: location)
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
+        }
+    }
+
+    private func locationCard(location: Location) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let urlString = location.imageUrls.first,
+               let url = URL(string: urlString) {
+                AsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                } placeholder: {
+                    Rectangle()
+                        .fill(Color(.systemGray5))
+                        .overlay(ProgressView())
+                }
+                .frame(width: 140, height: 140)
+                .clipped()
+            } else {
+                Rectangle()
+                    .fill(Color(.systemGray5))
+                    .frame(width: 140, height: 140)
+                    .overlay(
+                        Image(systemName: "mappin")
+                            .font(.title2)
+                            .foregroundStyle(.tertiary)
+                    )
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(location.name)
+                    .font(.caption.bold())
+                    .lineLimit(1)
+                Text(location.category)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(8)
+        }
+        .frame(width: 140)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    // MARK: - Settings
+
+    private var settingsSection: some View {
+        VStack(spacing: 0) {
+            settingsRow(icon: "shield", title: "Datenschutz")
+            Divider().padding(.leading, 44)
+            settingsRow(icon: "info.circle", title: "Impressum")
+            Divider().padding(.leading, 44)
+            Button {
+                showLogoutAlert = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "rectangle.portrait.and.arrow.right")
+                        .frame(width: 20)
+                        .foregroundStyle(.red)
+                    Text("Abmelden")
+                        .foregroundStyle(.red)
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+            }
+        }
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .alert("Abmelden?", isPresented: $showLogoutAlert) {
+            Button("Abmelden", role: .destructive) {
+                authViewModel.signOut()
+            }
+            Button("Abbrechen", role: .cancel) {}
+        } message: {
+            Text("Moechtest du dich wirklich abmelden?")
+        }
+    }
+
+    private func settingsRow(icon: String, title: String) -> some View {
+        Button {
+            // Navigation
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .frame(width: 20)
+                    .foregroundStyle(.primary)
+                Text(title)
+                    .foregroundStyle(.primary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+        }
+    }
+
+    private var profilePlaceholder: some View {
+        Circle()
+            .fill(Color(.systemGray4))
+            .overlay(
+                Image(systemName: "person.fill")
+                    .font(.largeTitle)
+                    .foregroundStyle(.white)
+            )
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
 #Preview {
-    let vm = AuthViewModel()
-    vm.currentUser = .preview
-    return Profile(authViewModel: vm)
+    let viewModel = AuthViewModel()
+    viewModel.currentUser = .preview
+    return Profile(authViewModel: viewModel)
 }
-
 
 extension User {
     static let preview = User(
         id: UUID(uuidString: "e5f9bcaa-20f7-4296-a7f1-f2caf539d474")!,
         email: "oleboehm4321@icloud.com",
         username: "oleboehm4321",
-        displayName: "Ole Böhm",
+        displayName: "Ole Boehm",
         profileImageUrl: nil,
         createdAt: "2026-01-01T12:00:00Z",
         updatedAt: nil,
@@ -337,4 +339,3 @@ extension User {
         stats: ["quests": 12, "friends": 5]
     )
 }
-

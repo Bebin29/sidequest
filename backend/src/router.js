@@ -37,6 +37,11 @@ function route(req, res) {
         return friendshipController.searchUsers(req, res, parsed.query);
     }
 
+    // Username availability check
+    if (pathname === '/api/users/check-username' && method === 'GET') {
+        return userController.checkUsername(req, res, parsed.query);
+    }
+
     // Users routes
     if (pathname === '/api/users' && method === 'GET') {
         return userController.getAll(req, res, parsed.query);

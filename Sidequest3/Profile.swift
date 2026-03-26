@@ -11,6 +11,7 @@ struct Profile: View {
     @Bindable var authViewModel: AuthViewModel
     @State private var viewModel = FriendsViewModel()
     @State private var showLogoutAlert = false
+    @State private var showEditProfile = false
     var currentUser: User?
     
     var body: some View {
@@ -29,14 +30,29 @@ struct Profile: View {
                             .fontWeight(.semibold)
                             .padding()
                             HStack(alignment: .center) {
-                                Image("Image01")
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 80, height: 80)
-                                    .clipShape(Circle())
-                                    .overlay(
-                                        Circle().stroke(.gray.opacity(0.2), lineWidth: 2)
-                                    )
+                                Group {
+                                    if let urlString = user.profileImageUrl,
+                                       let url = URL(string: urlString) {
+                                        AsyncImage(url: url) { image in
+                                            image
+                                                .resizable()
+                                                .scaledToFill()
+                                        } placeholder: {
+                                            Circle()
+                                                .fill(Color(.systemGray4))
+                                                .overlay(Image(systemName: "person.fill").foregroundStyle(.white))
+                                        }
+                                    } else {
+                                        Circle()
+                                            .fill(Color(.systemGray4))
+                                            .overlay(Image(systemName: "person.fill").font(.title2).foregroundStyle(.white))
+                                    }
+                                }
+                                .frame(width: 80, height: 80)
+                                .clipShape(Circle())
+                                .overlay(
+                                    Circle().stroke(.gray.opacity(0.2), lineWidth: 2)
+                                )
                                 Spacer()
                                 VStack (alignment: .leading) {
                                     HStack {
@@ -80,7 +96,7 @@ struct Profile: View {
                             .padding(.horizontal)
                             HStack(spacing: 8) {
                                 Button(action: {
-                                    print("Bearbeiten")
+                                    showEditProfile = true
                                 }) {
                                     Text("Bearbeiten")
                                         .font(.subheadline)
@@ -266,6 +282,9 @@ struct Profile: View {
                 .padding()
             }
         
+        .sheet(isPresented: $showEditProfile) {
+            EditProfileView(authViewModel: authViewModel)
+        }
         .task {
             guard let userId = authViewModel.currentUser?.id else { return }
             await viewModel.loadFriends(userId: userId)

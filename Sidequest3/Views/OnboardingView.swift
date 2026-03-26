@@ -71,7 +71,7 @@ struct OnboardingView: View {
                                 .font(.caption)
                                 .foregroundStyle(.red)
                         }
-                        if username.count > 0 && username.count < 3 {
+                        if !username.isEmpty && username.count < 3 {
                             Text("Mindestens 3 Zeichen")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)

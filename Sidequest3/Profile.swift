@@ -294,7 +294,7 @@ struct Profile: View {
 #Preview {
     let vm = AuthViewModel()
     vm.currentUser = .preview
-    return Profile(authViewModel: vm)
+    return Home(authViewModel: vm)
 }
 
 

@@ -13,6 +13,9 @@ struct Profile: View {
     @State private var mapViewModel = MapViewModel()
     @State private var showLogoutAlert = false
     @State private var showEditProfile = false
+    @State private var showFriends = false
+    @State private var selectedLocation: Location?
+    @State private var showLocationDetail = false
 
     var body: some View {
         NavigationStack {
@@ -49,6 +52,16 @@ struct Profile: View {
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showEditProfile) {
                 EditProfileView(authViewModel: authViewModel)
+            }
+            .sheet(isPresented: $showFriends) {
+                FriendsView(currentUser: authViewModel.currentUser)
+            }
+            .sheet(isPresented: $showLocationDetail) {
+                if let location = selectedLocation {
+                    NavigationStack {
+                        LocationDetailView(location: location, currentUserId: authViewModel.currentUser?.id)
+                    }
+                }
             }
             .task {
                 guard let userId = authViewModel.currentUser?.id else { return }
@@ -114,9 +127,16 @@ struct Profile: View {
 
     private func statsBar(user: User) -> some View {
         HStack {
-            statItem(value: "\(friendsViewModel.friends.count)", label: "Freunde")
+            Button {
+                showFriends = true
+            } label: {
+                statItem(value: "\(friendsViewModel.friends.count)", label: "Freunde")
+            }
+            .buttonStyle(.plain)
+
             Divider()
                 .frame(height: 32)
+
             statItem(value: "\(myLocationCount)", label: "Orte")
         }
         .padding(.vertical, 12)
@@ -155,9 +175,7 @@ struct Profile: View {
             }
             .buttonStyle(.plain)
 
-            Button {
-                // Share
-            } label: {
+            ShareLink(item: "Schau dir mein Profil auf Sidequest an! @\(authViewModel.currentUser?.username ?? "")") {
                 Image(systemName: "square.and.arrow.up")
                     .font(.subheadline.weight(.semibold))
                     .padding(.vertical, 8)
@@ -165,7 +183,6 @@ struct Profile: View {
                     .background(Color(.systemGray5))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
-            .buttonStyle(.plain)
         }
     }
 
@@ -197,7 +214,13 @@ struct Profile: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(spacing: 12) {
                         ForEach(ownLocations) { location in
-                            locationCard(location: location)
+                            Button {
+                                selectedLocation = location
+                                showLocationDetail = true
+                            } label: {
+                                locationCard(location: location)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                     .padding(.horizontal)

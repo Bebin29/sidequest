@@ -15,7 +15,6 @@ struct Profile: View {
     @State private var showEditProfile = false
     @State private var showFriends = false
     @State private var selectedLocation: Location?
-    @State private var showLocationDetail = false
 
     var body: some View {
         NavigationStack {
@@ -56,10 +55,22 @@ struct Profile: View {
             .sheet(isPresented: $showFriends) {
                 FriendsView(currentUser: authViewModel.currentUser)
             }
-            .sheet(isPresented: $showLocationDetail) {
-                if let location = selectedLocation {
-                    NavigationStack {
-                        LocationDetailView(location: location, currentUserId: authViewModel.currentUser?.id)
+            .sheet(item: $selectedLocation) { location in
+                NavigationStack {
+                    LocationDetailView(location: location, currentUserId: authViewModel.currentUser?.id, onDelete: {
+                        selectedLocation = nil
+                        if let userId = authViewModel.currentUser?.id {
+                            Task { await mapViewModel.loadLocations(userId: userId) }
+                        }
+                    }, onUpdate: { updated in
+                        if let index = mapViewModel.locations.firstIndex(where: { $0.id == updated.id }) {
+                            mapViewModel.locations[index] = updated
+                        }
+                    })
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button("Fertig") { selectedLocation = nil }
+                        }
                     }
                 }
             }
@@ -216,7 +227,6 @@ struct Profile: View {
                         ForEach(ownLocations) { location in
                             Button {
                                 selectedLocation = location
-                                showLocationDetail = true
                             } label: {
                                 locationCard(location: location)
                             }

@@ -14,7 +14,9 @@ struct Sidequest3App: App {
 
     var body: some Scene {
         WindowGroup {
-            if authViewModel.isAuthenticated {
+            if authViewModel.isAuthenticated && authViewModel.needsOnboarding {
+                OnboardingView(authViewModel: authViewModel)
+            } else if authViewModel.isAuthenticated {
                 Home(authViewModel: authViewModel)
                     .environmentObject(container)
             } else {

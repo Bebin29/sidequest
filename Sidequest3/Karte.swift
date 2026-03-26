@@ -7,7 +7,6 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
     private let manager = CLLocationManager()
     private var hasSetInitialPosition = false
-
     @Published var lastLocation: CLLocation?
     @Published var position: MapCameraPosition = .region(MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 52.5200, longitude: 13.4050),
@@ -35,6 +34,18 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             ))
         }
     }
+    func centerOnUser() {
+        guard let location = lastLocation else { return }
+
+        withAnimation(.easeInOut(duration: 0.6)) {
+            self.position = .region(
+                MKCoordinateRegion(
+                    center: location.coordinate,
+                    span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)
+                )
+            )
+        }
+    }
 }
 
 struct Karte: View {
@@ -54,6 +65,7 @@ struct Karte: View {
                     Annotation(location.name, coordinate: CLLocationCoordinate2D(
                         latitude: location.latitude,
                         longitude: location.longitude
+                            
                     )) {
                         LocationPin(imageUrl: location.imageUrls.first)
                             .onTapGesture {
@@ -72,23 +84,40 @@ struct Karte: View {
 
             VStack {
                 Spacer()
-
+                
                 HStack {
                     Spacer()
+                  
+                    VStack(spacing: 12) {
+                        
+                        Button(action: {
+                            locationManager.centerOnUser()
+                        }) {
+                            Image(systemName: "location.fill")
+                                .font(.title2)
+                                .foregroundColor(Color.indigo)
+                                .frame(width: 50, height: 50)
+                                .background(Color.white)
+                                .clipShape(Circle())
+                                .shadow(radius: 5)
+                                .fontWeight(.semibold)
+                        }
 
-                    Button(action: {
-                        showSearchSheet = true
-                    }) {
-                        Image(systemName: "plus")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                            .padding()
-                            .background(.ultraThinMaterial)
-                            .background(Color.blue)
-                            .clipShape(Circle())
-                            .shadow(radius: 5)
-                    }
-                    .padding()
+                        Button(action: {
+                            showSearchSheet = true
+                        }) {
+                            Image(systemName: "plus")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                                .frame(width: 50, height: 50)
+                                .background(Color.indigo)
+                                .clipShape(Circle())
+                                .shadow(radius: 5)
+                                .fontWeight(.semibold)
+                        }
+
+                    }.padding()
+                    
                 }
             }
         }
@@ -450,5 +479,33 @@ struct AddLocationFormView: View {
 }
 
 #Preview {
-    Home(authViewModel: AuthViewModel())
+    let vm = AuthViewModel()
+    vm.currentUser = .preview2
+    return Home(authViewModel: vm)
 }
+
+
+extension User {
+    static let preview2 = User(
+        id: UUID(uuidString: "e5f9bcaa-20f7-4296-a7f1-f2caf539d474")!,
+        email: "oleboehm4321@icloud.com",
+        username: "oleboehm4321",
+        displayName: "Ole Böhm",
+        profileImageUrl: nil,
+        createdAt: "2026-01-01T12:00:00Z",
+        updatedAt: nil,
+        lastSeenAt: nil,
+        bio: "This is a preview user",
+        preferences: ["theme": "dark"],
+        favoriteCategories: ["gaming", "sports"],
+        isVerified: true,
+        isModerator: false,
+        isPrivate: false,
+        fcmToken: nil,
+        stats: ["quests": 12, "friends": 5]
+    )
+}
+
+
+
+

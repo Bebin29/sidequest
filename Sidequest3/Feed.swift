@@ -216,21 +216,6 @@ struct FeedCard: View {
                 }
 
                 Spacer()
-
-                // Distance badge
-                if let distance = formattedDistance {
-                    HStack(spacing: 3) {
-                        Image(systemName: "location")
-                            .font(.caption2)
-                        Text(distance)
-                            .font(.caption2.weight(.medium))
-                    }
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color(.systemGray6))
-                    .clipShape(Capsule())
-                }
             }
             .padding(.horizontal, 4)
             .padding(.bottom, 10)
@@ -340,6 +325,16 @@ struct FeedCard: View {
                 }
 
                 Spacer()
+
+                if let distance = formattedDistance {
+                    HStack(spacing: 3) {
+                        Image(systemName: "location")
+                            .font(.caption2)
+                        Text(distance)
+                            .font(.caption2.weight(.medium))
+                    }
+                    .foregroundStyle(.secondary)
+                }
 
                 if location.imageUrls.count > 1 {
                     HStack(spacing: 4) {

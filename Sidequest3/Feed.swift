@@ -358,8 +358,6 @@ struct FeedCard: View {
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
-        .contentShape(RoundedRectangle(cornerRadius: 20))
-        .onTapGesture { onTap() }
     }
 
     // MARK: - Subviews

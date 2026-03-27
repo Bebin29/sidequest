@@ -5,6 +5,22 @@
 
 import SwiftUI
 
+private enum ImageCacheStore {
+    static let cache: URLCache = {
+        URLCache(
+            memoryCapacity: 50 * 1024 * 1024,
+            diskCapacity: 200 * 1024 * 1024
+        )
+    }()
+
+    static let session: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.urlCache = cache
+        config.requestCachePolicy = .returnCacheDataElseLoad
+        return URLSession(configuration: config)
+    }()
+}
+
 struct CachedAsyncImage<Content: View, Placeholder: View>: View {
     let url: URL?
     @ViewBuilder let content: (Image) -> Content
@@ -14,21 +30,6 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
     @State private var isLoading = false
     @State private var failed = false
     @State private var retryCount = 0
-
-    private static var cache: URLCache {
-        let cache = URLCache(
-            memoryCapacity: 50 * 1024 * 1024,  // 50 MB RAM
-            diskCapacity: 200 * 1024 * 1024     // 200 MB Disk
-        )
-        return cache
-    }
-
-    private static var session: URLSession = {
-        let config = URLSessionConfiguration.default
-        config.urlCache = CachedAsyncImage.cache
-        config.requestCachePolicy = .returnCacheDataElseLoad
-        return URLSession(configuration: config)
-    }()
 
     var body: some View {
         Group {
@@ -57,7 +58,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         let request = URLRequest(url: url)
 
         // Check cache first
-        if let cached = Self.cache.cachedResponse(for: request),
+        if let cached = ImageCacheStore.cache.cachedResponse(for: request),
            let uiImage = UIImage(data: cached.data) {
             self.image = uiImage
             isLoading = false
@@ -65,11 +66,11 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         }
 
         do {
-            let (data, response) = try await Self.session.data(for: request)
+            let (data, response) = try await ImageCacheStore.session.data(for: request)
             if let uiImage = UIImage(data: data) {
                 // Store in cache
                 let cachedResponse = CachedURLResponse(response: response, data: data)
-                Self.cache.storeCachedResponse(cachedResponse, for: request)
+                ImageCacheStore.cache.storeCachedResponse(cachedResponse, for: request)
                 self.image = uiImage
             } else {
                 failed = true

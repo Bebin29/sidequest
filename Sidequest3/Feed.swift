@@ -144,7 +144,6 @@ struct FeedCard: View {
                         .padding()
                         .background(Color.indigo)
                         .clipShape(Circle())
-                        .shadow(radius: 4)
                 }
                 
                 Button(action: {
@@ -156,7 +155,6 @@ struct FeedCard: View {
                         .padding()
                         .background(Color.indigo)
                         .clipShape(Circle())
-                        .shadow(radius: 4)
                 }
             }
             .padding()
@@ -167,7 +165,6 @@ struct FeedCard: View {
             RoundedRectangle(cornerRadius: 25)
                 .stroke(Color.white.opacity(0.8), lineWidth: 3)
         )
-        .shadow(radius: 5)
     }
     
     func formattedDate() -> String {

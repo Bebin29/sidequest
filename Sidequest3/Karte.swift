@@ -53,6 +53,7 @@ struct Karte: View {
     @StateObject private var locationManager = LocationManager()
     @State private var mapViewModel = MapViewModel()
     @State private var showSearchSheet = false
+    @State private var showFilterSheet = false
     @State private var selectedLocationId: UUID?
     @State private var showDetail = false
     var userId: UUID?
@@ -86,7 +87,20 @@ struct Karte: View {
                     Spacer()
                   
                     VStack(spacing: 12) {
-                        
+
+                        Button(action: {
+                            showFilterSheet = true
+                        }) {
+                            Image(systemName: mapViewModel.filter.isEmpty ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(mapViewModel.filter.isEmpty ? Color.indigo : .white)
+                                .frame(width: 50, height: 50)
+                                .background(mapViewModel.filter.isEmpty ? Color.white : Color.indigo)
+                                .clipShape(Circle())
+                                .shadow(radius: 5)
+                                .fontWeight(.semibold)
+                        }
+
                         Button(action: {
                             locationManager.centerOnUser()
                         }) {
@@ -122,6 +136,17 @@ struct Karte: View {
             PlaceSearchView(mapViewModel: mapViewModel, userId: userId) {
                 showSearchSheet = false
             }
+        }
+        .sheet(isPresented: $showFilterSheet) {
+            LocationFilterView(
+                mapViewModel: mapViewModel,
+                userLatitude: locationManager.lastLocation?.coordinate.latitude,
+                userLongitude: locationManager.lastLocation?.coordinate.longitude,
+                onApply: {
+                    guard let userId else { return }
+                    Task { await mapViewModel.loadLocations(userId: userId) }
+                }
+            )
         }
         .task {
             guard let userId else { return }

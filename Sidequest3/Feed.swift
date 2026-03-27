@@ -308,6 +308,8 @@ struct FeedCard: View {
             }
             .aspectRatio(1, contentMode: .fit)
             .clipShape(RoundedRectangle(cornerRadius: 16))
+            .contentShape(RoundedRectangle(cornerRadius: 16))
+            .onTapGesture { onTap() }
 
             // Description
             if let description = location.description, !description.isEmpty {
@@ -320,17 +322,21 @@ struct FeedCard: View {
             }
 
             // Action row
-            HStack(spacing: 16) {
+            HStack(spacing: 12) {
                 Button { onTap() } label: {
                     Label("Details", systemImage: "arrow.right.circle")
                         .font(.caption.weight(.medium))
                         .foregroundStyle(.indigo)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 4)
                 }
 
                 Button { onShowOnMap?() } label: {
                     Label("Karte", systemImage: "map")
                         .font(.caption.weight(.medium))
                         .foregroundStyle(.indigo)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 4)
                 }
 
                 Spacer()
@@ -344,19 +350,9 @@ struct FeedCard: View {
                     }
                     .foregroundStyle(.secondary)
                 }
-
-                if location.imageUrls.count > 1 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "photo.on.rectangle")
-                            .font(.caption2)
-                        Text("\(location.imageUrls.count) Fotos")
-                            .font(.caption2)
-                    }
-                    .foregroundStyle(.tertiary)
-                }
             }
             .padding(.horizontal, 4)
-            .padding(.top, 10)
+            .padding(.top, 4)
         }
         .padding(12)
         .background(Color(.secondarySystemGroupedBackground))
@@ -437,17 +433,25 @@ struct FeedCard: View {
         }
     }
 
+    private static let isoFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        f.locale = Locale(identifier: "de_DE")
+        return f
+    }()
+
+    private static let relativeFormatter: RelativeDateTimeFormatter = {
+        let f = RelativeDateTimeFormatter()
+        f.locale = Locale(identifier: "de_DE")
+        f.unitsStyle = .short
+        return f
+    }()
+
     private func formattedDate(_ dateString: String) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-        formatter.locale = Locale(identifier: "de_DE")
-        guard let date = formatter.date(from: String(dateString.prefix(19))) else {
+        guard let date = Self.isoFormatter.date(from: String(dateString.prefix(19))) else {
             return ""
         }
-        let relative = RelativeDateTimeFormatter()
-        relative.locale = Locale(identifier: "de_DE")
-        relative.unitsStyle = .short
-        return relative.localizedString(for: date, relativeTo: Date())
+        return Self.relativeFormatter.localizedString(for: date, relativeTo: Date())
     }
 }
 

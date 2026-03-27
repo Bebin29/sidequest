@@ -80,7 +80,7 @@ struct Karte: View {
                     showDetail = true
                 }
             }
-            .onChange(of: focusLocation) { _, location in
+            .onChange(of: focusLocation, initial: true) { _, location in
                 guard let location else { return }
                 withAnimation(.easeInOut(duration: 0.6)) {
                     locationManager.position = .region(MKCoordinateRegion(

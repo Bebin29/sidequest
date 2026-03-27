@@ -13,7 +13,7 @@ struct RingCodeView: View {
 
     private let ringCount = 3
     private let positionsPerRing = 24
-    private let gapSize: CGFloat = 4       // Gap between segments AND between rings (in points)
+    private let gapSize: CGFloat = 7       // Gap between segments AND between rings (in points)
     private let strokeWidth: CGFloat = 5
 
     var body: some View {

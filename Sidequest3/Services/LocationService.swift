@@ -7,14 +7,13 @@ import Foundation
 
 struct LocationFilter: Equatable {
     var category: LocationCategory?
-    var minRating: Double?
     var search: String?
     var latitude: Double?
     var longitude: Double?
     var radiusMeters: Double?
 
     var isEmpty: Bool {
-        category == nil && minRating == nil && (search ?? "").isEmpty && radiusMeters == nil
+        category == nil && (search ?? "").isEmpty && radiusMeters == nil
     }
 }
 
@@ -50,9 +49,6 @@ final class LocationService {
 
         if let category = filter.category {
             queryItems.append(URLQueryItem(name: "category", value: category.rawValue))
-        }
-        if let minRating = filter.minRating {
-            queryItems.append(URLQueryItem(name: "min_rating", value: String(minRating)))
         }
         if let search = filter.search, !search.isEmpty {
             queryItems.append(URLQueryItem(name: "search", value: search))

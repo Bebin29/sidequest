@@ -33,12 +33,6 @@ async function getAll(req, res, query) {
             paramIdx++;
         }
 
-        if (query.min_rating) {
-            filters.push(`average_rating >= $${paramIdx}`);
-            params.push(parseFloat(query.min_rating));
-            paramIdx++;
-        }
-
         if (query.search) {
             filters.push(`(name ILIKE $${paramIdx} OR address ILIKE $${paramIdx})`);
             params.push(`%${query.search}%`);

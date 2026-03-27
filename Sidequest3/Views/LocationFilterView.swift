@@ -13,7 +13,6 @@ struct LocationFilterView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedCategory: LocationCategory?
-    @State private var minRating: Double = 0
     @State private var searchText: String = ""
     @State private var radiusKm: Double = 0
     @State private var useRadius: Bool = false
@@ -54,30 +53,6 @@ struct LocationFilterView: View {
                             }
                         }
                         .padding(.vertical, 4)
-                    }
-                }
-
-                // Mindestbewertung
-                Section("Mindestbewertung") {
-                    HStack {
-                        ForEach(1...5, id: \.self) { star in
-                            Image(systemName: Double(star) <= minRating ? "star.fill" : "star")
-                                .foregroundStyle(Double(star) <= minRating ? .yellow : .gray)
-                                .font(.title3)
-                                .onTapGesture {
-                                    if minRating == Double(star) {
-                                        minRating = 0
-                                    } else {
-                                        minRating = Double(star)
-                                    }
-                                }
-                        }
-                        Spacer()
-                        if minRating > 0 {
-                            Text("ab \(Int(minRating)) Sterne")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
                     }
                 }
 
@@ -126,7 +101,6 @@ struct LocationFilterView: View {
             .onAppear {
                 // Bestehende Filter laden
                 selectedCategory = mapViewModel.filter.category
-                minRating = mapViewModel.filter.minRating ?? 0
                 searchText = mapViewModel.filter.search ?? ""
                 if let radius = mapViewModel.filter.radiusMeters {
                     useRadius = true
@@ -138,7 +112,6 @@ struct LocationFilterView: View {
 
     private func applyFilters() {
         mapViewModel.filter.category = selectedCategory
-        mapViewModel.filter.minRating = minRating > 0 ? minRating : nil
         mapViewModel.filter.search = searchText.isEmpty ? nil : searchText
 
         if useRadius, let lat = userLatitude, let lon = userLongitude, radiusKm > 0 {
@@ -154,7 +127,6 @@ struct LocationFilterView: View {
 
     private func resetFilters() {
         selectedCategory = nil
-        minRating = 0
         searchText = ""
         radiusKm = 1
         useRadius = false

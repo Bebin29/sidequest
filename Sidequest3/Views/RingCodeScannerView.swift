@@ -20,6 +20,8 @@ struct RingCodeScannerView: View {
     @State private var statusText = "Ring-Code in den Kreis halten"
     @State private var lastLookupCode: String?
 
+    private let guideSize: CGFloat = 240
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -27,13 +29,13 @@ struct RingCodeScannerView: View {
                     .ignoresSafeArea()
 
                 // Darkened edges with cutout
-                Color.black.opacity(0.4)
+                Color.black.opacity(0.5)
                     .ignoresSafeArea()
                     .mask(
                         Rectangle()
                             .overlay(
                                 Circle()
-                                    .frame(width: 260, height: 260)
+                                    .frame(width: guideSize, height: guideSize)
                                     .blendMode(.destinationOut)
                             )
                             .compositingGroup()
@@ -43,10 +45,10 @@ struct RingCodeScannerView: View {
                 VStack {
                     Spacer()
 
-                    // Scan guide
+                    // Scan guide — same size as cutout
                     Circle()
-                        .stroke(.white.opacity(0.6), lineWidth: 2)
-                        .frame(width: 220, height: 220)
+                        .stroke(.white.opacity(0.7), lineWidth: 2)
+                        .frame(width: guideSize, height: guideSize)
 
                     Spacer().frame(height: 40)
 
@@ -77,6 +79,7 @@ struct RingCodeScannerView: View {
                         .foregroundStyle(.white)
                 }
             }
+            .onDisappear { scanner.stop() }
             .onChange(of: scanner.detectedCode) { _, code in
                 guard let code, code != lastLookupCode, !isSearching else { return }
                 lastLookupCode = code
@@ -89,28 +92,50 @@ struct RingCodeScannerView: View {
         isSearching = true
         statusText = "Suche User..."
 
-        do {
-            let user = try await FriendshipService().findUserByRingCode(code: code)
+        // Try all 24 rotations (phone might be rotated)
+        let found = await tryAllRotations(code: code)
+
+        if let user = found {
             if user.id != currentUserId {
                 onUserFound(user)
+                return
             } else {
                 statusText = "Das ist dein eigener Code"
-                try? await Task.sleep(for: .seconds(2))
-                statusText = "Ring-Code in den Kreis halten"
-                lastLookupCode = nil
             }
-        } catch {
-            statusText = "Kein User gefunden"
-            try? await Task.sleep(for: .seconds(2))
-            statusText = "Ring-Code in den Kreis halten"
-            lastLookupCode = nil
+        } else {
+            statusText = "Kein User gefunden — erneut versuchen"
         }
 
         isSearching = false
+        try? await Task.sleep(for: .seconds(2))
+        statusText = "Ring-Code in den Kreis halten"
+        lastLookupCode = nil
+    }
+
+    private func tryAllRotations(code: String) async -> User? {
+        let service = FriendshipService()
+        let rings = stride(from: 0, to: 72, by: 24).map { start in
+            let idx = code.index(code.startIndex, offsetBy: start)
+            let end = code.index(idx, offsetBy: 24)
+            return String(code[idx..<end])
+        }
+
+        // Try each rotation offset (all 3 rings rotate together)
+        for offset in 0..<24 {
+            let rotated = rings.map { ring -> String in
+                let idx = ring.index(ring.startIndex, offsetBy: offset)
+                return String(ring[idx...]) + String(ring[..<idx])
+            }.joined()
+
+            if let user = try? await service.findUserByRingCode(code: rotated) {
+                return user
+            }
+        }
+        return nil
     }
 }
 
-// MARK: - Ring Code Scanner (AVCaptureSession + Frame Processing)
+// MARK: - Ring Code Scanner
 
 final class RingCodeScanner: NSObject, ObservableObject {
     @Published var detectedCode: String?
@@ -118,10 +143,14 @@ final class RingCodeScanner: NSObject, ObservableObject {
     let captureSession = AVCaptureSession()
     private let videoOutput = AVCaptureVideoDataOutput()
     private let processingQueue = DispatchQueue(label: "ring-code-scanner", qos: .userInitiated)
-    nonisolated(unsafe) private var lastProcessTime = Date.distantPast
     private var isSetup = false
 
-    @MainActor
+    // Confidence: require same code N times in a row
+    private var candidateCode: String?
+    private var candidateCount = 0
+    private let requiredConfidence = 3
+
+
     func setup() {
         guard !isSetup else { return }
         isSetup = true
@@ -149,21 +178,36 @@ final class RingCodeScanner: NSObject, ObservableObject {
     func stop() {
         captureSession.stopRunning()
     }
+
+    fileprivate func processCode(_ code: String?) {
+        guard let code else {
+            candidateCode = nil
+            candidateCount = 0
+            return
+        }
+
+        if code == candidateCode {
+            candidateCount += 1
+            if candidateCount >= requiredConfidence {
+                detectedCode = code
+                candidateCount = 0
+                candidateCode = nil
+            }
+        } else {
+            candidateCode = code
+            candidateCount = 1
+        }
+    }
 }
 
 extension RingCodeScanner: AVCaptureVideoDataOutputSampleBufferDelegate {
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        let now = Date()
-        guard now.timeIntervalSince(lastProcessTime) > 0.33 else { return }
-        lastProcessTime = now
-
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+        let code = RingCodeDecoder.decode(from: ciImage)
 
-        if let code = RingCodeDecoder.decode(from: ciImage) {
-            DispatchQueue.main.async { [weak self] in
-                self?.detectedCode = code
-            }
+        DispatchQueue.main.async { [weak self] in
+            self?.processCode(code)
         }
     }
 }
@@ -184,10 +228,6 @@ struct ScannerCameraPreview: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: UIView, context: Context) {}
-
-    static func dismantleUIView(_ uiView: UIView, coordinator: ()) {
-        // Session cleanup happens in scanner.stop()
-    }
 }
 
 private class ScannerPreviewUIView: UIView {
@@ -202,21 +242,17 @@ private class ScannerPreviewUIView: UIView {
 // MARK: - Ring Code Decoder
 
 enum RingCodeDecoder {
-    // Ring layout matches RingCodeView: 3 rings, 24 positions each
     private static let ringCount = 3
     private static let positionsPerRing = 24
 
-    // Relative ring radii (fraction of crop region radius)
-    // These match the RingCodeView layout proportions
+    // Relative ring radii — must match RingCodeView proportions
     private static let ringRadii: [CGFloat] = [0.55, 0.72, 0.89]
 
-    /// Decode a ring code from a camera frame.
-    /// Returns a 72-character binary string, or nil if no valid pattern found.
     static func decode(from ciImage: CIImage) -> String? {
         let extent = ciImage.extent
 
-        // Crop to center square
-        let side = min(extent.width, extent.height) * 0.5
+        // Crop center square (40% of image for tighter focus)
+        let side = min(extent.width, extent.height) * 0.4
         let cropRect = CGRect(
             x: extent.midX - side / 2,
             y: extent.midY - side / 2,
@@ -226,9 +262,10 @@ enum RingCodeDecoder {
 
         let cropped = ciImage.cropped(to: cropRect)
 
-        // Convert to grayscale CGImage for pixel access
         let context = CIContext()
         guard let cgImage = context.createCGImage(cropped, from: cropped.extent) else { return nil }
+
+        // Get pixel data
         guard let data = cgImage.dataProvider?.data,
               let pointer = CFDataGetBytePtr(data) else { return nil }
 
@@ -244,57 +281,49 @@ enum RingCodeDecoder {
 
         for ringIndex in 0..<ringCount {
             let radius = maxRadius * ringRadii[ringIndex]
-            var brightnesses: [CGFloat] = []
 
-            // Sample brightness at 24 positions around the ring
+            // Sample brightness at each position with 5x5 kernel
+            var brightnesses: [CGFloat] = []
             for position in 0..<positionsPerRing {
                 let angle = CGFloat(position) / CGFloat(positionsPerRing) * 2 * .pi - .pi / 2
+                let sampleX = centerX + cos(angle) * radius
+                let sampleY = centerY - sin(angle) * radius
 
-                let sampleX = Int(centerX + cos(angle) * radius)
-                let sampleY = Int(centerY - sin(angle) * radius)
-
-                // Sample a small area (3×3) for stability
-                var totalBrightness: CGFloat = 0
-                var sampleCount: CGFloat = 0
-
-                for deltaX in -1...1 {
-                    for deltaY in -1...1 {
-                        let pixelX = max(0, min(width - 1, sampleX + deltaX))
-                        let pixelY = max(0, min(height - 1, sampleY + deltaY))
-                        let offset = pixelY * bytesPerRow + pixelX * bytesPerPixel
-
-                        // Use luminance from RGB
-                        let red = CGFloat(pointer[offset]) / 255.0
-                        let green = CGFloat(pointer[offset + 1]) / 255.0
-                        let blue = CGFloat(pointer[offset + 2]) / 255.0
-                        totalBrightness += 0.299 * red + 0.587 * green + 0.114 * blue
-                        sampleCount += 1
-                    }
-                }
-
-                brightnesses.append(totalBrightness / sampleCount)
+                let brightness = sampleBrightness(
+                    pointer: pointer, x: sampleX, y: sampleY,
+                    width: width, height: height,
+                    bytesPerPixel: bytesPerPixel, bytesPerRow: bytesPerRow,
+                    kernelSize: 2
+                )
+                brightnesses.append(brightness)
             }
 
-            // Find gaps: positions where brightness drops significantly
-            // A gap is a segment boundary → bit = 1
-            let avgBrightness = brightnesses.reduce(0, +) / CGFloat(brightnesses.count)
-            let threshold = avgBrightness * 0.7
+            // Adaptive threshold per ring
+            let sorted = brightnesses.sorted()
+            let median = sorted[sorted.count / 2]
+            let minBright = sorted.first ?? 0
+            let threshold = minBright + (median - minBright) * 0.5
 
+<<<<<<< HEAD
             // Check each position: is it in a gap (dark) or a segment (bright)?
             let isGap = brightnesses.map { $0 < threshold }
+=======
+            // Classify each position
+            let isSegment = brightnesses.map { $0 > threshold }
+>>>>>>> 87ef9084a0cb4165ff893f055880d32536d970fe
 
-            // Convert gaps to bits: a gap at position i means position i starts a new segment
-            // bit[i] = 1 if there's a gap just before position i
+            // Convert to bits: detect transitions from gap to segment
             var bits = ""
             for position in 0..<positionsPerRing {
-                let prevPos = (position - 1 + positionsPerRing) % positionsPerRing
-                // If current is bright but previous was dark (gap), this starts a new segment
-                if isGap[prevPos] && !isGap[position] {
+                let prev = (position - 1 + positionsPerRing) % positionsPerRing
+                if isSegment[position] && !isSegment[prev] {
+                    // Transition from gap to segment → new segment starts
                     bits += "1"
-                } else if isGap[position] {
-                    // In a gap — this could be a boundary, but we encode it as continuation
+                } else if !isSegment[position] {
+                    // In a gap → mark as boundary
                     bits += "1"
                 } else {
+                    // Continuation of segment
                     bits += "0"
                 }
             }
@@ -302,10 +331,37 @@ enum RingCodeDecoder {
             allBits += bits
         }
 
-        // Validate: should have some variety (not all same)
+        // Validate: reasonable distribution
         let ones = allBits.filter { $0 == "1" }.count
-        guard ones > 5 && ones < 67 else { return nil }
+        guard ones > 8 && ones < 60 else { return nil }
 
         return allBits
+    }
+
+    private static func sampleBrightness(
+        pointer: UnsafePointer<UInt8>,
+        x: CGFloat, y: CGFloat,
+        width: Int, height: Int,
+        bytesPerPixel: Int, bytesPerRow: Int,
+        kernelSize: Int
+    ) -> CGFloat {
+        var total: CGFloat = 0
+        var count: CGFloat = 0
+
+        for deltaX in -kernelSize...kernelSize {
+            for deltaY in -kernelSize...kernelSize {
+                let pixelX = max(0, min(width - 1, Int(x) + deltaX))
+                let pixelY = max(0, min(height - 1, Int(y) + deltaY))
+                let offset = pixelY * bytesPerRow + pixelX * bytesPerPixel
+
+                let red = CGFloat(pointer[offset]) / 255.0
+                let green = CGFloat(pointer[offset + 1]) / 255.0
+                let blue = CGFloat(pointer[offset + 2]) / 255.0
+                total += 0.299 * red + 0.587 * green + 0.114 * blue
+                count += 1
+            }
+        }
+
+        return total / count
     }
 }

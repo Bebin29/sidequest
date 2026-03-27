@@ -1,6 +1,11 @@
 ALTER TABLE users ADD COLUMN IF NOT EXISTS ring_code VARCHAR(72);
 
--- Generate ring codes for existing users that don't have one
+-- Generate binary ring codes for existing users
 UPDATE users
-SET ring_code = substring(encode(sha256(id::text::bytea), 'hex') from 1 for 18)
+SET ring_code = (
+    SELECT string_agg(
+        CASE WHEN get_bit(sha256(users.id::text::bytea), i) = 1 THEN '1' ELSE '0' END, ''
+    )
+    FROM generate_series(0, 71) AS i
+)
 WHERE ring_code IS NULL;

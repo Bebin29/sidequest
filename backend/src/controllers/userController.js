@@ -152,4 +152,27 @@ async function checkUsername(req, res, query) {
     }
 }
 
-module.exports = { getAll, getById, create, update, remove, checkUsername };
+async function findByRingCode(req, res, query) {
+    try {
+        const code = query.code;
+        if (!code || code.length < 10) {
+            return sendError(res, 400, 'Valid ring code is required');
+        }
+
+        const result = await pool.query(
+            'SELECT * FROM users WHERE ring_code = $1',
+            [code]
+        );
+
+        if (result.rowCount === 0) {
+            return sendError(res, 404, 'User not found');
+        }
+
+        sendJSON(res, 200, { data: result.rows[0] });
+    } catch (err) {
+        console.error('findByRingCode error:', err);
+        sendError(res, 500, 'Internal server error');
+    }
+}
+
+module.exports = { getAll, getById, create, update, remove, checkUsername, findByRingCode };

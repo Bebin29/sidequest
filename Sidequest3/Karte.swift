@@ -7,6 +7,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
     private let manager = CLLocationManager()
     private var hasSetInitialPosition = false
+    var positionOverridden = false
     @Published var lastLocation: CLLocation?
     @Published var position: MapCameraPosition = .region(MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 52.5200, longitude: 13.4050),
@@ -28,10 +29,12 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
         DispatchQueue.main.async {
             self.lastLocation = location
-            self.position = .region(MKCoordinateRegion(
-                center: location.coordinate,
-                span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-            ))
+            if !self.positionOverridden {
+                self.position = .region(MKCoordinateRegion(
+                    center: location.coordinate,
+                    span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+                ))
+            }
         }
     }
     func centerOnUser() {
@@ -57,6 +60,7 @@ struct Karte: View {
     @State private var selectedLocationId: UUID?
     @State private var showDetail = false
     var userId: UUID?
+    @Binding var focusLocation: Location?
 
     var body: some View {
         ZStack {
@@ -78,6 +82,18 @@ struct Karte: View {
                 if newValue != nil {
                     showDetail = true
                 }
+            }
+            .onChange(of: focusLocation, initial: true) { _, location in
+                guard let location else { return }
+                locationManager.positionOverridden = true
+                withAnimation(.easeInOut(duration: 0.6)) {
+                    locationManager.position = .region(MKCoordinateRegion(
+                        center: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude),
+                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                    ))
+                    selectedLocationId = location.id
+                }
+                focusLocation = nil
             }
 
             VStack {
@@ -248,6 +264,7 @@ struct PlaceSearchView: View {
     @StateObject private var locationManager = LocationManager()
     @State private var selectedItem: MKMapItem?
     @State private var selectedCategory = ""
+    @State private var searchDebounceTask: Task<Void, Never>?
     @Bindable var mapViewModel: MapViewModel
     var userId: UUID?
     var onDismiss: () -> Void
@@ -269,8 +286,13 @@ struct PlaceSearchView: View {
                         .textFieldStyle(.roundedBorder)
                         .padding()
                         .onChange(of: searchText) { _, newValue in
-                            completer.userLocation = locationManager.lastLocation
-                            completer.update(query: newValue)
+                            searchDebounceTask?.cancel()
+                            searchDebounceTask = Task {
+                                try? await Task.sleep(for: .milliseconds(300))
+                                guard !Task.isCancelled else { return }
+                                completer.userLocation = locationManager.lastLocation
+                                completer.update(query: newValue)
+                            }
                         }
 
                     List(completer.results) { result in

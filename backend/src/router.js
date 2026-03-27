@@ -59,6 +59,11 @@ function route(req, res) {
         if (method === 'DELETE') return userController.remove(req, res, id);
     }
 
+    // Feed
+    if (pathname === '/api/feed' && method === 'GET') {
+        return locationController.getFeed(req, res, parsed.query);
+    }
+
     // Locations routes
     if (pathname === '/api/locations' && method === 'GET') {
         return locationController.getAll(req, res, parsed.query);

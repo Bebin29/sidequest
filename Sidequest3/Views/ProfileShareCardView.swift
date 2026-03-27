@@ -4,121 +4,128 @@
 //
 
 import SwiftUI
-import CoreImage.CIFilterBuiltins
 
-// MARK: - Share Card Layout (rendered to image)
+// MARK: - Share Card Layout
 
 struct ProfileShareCardContent: View {
     let user: User
-    let qrImage: UIImage?
     let profileImage: UIImage?
+    let locations: [Location]
 
     private let cardWidth: CGFloat = 360
-    private let cardHeight: CGFloat = 480
+    private let cardHeight: CGFloat = 520
 
     var body: some View {
         VStack(spacing: 0) {
-            // Top: Indigo header area with profile
-            ZStack {
-                // Indigo gradient background
-                LinearGradient(
-                    colors: [
-                        Color(.systemIndigo),
-                        Color(.systemIndigo).opacity(0.85)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
+            VStack(spacing: 16) {
+                Spacer().frame(height: 24)
+
+                // Ring Code + Profile Image
+                RingCodeView(
+                    code: user.ringCode ?? String(repeating: "0", count: 96),
+                    profileImage: profileImage,
+                    initial: String(user.displayName.prefix(1)).uppercased(),
+                    size: 130
                 )
 
-                VStack(spacing: 12) {
-                    // Profile image
-                    Group {
-                        if let profileImage {
-                            Image(uiImage: profileImage)
-                                .resizable()
-                                .scaledToFill()
-                        } else {
-                            Color.white.opacity(0.2)
-                                .overlay(
-                                    Text(String(user.displayName.prefix(1)).uppercased())
-                                        .font(.system(size: 32, weight: .bold, design: .rounded))
-                                        .foregroundStyle(.white)
-                                )
+                // Name + Username
+                VStack(spacing: 4) {
+                    Text(user.displayName)
+                        .font(.title3.bold())
+                        .foregroundStyle(.white)
+
+                    Text("@\(user.username)")
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.6))
+                }
+
+                // Spots
+                if !locations.isEmpty {
+                    HStack(spacing: 8) {
+                        ForEach(locations.prefix(3)) { location in
+                            SpotMiniCard(location: location)
                         }
                     }
-                    .frame(width: 76, height: 76)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(.white.opacity(0.3), lineWidth: 2))
-
-                    // Name + username
-                    VStack(spacing: 4) {
-                        Text(user.displayName)
-                            .font(.title3.bold())
-                            .foregroundStyle(.white)
-
-                        Text("@\(user.username)")
-                            .font(.subheadline)
-                            .foregroundStyle(.white.opacity(0.7))
-                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 4)
                 }
-                .padding(.vertical, 36)
-            }
-            .frame(height: 210)
 
-            // Bottom: White area with QR code
-            ZStack {
-                Color(.systemBackground)
+                Spacer()
 
-                VStack(spacing: 16) {
-                    if let qrImage {
-                        Image(uiImage: qrImage)
-                            .interpolation(.none)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 180, height: 180)
-                            .padding(12)
-                            .background(Color(.systemBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-
-                    // App branding
-                    HStack(spacing: 6) {
-                        Image("AppIcon")
-                            .resizable()
-                            .frame(width: 16, height: 16)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                        Text("Sidequest")
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(.secondary)
-                    }
+                // Branding
+                HStack(spacing: 6) {
+                    Image(systemName: "map.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.4))
+                    Text("Sidequest")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.white.opacity(0.4))
                 }
+                .padding(.bottom, 20)
             }
         }
         .frame(width: cardWidth, height: cardHeight)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        .overlay(
-            RoundedRectangle(cornerRadius: 24)
-                .stroke(Color(.systemGray4), lineWidth: 0.5)
+        .background(
+            LinearGradient(
+                colors: [
+                    Color(red: 0.22, green: 0.17, blue: 0.45),
+                    Color(red: 0.12, green: 0.10, blue: 0.30)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         )
+        .clipShape(RoundedRectangle(cornerRadius: 24))
     }
 }
 
-// MARK: - QR Code Generator
+// MARK: - Spot Mini Card
 
-enum QRCodeGenerator {
-    static func generate(from string: String, size: CGFloat = 200) -> UIImage? {
-        let context = CIContext()
-        let filter = CIFilter.qrCodeGenerator()
-        filter.message = Data(string.utf8)
-        filter.correctionLevel = "M"
+private struct SpotMiniCard: View {
+    let location: Location
 
-        guard let output = filter.outputImage else { return nil }
+    var body: some View {
+        VStack(spacing: 0) {
+            // Image
+            if let urlString = location.imageUrls.first,
+               let url = URL(string: urlString) {
+                CachedAsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                } placeholder: {
+                    Color.white.opacity(0.1)
+                }
+                .frame(height: 70)
+                .clipped()
+            } else {
+                Color.white.opacity(0.1)
+                    .frame(height: 70)
+                    .overlay(
+                        Image(systemName: "photo")
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.3))
+                    )
+            }
 
-        let scale = size / output.extent.size.width
-        let scaled = output.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+            // Name + Category
+            VStack(spacing: 2) {
+                Text(location.name)
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
 
-        guard let cgImage = context.createCGImage(scaled, from: scaled.extent) else { return nil }
-        return UIImage(cgImage: cgImage)
+                Text(location.category)
+                    .font(.system(size: 8))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 4)
+            .padding(.vertical, 6)
+        }
+        .frame(maxWidth: .infinity)
+        .background(Color.white.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
 
@@ -131,10 +138,7 @@ struct ProfileShareCardView: View {
     @State private var renderedImage: UIImage?
     @State private var showShareSheet = false
     @State private var profileImage: UIImage?
-
-    private var qrImage: UIImage? {
-        QRCodeGenerator.generate(from: "sidequest://add-friend/\(user.username)")
-    }
+    @State private var locations: [Location] = []
 
     var body: some View {
         NavigationStack {
@@ -142,16 +146,15 @@ struct ProfileShareCardView: View {
                 Color(.systemGroupedBackground)
                     .ignoresSafeArea()
 
-                VStack(spacing: 32) {
+                VStack(spacing: 28) {
                     Spacer()
 
-                    // Card preview
                     ProfileShareCardContent(
                         user: user,
-                        qrImage: qrImage,
-                        profileImage: profileImage
+                        profileImage: profileImage,
+                        locations: locations
                     )
-                    .shadow(color: .black.opacity(0.08), radius: 16, y: 8)
+                    .shadow(color: .black.opacity(0.15), radius: 20, y: 10)
 
                     // Action buttons
                     HStack(spacing: 12) {
@@ -201,6 +204,7 @@ struct ProfileShareCardView: View {
             }
             .task {
                 await loadProfileImage()
+                await loadLocations()
             }
         }
     }
@@ -214,12 +218,19 @@ struct ProfileShareCardView: View {
         } catch {}
     }
 
+    private func loadLocations() async {
+        do {
+            let fetched = try await LocationService().fetchLocations(userId: user.id)
+            locations = Array(fetched.prefix(3))
+        } catch {}
+    }
+
     @MainActor
     private func renderImage() {
         let content = ProfileShareCardContent(
             user: user,
-            qrImage: qrImage,
-            profileImage: profileImage
+            profileImage: profileImage,
+            locations: locations
         )
         let renderer = ImageRenderer(content: content)
         renderer.scale = 3

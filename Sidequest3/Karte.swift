@@ -563,7 +563,8 @@ extension User {
         isModerator: false,
         isPrivate: false,
         fcmToken: nil,
-        stats: ["quests": 12, "friends": 5]
+        stats: ["quests": 12, "friends": 5],
+        ringCode: "101100110010110011001011001100101100110010110011001011001100101100110010110011001011001100101100"
     )
 }
 

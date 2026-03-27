@@ -53,7 +53,14 @@ async function getAll(req, res, query) {
             (filters.length > 0 ? ' AND ' + filters.join(' AND ') : '');
 
         const result = await pool.query(
-            `SELECT * FROM locations WHERE ${whereClause} ORDER BY created_at DESC`,
+            `SELECT locations.*,
+                    users.username AS creator_username,
+                    users.display_name AS creator_display_name,
+                    users.profile_image_url AS creator_profile_image_url
+             FROM locations
+             LEFT JOIN users ON locations.created_by = users.id
+             WHERE ${whereClause}
+             ORDER BY locations.created_at DESC`,
             params
         );
 
@@ -66,7 +73,16 @@ async function getAll(req, res, query) {
 
 async function getById(req, res, id) {
     try {
-        const result = await pool.query('SELECT * FROM locations WHERE id = $1', [id]);
+        const result = await pool.query(
+            `SELECT locations.*,
+                    users.username AS creator_username,
+                    users.display_name AS creator_display_name,
+                    users.profile_image_url AS creator_profile_image_url
+             FROM locations
+             LEFT JOIN users ON locations.created_by = users.id
+             WHERE locations.id = $1`,
+            [id]
+        );
         if (result.rowCount === 0) {
             return sendError(res, 404, 'Location not found');
         }

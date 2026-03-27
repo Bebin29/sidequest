@@ -14,6 +14,7 @@ struct Profile: View {
     @State private var showLogoutAlert = false
     @State private var showEditProfile = false
     @State private var showFriends = false
+    @State private var showShareCard = false
     @State private var selectedLocation: Location?
 
     var body: some View {
@@ -54,6 +55,11 @@ struct Profile: View {
             }
             .sheet(isPresented: $showFriends) {
                 FriendsView(currentUser: authViewModel.currentUser)
+            }
+            .sheet(isPresented: $showShareCard) {
+                if let user = authViewModel.currentUser {
+                    ProfileShareCardView(user: user)
+                }
             }
             .sheet(item: $selectedLocation) { location in
                 NavigationStack {
@@ -186,7 +192,9 @@ struct Profile: View {
             }
             .buttonStyle(.plain)
 
-            ShareLink(item: "Schau dir mein Profil auf Sidequest an! @\(authViewModel.currentUser?.username ?? "")") {
+            Button {
+                showShareCard = true
+            } label: {
                 Image(systemName: "square.and.arrow.up")
                     .font(.subheadline.weight(.semibold))
                     .padding(.vertical, 8)
@@ -194,6 +202,7 @@ struct Profile: View {
                     .background(Color(.systemGray5))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
+            .buttonStyle(.plain)
         }
     }
 

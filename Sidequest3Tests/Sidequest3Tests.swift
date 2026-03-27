@@ -9,6 +9,9 @@ import Testing
 import Foundation
 @testable import Sidequest3
 
+// Resolve ambiguity with Testing framework's Comment type
+typealias AppComment = Sidequest3.Comment
+
 // MARK: - Mock URLProtocol
 
 final class MockURLProtocol: URLProtocol {
@@ -255,10 +258,10 @@ struct ModelDecodingTests {
         }
         """.data(using: .utf8)!
 
-        let comment = try JSONDecoder().decode(Comment.self, from: json)
-        #expect(comment.username == "bob")
-        #expect(comment.text == "Toller Spot!")
-        #expect(comment.createdAt.hasPrefix("2026-03-25"))
+        let decoded = try JSONDecoder().decode(AppComment.self, from: json)
+        #expect(decoded.username == "bob")
+        #expect(decoded.text == "Toller Spot!")
+        #expect(decoded.createdAt.hasPrefix("2026-03-25"))
     }
 
     @Test func tripDecoding() async throws {
@@ -407,7 +410,7 @@ struct ServiceTests {
 
     @Test func commentServiceFetchComments() async throws {
         let session = makeMockSession()
-        let service = CommentService(session: session)
+        let service = Sidequest3.CommentService(session: session)
 
         mockSuccess(json: """
         {
@@ -426,8 +429,8 @@ struct ServiceTests {
         """)
 
         let locationId = UUID(uuidString: "550e8400-e29b-41d4-a716-446655440021")!
-        let comments = try await service.fetchComments(locationId: locationId)
-        #expect(comments.count == 1)
-        #expect(comments.first?.text == "Super Laden!")
+        let result: [AppComment] = try await service.fetchComments(locationId: locationId)
+        #expect(result.count == 1)
+        #expect(result.first?.text == "Super Laden!")
     }
 }

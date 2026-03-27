@@ -179,4 +179,54 @@ async function remove(req, res, id) {
     }
 }
 
-module.exports = { getAll, getById, create, update, remove };
+async function getFeed(req, res, query) {
+    try {
+        const userId = query.user_id;
+        if (!userId) {
+            return sendError(res, 400, 'user_id is required');
+        }
+
+        const limit = parseInt(query.limit) || 20;
+        const offset = parseInt(query.offset) || 0;
+
+        // Freunde IDs sammeln (ohne eigene)
+        const friendsResult = await pool.query(
+            `SELECT CASE
+                WHEN requester_id = $1 THEN receiver_id
+                ELSE requester_id
+             END AS friend_id
+             FROM friendships
+             WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'`,
+            [userId]
+        );
+
+        const friendIds = friendsResult.rows.map(r => r.friend_id);
+
+        if (friendIds.length === 0) {
+            return sendJSON(res, 200, { data: [], count: 0, hasMore: false });
+        }
+
+        const placeholders = friendIds.map((_, i) => `$${i + 1}`).join(', ');
+
+        const result = await pool.query(
+            `SELECT locations.*,
+                    users.username AS creator_username,
+                    users.display_name AS creator_display_name,
+                    users.profile_image_url AS creator_profile_image_url
+             FROM locations
+             LEFT JOIN users ON locations.created_by = users.id
+             WHERE locations.created_by IN (${placeholders})
+             ORDER BY locations.created_at DESC
+             LIMIT $${friendIds.length + 1} OFFSET $${friendIds.length + 2}`,
+            [...friendIds, limit, offset]
+        );
+
+        const hasMore = result.rowCount === limit;
+        sendJSON(res, 200, { data: result.rows, count: result.rowCount, hasMore });
+    } catch (err) {
+        console.error('getFeed error:', err);
+        sendError(res, 500, 'Internal server error');
+    }
+}
+
+module.exports = { getAll, getById, create, update, remove, getFeed };

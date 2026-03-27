@@ -23,9 +23,38 @@ async function getAll(req, res, query) {
         const allowedIds = [userId, ...friendsResult.rows.map(r => r.friend_id)];
         const placeholders = allowedIds.map((_, i) => `$${i + 1}`).join(', ');
 
+        let paramIdx = allowedIds.length + 1;
+        const filters = [];
+        const params = [...allowedIds];
+
+        if (query.category) {
+            filters.push(`category = $${paramIdx}`);
+            params.push(query.category);
+            paramIdx++;
+        }
+
+        if (query.search) {
+            filters.push(`(name ILIKE $${paramIdx} OR address ILIKE $${paramIdx})`);
+            params.push(`%${query.search}%`);
+            paramIdx++;
+        }
+
+        if (query.lat && query.lon && query.radius) {
+            const radiusMeters = parseFloat(query.radius);
+            // Haversine-based distance filter using lat/lon columns
+            filters.push(
+                `(6371000 * acos(cos(radians($${paramIdx})) * cos(radians(latitude)) * cos(radians(longitude) - radians($${paramIdx + 1})) + sin(radians($${paramIdx})) * sin(radians(latitude)))) <= $${paramIdx + 2}`
+            );
+            params.push(parseFloat(query.lat), parseFloat(query.lon), radiusMeters);
+            paramIdx += 3;
+        }
+
+        const whereClause = `created_by IN (${placeholders})` +
+            (filters.length > 0 ? ' AND ' + filters.join(' AND ') : '');
+
         const result = await pool.query(
-            `SELECT * FROM locations WHERE created_by IN (${placeholders}) ORDER BY created_at DESC`,
-            allowedIds
+            `SELECT * FROM locations WHERE ${whereClause} ORDER BY created_at DESC`,
+            params
         );
 
         sendJSON(res, 200, { data: result.rows, count: result.rowCount });

@@ -356,9 +356,11 @@ struct Profile: View {
 }
 
 #Preview {
-    let viewModel = AuthViewModel()
-    viewModel.currentUser = .preview
-    return Profile(authViewModel: viewModel)
+    Profile(authViewModel: {
+        let vm = AuthViewModel()
+        vm.currentUser = .preview
+        return vm
+    }())
 }
 
 extension User {
@@ -378,6 +380,7 @@ extension User {
         isModerator: false,
         isPrivate: false,
         fcmToken: nil,
-        stats: ["quests": 12, "friends": 5]
+        stats: ["quests": 12, "friends": 5],
+        ringCode: nil
     )
 }

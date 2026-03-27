@@ -111,79 +111,64 @@ struct FeedCard: View {
             .padding(.bottom, 10)
 
             // Image carousel with gradient overlay
-            GeometryReader { geo in
-                let size = geo.size.width
-                ZStack(alignment: .bottomLeading) {
-                    if !location.imageUrls.isEmpty {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            LazyHStack(spacing: 0) {
-                                ForEach(location.imageUrls, id: \.self) { urlString in
-                                    AsyncImage(url: URL(string: urlString)) { phase in
-                                        switch phase {
-                                        case .success(let image):
-                                            image
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width: size, height: size)
-                                                .clipped()
-                                        case .failure:
-                                            Color(.systemGray5)
-                                                .frame(width: size, height: size)
-                                                .overlay(
-                                                    Image(systemName: "photo")
-                                                        .font(.title)
-                                                        .foregroundStyle(.tertiary)
-                                                )
-                                        case .empty:
-                                            ProgressView()
-                                                .frame(width: size, height: size)
-                                                .background(Color(.systemGray6))
-                                        @unknown default:
-                                            EmptyView()
-                                        }
-                                    }
+            ZStack(alignment: .bottomLeading) {
+                if !location.imageUrls.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(spacing: 0) {
+                            ForEach(location.imageUrls, id: \.self) { urlString in
+                                CachedAsyncImage(url: URL(string: urlString)) { image in
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                } placeholder: {
+                                    Color(.systemGray6)
+                                        .overlay(ProgressView())
                                 }
+                                .frame(minWidth: 0, maxWidth: .infinity)
+                                .aspectRatio(1, contentMode: .fill)
+                                .clipped()
+                                .containerRelativeFrame(.horizontal)
                             }
-                            .scrollTargetLayout()
                         }
-                        .scrollTargetBehavior(.paging)
-                    } else {
-                        imagePlaceholder
+                        .scrollTargetLayout()
                     }
-
-                    // Gradient overlay with name + category
-                    LinearGradient(
-                        colors: [.clear, .black.opacity(0.7)],
-                        startPoint: .center,
-                        endPoint: .bottom
-                    )
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(location.name)
-                            .font(.title3.bold())
-                            .foregroundStyle(.white)
-
-                        HStack(spacing: 8) {
-                            Text(location.category)
-                                .font(.caption.weight(.semibold))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(.white.opacity(0.2))
-                                .clipShape(Capsule())
-
-                            HStack(spacing: 3) {
-                                Image(systemName: "mappin")
-                                    .font(.caption2)
-                                Text(location.address)
-                                    .font(.caption)
-                                    .lineLimit(1)
-                            }
-                            .opacity(0.8)
-                        }
-                        .foregroundStyle(.white)
-                    }
-                    .padding()
+                    .scrollTargetBehavior(.paging)
+                } else {
+                    imagePlaceholder
                 }
+
+                // Gradient overlay with name + category
+                LinearGradient(
+                    colors: [.clear, .black.opacity(0.7)],
+                    startPoint: .center,
+                    endPoint: .bottom
+                )
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(location.name)
+                        .font(.title3.bold())
+                        .foregroundStyle(.white)
+
+                    HStack(spacing: 8) {
+                        Text(location.category)
+                            .font(.caption.weight(.semibold))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(.white.opacity(0.2))
+                            .clipShape(Capsule())
+
+                        HStack(spacing: 3) {
+                            Image(systemName: "mappin")
+                                .font(.caption2)
+                            Text(location.address)
+                                .font(.caption)
+                                .lineLimit(1)
+                        }
+                        .opacity(0.8)
+                    }
+                    .foregroundStyle(.white)
+                }
+                .padding()
             }
             .aspectRatio(1, contentMode: .fit)
             .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -235,7 +220,7 @@ struct FeedCard: View {
     private var creatorAvatar: some View {
         if let urlString = location.creatorProfileImageUrl,
            let url = URL(string: urlString) {
-            AsyncImage(url: url) { image in
+            CachedAsyncImage(url: url) { image in
                 image
                     .resizable()
                     .scaledToFill()

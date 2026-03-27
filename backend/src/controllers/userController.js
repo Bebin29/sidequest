@@ -93,6 +93,19 @@ async function update(req, res, id) {
         if (result.rowCount === 0) {
             return sendError(res, 404, 'User not found');
         }
+
+        // When username changes, update all denormalized copies
+        if (body.username) {
+            const newUsername = body.username;
+            await Promise.all([
+                pool.query('UPDATE ratings SET username = $1 WHERE user_id = $2', [newUsername, id]),
+                pool.query('UPDATE comments SET username = $1 WHERE user_id = $2', [newUsername, id]),
+                pool.query('UPDATE friendships SET requester_username = $1 WHERE requester_id = $2', [newUsername, id]),
+                pool.query('UPDATE friendships SET receiver_username = $1 WHERE receiver_id = $2', [newUsername, id]),
+                pool.query('UPDATE trips SET username = $1 WHERE user_id = $2', [newUsername, id]),
+            ]);
+        }
+
         sendJSON(res, 200, { data: result.rows[0] });
     } catch (err) {
         if (err.code === '23505') {

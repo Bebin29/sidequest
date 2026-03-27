@@ -100,7 +100,7 @@ private struct RingLayer: View {
     let strokeWidth: CGFloat
 
     private let totalPositions = 24
-    private let gapAngle = 0.03  // Small gap between segments (radians)
+    private let gapAngle = 0.08  // Visible gap between segments (radians, ~4.6°)
 
     var body: some View {
         Canvas { context, canvasSize in

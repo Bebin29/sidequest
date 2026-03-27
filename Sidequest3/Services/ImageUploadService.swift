@@ -14,7 +14,8 @@ final class ImageUploadService {
     }
 
     func upload(image: UIImage) async throws -> String {
-        guard let data = image.jpegData(compressionQuality: 0.7) else {
+        let resized = Self.resize(image, maxDimension: 1920)
+        guard let data = resized.jpegData(compressionQuality: 0.7) else {
             throw AppError.unknown(underlying: nil)
         }
 
@@ -44,5 +45,23 @@ final class ImageUploadService {
         struct UploadResponse: Codable { let url: String }
         let decoded = try JSONDecoder().decode(UploadResponse.self, from: responseData)
         return decoded.url
+    }
+
+    private static func resize(_ image: UIImage, maxDimension: CGFloat) -> UIImage {
+        let size = image.size
+        guard max(size.width, size.height) > maxDimension else { return image }
+
+        let scale: CGFloat
+        if size.width > size.height {
+            scale = maxDimension / size.width
+        } else {
+            scale = maxDimension / size.height
+        }
+
+        let newSize = CGSize(width: size.width * scale, height: size.height * scale)
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        return renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: newSize))
+        }
     }
 }

@@ -323,14 +323,6 @@ struct FeedCard: View {
 
             // Action row
             HStack(spacing: 12) {
-                Button { onTap() } label: {
-                    Label("Details", systemImage: "arrow.right.circle")
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(.indigo)
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 4)
-                }
-
                 Button { onShowOnMap?() } label: {
                     Label("Karte", systemImage: "map")
                         .font(.caption.weight(.medium))

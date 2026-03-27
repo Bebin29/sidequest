@@ -12,6 +12,7 @@ struct EditProfileView: View {
     @State private var selectedImage: UIImage?
     @State private var showImagePicker = false
     @State private var isSaving = false
+    @State private var showSuccess = false
     @State private var errorMessage: String?
     @State private var isUsernameAvailable: Bool?
     @State private var isCheckingUsername = false
@@ -170,6 +171,24 @@ struct EditProfileView: View {
             .sheet(isPresented: $showImagePicker) {
                 ImagePicker(image: $selectedImage)
             }
+            .overlay {
+                if showSuccess {
+                    VStack {
+                        Spacer()
+                        Label("Profil gespeichert", systemImage: "checkmark.circle.fill")
+                            .font(.subheadline.bold())
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .background(.green, in: Capsule())
+                            .foregroundStyle(.white)
+                            .shadow(radius: 4)
+                            .padding(.bottom, 32)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .allowsHitTesting(false)
+                }
+            }
+            .animation(.easeInOut(duration: 0.3), value: showSuccess)
         }
     }
 
@@ -213,11 +232,13 @@ struct EditProfileView: View {
         do {
             let updated = try await profileService.updateProfile(userId: userId, body: body)
             authViewModel.currentUser = updated
+            isSaving = false
+            showSuccess = true
+            try? await Task.sleep(for: .seconds(1.2))
             dismiss()
         } catch {
             errorMessage = error.localizedDescription
+            isSaving = false
         }
-
-        isSaving = false
     }
 }

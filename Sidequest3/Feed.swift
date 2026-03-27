@@ -5,6 +5,7 @@
 
 import SwiftUI
 import CoreLocation
+import MapKit
 
 struct Feed: View {
     var userId: UUID?
@@ -199,6 +200,7 @@ struct FeedCard: View {
     var onTap: () -> Void
 
     @State private var currentPage: Int? = 0
+    @State private var showMap = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -324,6 +326,12 @@ struct FeedCard: View {
                         .foregroundStyle(.indigo)
                 }
 
+                Button { showMap = true } label: {
+                    Label("Karte", systemImage: "map")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.indigo)
+                }
+
                 Spacer()
 
                 if let distance = formattedDistance {
@@ -353,6 +361,10 @@ struct FeedCard: View {
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
+        .sheet(isPresented: $showMap) {
+            SpotMapSheet(location: location)
+                .presentationDetents([.medium])
+        }
     }
 
     // MARK: - Subviews
@@ -439,6 +451,58 @@ struct FeedCard: View {
         relative.locale = Locale(identifier: "de_DE")
         relative.unitsStyle = .short
         return relative.localizedString(for: date, relativeTo: Date())
+    }
+}
+
+// MARK: - Spot Map Sheet
+
+struct SpotMapSheet: View {
+    let location: Location
+
+    @State private var position: MapCameraPosition
+
+    init(location: Location) {
+        self.location = location
+        let region = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude),
+            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        )
+        _position = State(initialValue: .region(region))
+    }
+
+    var body: some View {
+        NavigationStack {
+            Map(position: $position) {
+                Marker(location.name, coordinate: CLLocationCoordinate2D(
+                    latitude: location.latitude,
+                    longitude: location.longitude
+                ))
+                .tint(.indigo)
+            }
+            .navigationTitle(location.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        openInMaps()
+                    } label: {
+                        Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(.indigo)
+                    }
+                }
+            }
+        }
+    }
+
+    private func openInMaps() {
+        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(
+            latitude: location.latitude,
+            longitude: location.longitude
+        ))
+        let mapItem = MKMapItem(placemark: placemark)
+        mapItem.name = location.name
+        mapItem.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
     }
 }
 

@@ -4,6 +4,8 @@
 //
 
 import Foundation
+import AudioToolbox
+import AVFoundation
 
 @Observable
 final class FriendsViewModel {
@@ -51,6 +53,9 @@ final class FriendsViewModel {
         successMessage = nil
         do {
             _ = try await service.sendRequest(requesterId: requesterId, receiverUsername: receiverUsername)
+            try? AVAudioSession.sharedInstance().setCategory(.playback)
+            try? AVAudioSession.sharedInstance().setActive(true)
+            AudioServicesPlayAlertSound(1407)
             successMessage = "Anfrage an @\(receiverUsername) gesendet"
             searchResults = []
         } catch {

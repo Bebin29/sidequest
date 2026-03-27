@@ -57,6 +57,7 @@ struct Karte: View {
     @State private var selectedLocationId: UUID?
     @State private var showDetail = false
     var userId: UUID?
+    @Binding var focusLocation: Location?
 
     var body: some View {
         ZStack {
@@ -78,6 +79,17 @@ struct Karte: View {
                 if newValue != nil {
                     showDetail = true
                 }
+            }
+            .onChange(of: focusLocation) { _, location in
+                guard let location else { return }
+                withAnimation(.easeInOut(duration: 0.6)) {
+                    locationManager.position = .region(MKCoordinateRegion(
+                        center: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude),
+                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                    ))
+                    selectedLocationId = location.id
+                }
+                focusLocation = nil
             }
 
             VStack {

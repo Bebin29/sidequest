@@ -1,5 +1,7 @@
+const crypto = require('crypto');
 const pool = require('../db/pool');
 const { parseBody, sendJSON, sendError } = require('../helpers');
+const { generateRingCode } = require('../ringCode');
 
 async function signInWithApple(req, res) {
     try {
@@ -31,15 +33,20 @@ async function signInWithApple(req, res) {
         // Apple liefert Email und Name nur beim ersten Login
         const username = (email ? email.split('@')[0] : `user_${Date.now()}`).toLowerCase();
 
+        // Generate unique ring code for profile sharing
+        const tempId = crypto.randomUUID();
+        const ringCode = generateRingCode(tempId);
+
         const result = await pool.query(
-            `INSERT INTO users (apple_user_id, email, username, display_name)
-             VALUES ($1, $2, $3, $4)
+            `INSERT INTO users (apple_user_id, email, username, display_name, ring_code)
+             VALUES ($1, $2, $3, $4, $5)
              RETURNING *`,
             [
                 appleUserId,
                 email || `${appleUserId}@privaterelay.appleid.com`,
                 username,
-                displayName || username
+                displayName || username,
+                ringCode
             ]
         );
 

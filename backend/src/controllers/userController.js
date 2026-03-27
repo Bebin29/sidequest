@@ -1,5 +1,7 @@
+const crypto = require('crypto');
 const pool = require('../db/pool');
 const { parseBody, sendJSON, sendError } = require('../helpers');
+const { generateRingCode } = require('../ringCode');
 
 async function getAll(req, res, query) {
     try {
@@ -41,11 +43,13 @@ async function create(req, res) {
             return sendError(res, 400, 'email, username and display_name are required');
         }
 
+        const ringCode = generateRingCode(crypto.randomUUID());
+
         const result = await pool.query(
-            `INSERT INTO users (email, username, display_name, bio, profile_image_url)
-             VALUES ($1, $2, $3, $4, $5)
+            `INSERT INTO users (email, username, display_name, bio, profile_image_url, ring_code)
+             VALUES ($1, $2, $3, $4, $5, $6)
              RETURNING *`,
-            [email, username, display_name, bio || null, profile_image_url || null]
+            [email, username, display_name, bio || null, profile_image_url || null, ringCode]
         );
 
         sendJSON(res, 201, { data: result.rows[0] });

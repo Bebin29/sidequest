@@ -14,26 +14,28 @@ typealias AppComment = Sidequest3.Comment
 
 // MARK: - Mock URLProtocol
 
-final class MockURLProtocol: URLProtocol {
-    static var mockData: Data?
-    static var mockResponse: HTTPURLResponse?
-    static var mockError: Error?
+final class MockURLProtocol: URLProtocol, @unchecked Sendable {
+    nonisolated(unsafe) static var mockData: Data?
+    nonisolated(unsafe) static var mockResponse: HTTPURLResponse?
+    nonisolated(unsafe) static var mockError: Error?
 
     override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canInit(with task: URLSessionTask) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override class func requestIsCacheEquivalent(_ lhs: URLRequest, to rhs: URLRequest) -> Bool { false }
 
     override func startLoading() {
         if let error = MockURLProtocol.mockError {
             client?.urlProtocol(self, didFailWithError: error)
-        } else {
-            if let response = MockURLProtocol.mockResponse {
-                client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-            }
-            if let data = MockURLProtocol.mockData {
-                client?.urlProtocol(self, didLoad: data)
-            }
-            client?.urlProtocolDidFinishLoading(self)
+            return
         }
+        if let response = MockURLProtocol.mockResponse {
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        }
+        if let data = MockURLProtocol.mockData {
+            client?.urlProtocol(self, didLoad: data)
+        }
+        client?.urlProtocolDidFinishLoading(self)
     }
 
     override func stopLoading() {}
@@ -48,6 +50,10 @@ final class MockURLProtocol: URLProtocol {
 func makeMockSession() -> URLSession {
     let config = URLSessionConfiguration.ephemeral
     config.protocolClasses = [MockURLProtocol.self]
+    config.timeoutIntervalForRequest = 2
+    config.timeoutIntervalForResource = 2
+    config.urlCache = nil
+    config.requestCachePolicy = .reloadIgnoringLocalCacheData
     return URLSession(configuration: config)
 }
 

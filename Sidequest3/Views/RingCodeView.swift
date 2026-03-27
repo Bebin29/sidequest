@@ -13,7 +13,7 @@ struct RingCodeView: View {
 
     private let ringCount = 3
     private let positionsPerRing = 24
-    private let ringSpacing: CGFloat = 8
+    private let gapSize: CGFloat = 4       // Gap between segments AND between rings (in points)
     private let strokeWidth: CGFloat = 5
 
     var body: some View {
@@ -21,8 +21,9 @@ struct RingCodeView: View {
             ForEach(0..<ringCount, id: \.self) { ringIndex in
                 RingLayer(
                     segments: segmentsForRing(ringIndex),
-                    radius: innerRadius + CGFloat(ringIndex) * (ringSpacing + strokeWidth),
-                    strokeWidth: strokeWidth
+                    radius: innerRadius + CGFloat(ringIndex) * (gapSize + strokeWidth),
+                    strokeWidth: strokeWidth,
+                    gapPixels: gapSize
                 )
             }
 
@@ -48,7 +49,7 @@ struct RingCodeView: View {
     }
 
     private var profileSize: CGFloat {
-        size - CGFloat(ringCount) * 2 * (ringSpacing + strokeWidth) - 8
+        size - CGFloat(ringCount) * 2 * (gapSize + strokeWidth) - 8
     }
 
     private var innerRadius: CGFloat {
@@ -98,18 +99,20 @@ private struct RingLayer: View {
     let segments: [RingSegment]
     let radius: CGFloat
     let strokeWidth: CGFloat
+    let gapPixels: CGFloat      // Gap size in points — consistent across all rings
 
     private let totalPositions = 24
-    private let gapAngle = 0.08  // Visible gap between segments (radians, ~4.6°)
 
     var body: some View {
         Canvas { context, canvasSize in
             let center = CGPoint(x: canvasSize.width / 2, y: canvasSize.height / 2)
+            // Convert pixel gap to radians for THIS ring's radius
+            let gapRad = Double(gapPixels) / Double(radius)
             let slotAngle = 2 * .pi / Double(totalPositions)
 
             for segment in segments {
-                let startRad = Double(segment.start) * slotAngle + gapAngle / 2 - .pi / 2
-                let endRad = startRad + Double(segment.length) * slotAngle - gapAngle
+                let startRad = Double(segment.start) * slotAngle + gapRad / 2 - .pi / 2
+                let endRad = startRad + Double(segment.length) * slotAngle - gapRad
 
                 var path = Path()
                 path.addArc(

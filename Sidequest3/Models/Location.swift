@@ -125,6 +125,11 @@ struct Location: Codable, Identifiable, Hashable {
     let reportCount: Int
     let trendingScore: Double?
 
+    // Creator info (from JOIN)
+    let creatorUsername: String?
+    let creatorDisplayName: String?
+    let creatorProfileImageUrl: String?
+
     enum CodingKeys: String, CodingKey {
         case id, name, address, latitude, longitude, geohash, category, tags, website, description
         case averageRating = "average_rating"
@@ -147,6 +152,9 @@ struct Location: Codable, Identifiable, Hashable {
         case isVerified = "is_verified"
         case reportCount = "report_count"
         case trendingScore = "trending_score"
+        case creatorUsername = "creator_username"
+        case creatorDisplayName = "creator_display_name"
+        case creatorProfileImageUrl = "creator_profile_image_url"
     }
 }
 

@@ -93,6 +93,45 @@ struct LocationDetailView: View {
                         }
                     }
 
+                    // Ersteller
+                    if let creatorUsername = location.creatorUsername {
+                        NavigationLink(destination: UserProfileView(userId: location.createdBy, currentUserId: currentUserId)) {
+                            HStack(spacing: 10) {
+                                if let urlString = location.creatorProfileImageUrl,
+                                   let url = URL(string: urlString) {
+                                    AsyncImage(url: url) { image in
+                                        image
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 36, height: 36)
+                                            .clipShape(Circle())
+                                    } placeholder: {
+                                        creatorPlaceholder(username: creatorUsername)
+                                    }
+                                } else {
+                                    creatorPlaceholder(username: creatorUsername)
+                                }
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    if let displayName = location.creatorDisplayName {
+                                        Text(displayName)
+                                            .font(.subheadline.bold())
+                                    }
+                                    Text("@\(creatorUsername)")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+
+                                Spacer()
+
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+
                     Divider()
 
                     // Kommentare
@@ -256,6 +295,17 @@ struct LocationDetailView: View {
                 }
             }
         }
+    }
+
+    private func creatorPlaceholder(username: String) -> some View {
+        Circle()
+            .fill(Color(.systemGray4))
+            .frame(width: 36, height: 36)
+            .overlay(
+                Text(String(username.prefix(1)).uppercased())
+                    .font(.caption.bold())
+                    .foregroundStyle(.white)
+            )
     }
 
     func saveEdit() async {

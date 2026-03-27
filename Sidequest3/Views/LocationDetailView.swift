@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import MapKit
 
 struct LocationDetailView: View {
     @State var location: Location
@@ -52,6 +53,18 @@ struct LocationDetailView: View {
                             Text(location.address)
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
+                        }
+
+                        Button {
+                            openInAppleMaps()
+                        } label: {
+                            Label("Route", systemImage: "arrow.triangle.turn.up.right.diamond.fill")
+                                .font(.caption.weight(.semibold))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(.indigo)
+                                .foregroundStyle(.white)
+                                .clipShape(Capsule())
                         }
 
                         if isEditing {
@@ -323,6 +336,16 @@ struct LocationDetailView: View {
         } catch {
             print("Save error: \(error)")
         }
+    }
+
+    private func openInAppleMaps() {
+        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(
+            latitude: location.latitude,
+            longitude: location.longitude
+        ))
+        let mapItem = MKMapItem(placemark: placemark)
+        mapItem.name = location.name
+        mapItem.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
     }
 
     func reloadLocation() async {

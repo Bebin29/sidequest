@@ -68,10 +68,7 @@ struct Karte: View {
                             
                     )) {
                         LocationPin(imageUrl: location.imageUrls.first)
-                            .onTapGesture {
-                                selectedLocationId = location.id
-                                showDetail = true
-                            }
+                            .tag(location.id)
                     }
                 }
             }

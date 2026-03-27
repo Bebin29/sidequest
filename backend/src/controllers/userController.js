@@ -159,10 +159,35 @@ async function findByRingCode(req, res, query) {
             return sendError(res, 400, 'Valid ring code is required');
         }
 
-        const result = await pool.query(
+        // Exact match first
+        let result = await pool.query(
             'SELECT * FROM users WHERE ring_code = $1',
             [code]
         );
+
+        // Fuzzy match: allow up to 6 bit differences (Hamming distance)
+        if (result.rowCount === 0 && code.length >= 72) {
+            const allUsers = await pool.query('SELECT * FROM users WHERE ring_code IS NOT NULL');
+            let bestMatch = null;
+            let bestDistance = 7; // max allowed + 1
+
+            for (const user of allUsers.rows) {
+                if (!user.ring_code || user.ring_code.length !== code.length) continue;
+                let distance = 0;
+                for (let idx = 0; idx < code.length; idx++) {
+                    if (code[idx] !== user.ring_code[idx]) distance++;
+                    if (distance >= bestDistance) break;
+                }
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    bestMatch = user;
+                }
+            }
+
+            if (bestMatch) {
+                result = { rows: [bestMatch], rowCount: 1 };
+            }
+        }
 
         if (result.rowCount === 0) {
             return sendError(res, 404, 'User not found');

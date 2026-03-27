@@ -314,6 +314,9 @@ struct AddLocationFormView: View {
     @State private var description = ""
     @State private var selectedImages: [UIImage] = []
     @State private var showImagePicker = false
+    @State private var showCamera = false
+    @State private var showImageSourceDialog = false
+    @State private var cameraImage: UIImage?
     @State private var showPreview = false
     @State private var isUploading = false
 
@@ -370,7 +373,7 @@ struct AddLocationFormView: View {
                 }
 
                 Button {
-                    showImagePicker = true
+                    showImageSourceDialog = true
                 } label: {
                     Label("Foto hinzufügen", systemImage: "camera")
                 }
@@ -428,8 +431,22 @@ struct AddLocationFormView: View {
                 Button("Zurück") { onBack() }
             }
         }
+        .confirmationDialog("Foto auswählen", isPresented: $showImageSourceDialog) {
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                Button("Foto aufnehmen") { showCamera = true }
+            }
+            Button("Aus Galerie wählen") { showImagePicker = true }
+            Button("Abbrechen", role: .cancel) {}
+        }
         .sheet(isPresented: $showImagePicker) {
             ImagePickerAppend(images: $selectedImages)
+        }
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraImagePicker(image: $cameraImage)
+                .ignoresSafeArea()
+        }
+        .onChange(of: cameraImage) { _, newImage in
+            if let newImage { selectedImages.append(newImage) }
         }
     }
 

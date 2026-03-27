@@ -11,6 +11,8 @@ struct EditProfileView: View {
     @State private var username: String
     @State private var selectedImage: UIImage?
     @State private var showImagePicker = false
+    @State private var showCamera = false
+    @State private var showImageSourceDialog = false
     @State private var isSaving = false
     @State private var showSuccess = false
     @State private var errorMessage: String?
@@ -72,7 +74,7 @@ struct EditProfileView: View {
                             }
 
                             Button {
-                                showImagePicker = true
+                                showImageSourceDialog = true
                             } label: {
                                 Image(systemName: "camera.circle.fill")
                                     .font(.title2)
@@ -168,8 +170,19 @@ struct EditProfileView: View {
                     }
                 }
             }
+            .confirmationDialog("Foto auswählen", isPresented: $showImageSourceDialog) {
+                if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                    Button("Foto aufnehmen") { showCamera = true }
+                }
+                Button("Aus Galerie wählen") { showImagePicker = true }
+                Button("Abbrechen", role: .cancel) {}
+            }
             .sheet(isPresented: $showImagePicker) {
                 ImagePicker(image: $selectedImage)
+            }
+            .fullScreenCover(isPresented: $showCamera) {
+                CameraImagePicker(image: $selectedImage)
+                    .ignoresSafeArea()
             }
             .overlay {
                 if showSuccess {

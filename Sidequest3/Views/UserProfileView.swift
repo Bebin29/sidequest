@@ -373,7 +373,8 @@ struct UserProfileView: View {
         async let friendsFetch = friendshipService.getFriends(userId: userId)
 
         user = try? await userFetch
-        locations = (try? await locationsFetch) ?? []
+        let allLocations = (try? await locationsFetch) ?? []
+        locations = allLocations.filter { $0.createdBy == userId }
         friends = (try? await friendsFetch) ?? []
     }
 

@@ -6,6 +6,7 @@
 import SwiftUI
 import AVFoundation
 import CoreImage
+import Combine
 
 // MARK: - Scanner View
 
@@ -111,16 +112,16 @@ struct RingCodeScannerView: View {
 
 // MARK: - Ring Code Scanner (AVCaptureSession + Frame Processing)
 
-@MainActor
 final class RingCodeScanner: NSObject, ObservableObject {
     @Published var detectedCode: String?
 
     let captureSession = AVCaptureSession()
     private let videoOutput = AVCaptureVideoDataOutput()
     private let processingQueue = DispatchQueue(label: "ring-code-scanner", qos: .userInitiated)
-    private var lastProcessTime = Date.distantPast
+    nonisolated(unsafe) private var lastProcessTime = Date.distantPast
     private var isSetup = false
 
+    @MainActor
     func setup() {
         guard !isSetup else { return }
         isSetup = true
@@ -150,9 +151,8 @@ final class RingCodeScanner: NSObject, ObservableObject {
     }
 }
 
-extension RingCodeScanner: @preconcurrency AVCaptureVideoDataOutputSampleBufferDelegate {
-    nonisolated func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        // Process max 3 frames per second
+extension RingCodeScanner: AVCaptureVideoDataOutputSampleBufferDelegate {
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         let now = Date()
         guard now.timeIntervalSince(lastProcessTime) > 0.33 else { return }
         lastProcessTime = now
@@ -281,7 +281,7 @@ enum RingCodeDecoder {
             let threshold = avgBrightness * 0.7
 
             // Check each position: is it in a gap (dark) or a segment (bright)?
-            var isGap = brightnesses.map { $0 < threshold }
+            let isGap = brightnesses.map { $0 < threshold }
 
             // Convert gaps to bits: a gap at position i means position i starts a new segment
             // bit[i] = 1 if there's a gap just before position i

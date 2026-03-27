@@ -5,6 +5,19 @@
 
 import Foundation
 
+struct LocationFilter: Equatable {
+    var category: LocationCategory?
+    var minRating: Double?
+    var search: String?
+    var latitude: Double?
+    var longitude: Double?
+    var radiusMeters: Double?
+
+    var isEmpty: Bool {
+        category == nil && minRating == nil && (search ?? "").isEmpty && radiusMeters == nil
+    }
+}
+
 final class LocationService {
     private let session: URLSession
 
@@ -31,8 +44,28 @@ final class LocationService {
         return try JSONDecoder().decode(SingleResponse.self, from: data).data
     }
 
-    func fetchLocations(userId: UUID) async throws -> [Location] {
-        guard let url = URL(string: "\(Constants.API.baseURL)/api/locations?user_id=\(userId.uuidString)") else {
+    func fetchLocations(userId: UUID, filter: LocationFilter = LocationFilter()) async throws -> [Location] {
+        var components = URLComponents(string: "\(Constants.API.baseURL)/api/locations")!
+        var queryItems = [URLQueryItem(name: "user_id", value: userId.uuidString)]
+
+        if let category = filter.category {
+            queryItems.append(URLQueryItem(name: "category", value: category.rawValue))
+        }
+        if let minRating = filter.minRating {
+            queryItems.append(URLQueryItem(name: "min_rating", value: String(minRating)))
+        }
+        if let search = filter.search, !search.isEmpty {
+            queryItems.append(URLQueryItem(name: "search", value: search))
+        }
+        if let lat = filter.latitude, let lon = filter.longitude, let radius = filter.radiusMeters {
+            queryItems.append(URLQueryItem(name: "lat", value: String(lat)))
+            queryItems.append(URLQueryItem(name: "lon", value: String(lon)))
+            queryItems.append(URLQueryItem(name: "radius", value: String(radius)))
+        }
+
+        components.queryItems = queryItems
+
+        guard let url = components.url else {
             throw AppError.unknown(underlying: nil)
         }
 

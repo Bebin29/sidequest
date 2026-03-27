@@ -95,42 +95,41 @@ struct LocationDetailView: View {
 
                     // Ersteller
                     if let creatorUsername = location.creatorUsername {
-                        HStack(spacing: 10) {
-                            if let urlString = location.creatorProfileImageUrl,
-                               let url = URL(string: urlString) {
-                                AsyncImage(url: url) { image in
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 36, height: 36)
-                                        .clipShape(Circle())
-                                } placeholder: {
+                        NavigationLink(destination: UserProfileView(userId: location.createdBy, currentUserId: currentUserId)) {
+                            HStack(spacing: 10) {
+                                if let urlString = location.creatorProfileImageUrl,
+                                   let url = URL(string: urlString) {
+                                    AsyncImage(url: url) { image in
+                                        image
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 36, height: 36)
+                                            .clipShape(Circle())
+                                    } placeholder: {
+                                        creatorPlaceholder(username: creatorUsername)
+                                    }
+                                } else {
                                     creatorPlaceholder(username: creatorUsername)
                                 }
-                            } else {
-                                creatorPlaceholder(username: creatorUsername)
-                            }
 
-                            VStack(alignment: .leading, spacing: 2) {
-                                if let displayName = location.creatorDisplayName {
-                                    Text(displayName)
-                                        .font(.subheadline.bold())
+                                VStack(alignment: .leading, spacing: 2) {
+                                    if let displayName = location.creatorDisplayName {
+                                        Text(displayName)
+                                            .font(.subheadline.bold())
+                                    }
+                                    Text("@\(creatorUsername)")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
                                 }
-                                Text("@\(creatorUsername)")
+
+                                Spacer()
+
+                                Image(systemName: "chevron.right")
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.tertiary)
                             }
-
-                            Spacer()
-
-                            Text("Ersteller")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color(.systemGray5))
-                                .clipShape(Capsule())
                         }
+                        .buttonStyle(.plain)
                     }
 
                     Divider()

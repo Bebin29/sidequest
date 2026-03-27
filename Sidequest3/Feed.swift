@@ -91,109 +91,169 @@ struct FeedCard: View {
     var onTap: () -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Top Bar — Creator Info
-            HStack(spacing: 12) {
-                if let urlString = location.creatorProfileImageUrl,
-                   let url = URL(string: urlString) {
-                    AsyncImage(url: url) { image in
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 44, height: 44)
-                            .clipShape(Circle())
-                    } placeholder: {
-                        avatarPlaceholder
-                    }
-                } else {
-                    avatarPlaceholder
-                }
+        VStack(alignment: .leading, spacing: 0) {
+            // Creator Bar — clean, no background
+            HStack(spacing: 10) {
+                creatorAvatar
+                    .frame(width: 40, height: 40)
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 1) {
                     Text(location.creatorDisplayName ?? location.creatorUsername ?? "Unbekannt")
                         .font(.subheadline.bold())
                     Text(formattedDate(location.createdAt))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, 4)
+            .padding(.bottom, 10)
+
+            // Image carousel with gradient overlay
+            GeometryReader { geo in
+                let size = geo.size.width
+                ZStack(alignment: .bottomLeading) {
+                    if !location.imageUrls.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            LazyHStack(spacing: 0) {
+                                ForEach(location.imageUrls, id: \.self) { urlString in
+                                    AsyncImage(url: URL(string: urlString)) { phase in
+                                        switch phase {
+                                        case .success(let image):
+                                            image
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: size, height: size)
+                                                .clipped()
+                                        case .failure:
+                                            Color(.systemGray5)
+                                                .frame(width: size, height: size)
+                                                .overlay(
+                                                    Image(systemName: "photo")
+                                                        .font(.title)
+                                                        .foregroundStyle(.tertiary)
+                                                )
+                                        case .empty:
+                                            ProgressView()
+                                                .frame(width: size, height: size)
+                                                .background(Color(.systemGray6))
+                                        @unknown default:
+                                            EmptyView()
+                                        }
+                                    }
+                                }
+                            }
+                            .scrollTargetLayout()
+                        }
+                        .scrollTargetBehavior(.paging)
+                    } else {
+                        imagePlaceholder
+                    }
+
+                    // Gradient overlay with name + category
+                    LinearGradient(
+                        colors: [.clear, .black.opacity(0.7)],
+                        startPoint: .center,
+                        endPoint: .bottom
+                    )
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(location.name)
+                            .font(.title3.bold())
+                            .foregroundStyle(.white)
+
+                        HStack(spacing: 8) {
+                            Text(location.category)
+                                .font(.caption.weight(.semibold))
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(.white.opacity(0.2))
+                                .clipShape(Capsule())
+
+                            HStack(spacing: 3) {
+                                Image(systemName: "mappin")
+                                    .font(.caption2)
+                                Text(location.address)
+                                    .font(.caption)
+                                    .lineLimit(1)
+                            }
+                            .opacity(0.8)
+                        }
+                        .foregroundStyle(.white)
+                    }
+                    .padding()
+                }
+            }
+            .aspectRatio(1, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+
+            // Description + Actions
+            if let description = location.description, !description.isEmpty {
+                Text(description)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .padding(.horizontal, 4)
+                    .padding(.top, 10)
+            }
+
+            // Action row
+            HStack(spacing: 16) {
+                Button { onTap() } label: {
+                    Label("Details", systemImage: "arrow.right.circle")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.indigo)
                 }
 
                 Spacer()
 
-                Text(location.category)
-                    .font(.caption2.weight(.medium))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(.blue.opacity(0.1))
-                    .foregroundStyle(.blue)
-                    .clipShape(Capsule())
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 12)
-            .background(Color(.systemGray6))
-
-            // Image
-            if let urlString = location.imageUrls.first,
-               let url = URL(string: urlString) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(height: 300)
-                            .clipped()
-                    case .failure:
-                        imagePlaceholder
-                    case .empty:
-                        ProgressView()
-                            .frame(height: 300)
-                            .frame(maxWidth: .infinity)
-                            .background(Color(.systemGray6))
-                    @unknown default:
-                        EmptyView()
+                if location.imageUrls.count > 1 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "photo.on.rectangle")
+                            .font(.caption2)
+                        Text("\(location.imageUrls.count) Fotos")
+                            .font(.caption2)
                     }
-                }
-            } else {
-                imagePlaceholder
-            }
-
-            // Bottom Bar — Location Info + Actions
-            VStack(alignment: .leading, spacing: 8) {
-                Text(location.name)
-                    .font(.headline)
-
-                HStack(spacing: 4) {
-                    Image(systemName: "mappin")
-                        .font(.caption2)
-                    Text(location.address)
-                        .font(.caption)
-                        .lineLimit(1)
-                }
-                .foregroundStyle(.secondary)
-
-                if let description = location.description, !description.isEmpty {
-                    Text(description)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
+                    .foregroundStyle(.tertiary)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding()
-            .background(Color(.systemGray6))
+            .padding(.horizontal, 4)
+            .padding(.top, 10)
         }
+        .padding(12)
+        .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
         .contentShape(RoundedRectangle(cornerRadius: 20))
         .onTapGesture { onTap() }
+    }
+
+    // MARK: - Subviews
+
+    @ViewBuilder
+    private var creatorAvatar: some View {
+        if let urlString = location.creatorProfileImageUrl,
+           let url = URL(string: urlString) {
+            AsyncImage(url: url) { image in
+                image
+                    .resizable()
+                    .scaledToFill()
+                    .clipShape(Circle())
+            } placeholder: {
+                avatarPlaceholder
+            }
+        } else {
+            avatarPlaceholder
+        }
     }
 
     private var avatarPlaceholder: some View {
         Circle()
             .fill(Color(.systemGray4))
-            .frame(width: 44, height: 44)
             .overlay(
                 Text(String((location.creatorUsername ?? "?").prefix(1)).uppercased())
-                    .font(.subheadline.bold())
+                    .font(.caption.bold())
                     .foregroundStyle(.white)
             )
     }
@@ -201,7 +261,7 @@ struct FeedCard: View {
     private var imagePlaceholder: some View {
         Rectangle()
             .fill(Color(.systemGray5))
-            .frame(height: 200)
+            .aspectRatio(1, contentMode: .fill)
             .overlay(
                 Image(systemName: "photo")
                     .font(.title)

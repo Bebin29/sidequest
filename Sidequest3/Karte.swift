@@ -248,6 +248,7 @@ struct PlaceSearchView: View {
     @StateObject private var locationManager = LocationManager()
     @State private var selectedItem: MKMapItem?
     @State private var selectedCategory = ""
+    @State private var searchDebounceTask: Task<Void, Never>?
     @Bindable var mapViewModel: MapViewModel
     var userId: UUID?
     var onDismiss: () -> Void
@@ -269,8 +270,13 @@ struct PlaceSearchView: View {
                         .textFieldStyle(.roundedBorder)
                         .padding()
                         .onChange(of: searchText) { _, newValue in
-                            completer.userLocation = locationManager.lastLocation
-                            completer.update(query: newValue)
+                            searchDebounceTask?.cancel()
+                            searchDebounceTask = Task {
+                                try? await Task.sleep(for: .milliseconds(300))
+                                guard !Task.isCancelled else { return }
+                                completer.userLocation = locationManager.lastLocation
+                                completer.update(query: newValue)
+                            }
                         }
 
                     List(completer.results) { result in

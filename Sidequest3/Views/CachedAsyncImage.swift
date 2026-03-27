@@ -1,0 +1,95 @@
+//
+//  CachedAsyncImage.swift
+//  Sidequest
+//
+
+import SwiftUI
+
+struct CachedAsyncImage<Content: View, Placeholder: View>: View {
+    let url: URL?
+    @ViewBuilder let content: (Image) -> Content
+    @ViewBuilder let placeholder: () -> Placeholder
+
+    @State private var image: UIImage?
+    @State private var isLoading = false
+    @State private var failed = false
+    @State private var retryCount = 0
+
+    private static var cache: URLCache {
+        let cache = URLCache(
+            memoryCapacity: 50 * 1024 * 1024,  // 50 MB RAM
+            diskCapacity: 200 * 1024 * 1024     // 200 MB Disk
+        )
+        return cache
+    }
+
+    private static var session: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.urlCache = CachedAsyncImage.cache
+        config.requestCachePolicy = .returnCacheDataElseLoad
+        return URLSession(configuration: config)
+    }()
+
+    var body: some View {
+        Group {
+            if let image {
+                content(Image(uiImage: image))
+            } else if failed {
+                placeholder()
+                    .onTapGesture {
+                        retry()
+                    }
+            } else {
+                placeholder()
+            }
+        }
+        .task(id: url) {
+            await loadImage()
+        }
+    }
+
+    private func loadImage() async {
+        guard let url, image == nil else { return }
+        guard !isLoading else { return }
+        isLoading = true
+        failed = false
+
+        let request = URLRequest(url: url)
+
+        // Check cache first
+        if let cached = Self.cache.cachedResponse(for: request),
+           let uiImage = UIImage(data: cached.data) {
+            self.image = uiImage
+            isLoading = false
+            return
+        }
+
+        do {
+            let (data, response) = try await Self.session.data(for: request)
+            if let uiImage = UIImage(data: data) {
+                // Store in cache
+                let cachedResponse = CachedURLResponse(response: response, data: data)
+                Self.cache.storeCachedResponse(cachedResponse, for: request)
+                self.image = uiImage
+            } else {
+                failed = true
+            }
+        } catch {
+            if retryCount < 2 {
+                retryCount += 1
+                try? await Task.sleep(for: .milliseconds(500 * retryCount))
+                isLoading = false
+                await loadImage()
+                return
+            }
+            failed = true
+        }
+        isLoading = false
+    }
+
+    private func retry() {
+        retryCount = 0
+        failed = false
+        Task { await loadImage() }
+    }
+}

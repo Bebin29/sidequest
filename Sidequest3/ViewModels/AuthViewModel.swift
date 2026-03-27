@@ -52,7 +52,8 @@ final class AuthViewModel {
             )
             currentUser = user
             isAuthenticated = true
-            needsOnboarding = isNewUser
+            // Username wird vom Backend automatisch aus der E-Mail generiert
+            // User kann ihn später auf der Profilseite ändern
         } catch {
             errorMessage = error.localizedDescription
         }

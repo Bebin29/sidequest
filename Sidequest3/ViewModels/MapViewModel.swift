@@ -5,11 +5,13 @@
 
 import Foundation
 
+@MainActor
 @Observable
 final class MapViewModel {
     var locations: [Location] = []
     var isLoading = false
     var errorMessage: String?
+    var filter = LocationFilter()
 
     private let locationService = LocationService()
 
@@ -18,7 +20,7 @@ final class MapViewModel {
         errorMessage = nil
 
         do {
-            locations = try await locationService.fetchLocations(userId: userId)
+            locations = try await locationService.fetchLocations(userId: userId, filter: filter)
         } catch {
             errorMessage = error.localizedDescription
         }

@@ -7,6 +7,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
     private let manager = CLLocationManager()
     private var hasSetInitialPosition = false
+    var positionOverridden = false
     @Published var lastLocation: CLLocation?
     @Published var position: MapCameraPosition = .region(MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 52.5200, longitude: 13.4050),
@@ -28,10 +29,12 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
         DispatchQueue.main.async {
             self.lastLocation = location
-            self.position = .region(MKCoordinateRegion(
-                center: location.coordinate,
-                span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-            ))
+            if !self.positionOverridden {
+                self.position = .region(MKCoordinateRegion(
+                    center: location.coordinate,
+                    span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+                ))
+            }
         }
     }
     func centerOnUser() {
@@ -82,6 +85,7 @@ struct Karte: View {
             }
             .onChange(of: focusLocation, initial: true) { _, location in
                 guard let location else { return }
+                locationManager.positionOverridden = true
                 withAnimation(.easeInOut(duration: 0.6)) {
                     locationManager.position = .region(MKCoordinateRegion(
                         center: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude),

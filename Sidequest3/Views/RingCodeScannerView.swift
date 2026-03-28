@@ -304,13 +304,8 @@ enum RingCodeDecoder {
             let minBright = sorted.first ?? 0
             let threshold = minBright + (median - minBright) * 0.5
 
-<<<<<<< HEAD
-            // Check each position: is it in a gap (dark) or a segment (bright)?
-            let isGap = brightnesses.map { $0 < threshold }
-=======
             // Classify each position
             let isSegment = brightnesses.map { $0 > threshold }
->>>>>>> 87ef9084a0cb4165ff893f055880d32536d970fe
 
             // Convert to bits: detect transitions from gap to segment
             var bits = ""

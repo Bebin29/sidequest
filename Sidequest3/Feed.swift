@@ -51,7 +51,10 @@ struct Feed: View {
                     .padding(.top)
                 }
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Feed")
+            .navigationBarTitleDisplayMode(.inline)
+            //.navigationTitle("Feed")
             .task {
                 guard let userId else { return }
                 await viewModel.loadFeed(userId: userId)
@@ -224,67 +227,69 @@ struct FeedCard: View {
             .padding(.bottom, 10)
 
             // Image carousel with gradient overlay
-            ZStack(alignment: .bottomLeading) {
+            ZStack(alignment: .topLeading) {
+
+                // Images
                 if !location.imageUrls.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        LazyHStack(spacing: 0) {
-                            ForEach(Array(location.imageUrls.enumerated()), id: \.offset) { index, urlString in
-                                CachedAsyncImage(url: URL(string: urlString)) { image in
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                } placeholder: {
-                                    Color(.systemGray6)
-                                        .overlay(ProgressView())
+
+                    if location.imageUrls.count > 1 {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            LazyHStack(spacing: 0) {
+                                ForEach(Array(location.imageUrls.enumerated()), id: \.offset) { index, urlString in
+                                    CachedAsyncImage(url: URL(string: urlString)) { image in
+                                        image
+                                            .resizable()
+                                            .scaledToFill()
+                                    } placeholder: {
+                                        Color(.systemGray6)
+                                            .overlay(ProgressView())
+                                    }
+                                    .aspectRatio(1, contentMode: .fill)
+                                    .clipped()
+                                    .containerRelativeFrame(.horizontal)
                                 }
-                                .frame(minWidth: 0, maxWidth: .infinity)
-                                .aspectRatio(1, contentMode: .fill)
-                                .clipped()
-                                .containerRelativeFrame(.horizontal)
                             }
+                            .scrollTargetLayout()
                         }
-                        .scrollTargetLayout()
+                        .scrollTargetBehavior(.paging)
+                        .scrollPosition(id: $currentPage)
+
+                    } else {
+                        // nur ein Bild -> kein ScrollView
+                        CachedAsyncImage(url: URL(string: location.imageUrls[0])) { image in
+                            image
+                                .resizable()
+                                .scaledToFill()
+                        } placeholder: {
+                            Color(.systemGray6)
+                                .overlay(ProgressView())
+                        }
                     }
-                    .scrollTargetBehavior(.paging)
-                    .scrollPosition(id: $currentPage)
+
                 } else {
                     imagePlaceholder
                 }
 
-                // Page indicator dots
-                if location.imageUrls.count > 1 {
-                    HStack(spacing: 6) {
-                        ForEach(0..<location.imageUrls.count, id: \.self) { index in
-                            Circle()
-                                .fill(index == (currentPage ?? 0) ? .white : .white.opacity(0.4))
-                                .frame(width: 7, height: 7)
-                        }
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(.black.opacity(0.3))
-                    .clipShape(Capsule())
-                    .frame(maxWidth: .infinity)
-                    .padding(.bottom, 72)
-                }
-
-                // Gradient overlay with name + category
+                // Top Gradient
                 LinearGradient(
-                    colors: [.clear, .black.opacity(0.7)],
-                    startPoint: .center,
-                    endPoint: .bottom
+                    colors: [.black.opacity(0.7), .clear],
+                    startPoint: .top,
+                    endPoint: .center
                 )
                 .allowsHitTesting(false)
 
+                // Name + Category (oben im Bild)
                 VStack(alignment: .leading, spacing: 6) {
                     Text(location.name)
                         .font(.title3.bold())
                         .foregroundStyle(.white)
 
                     HStack(spacing: 8) {
+
                         HStack(spacing: 4) {
                             Image(systemName: categoryIcon(for: location.category))
                                 .font(.caption2)
+
                             Text(location.category)
                                 .font(.caption.weight(.semibold))
                         }
@@ -296,21 +301,42 @@ struct FeedCard: View {
                         HStack(spacing: 3) {
                             Image(systemName: "mappin")
                                 .font(.caption2)
+
                             Text(location.address)
                                 .font(.caption)
                                 .lineLimit(1)
                         }
-                        .opacity(0.8)
+                        .opacity(0.85)
                     }
                     .foregroundStyle(.white)
                 }
                 .padding()
+
+                // Dots ganz unten
+                if location.imageUrls.count > 1 {
+                    VStack {
+                        Spacer()
+
+                        HStack(spacing: 6) {
+                            ForEach(0..<location.imageUrls.count, id: \.self) { index in
+                                Circle()
+                                    .fill(index == (currentPage ?? 0) ? .white : .white.opacity(0.4))
+                                    .frame(width: 7, height: 7)
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.black.opacity(0.35))
+                        .clipShape(Capsule())
+                        .padding(.bottom, 10)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
             }
             .aspectRatio(1, contentMode: .fit)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .contentShape(RoundedRectangle(cornerRadius: 16))
             .onTapGesture { onTap() }
-
             // Description
             if let description = location.description, !description.isEmpty {
                 Text(description)

@@ -59,6 +59,7 @@ struct Karte: View {
     @State private var showFilterSheet = false
     @State private var selectedLocationId: UUID?
     @State private var showDetail = false
+    
     var userId: UUID?
     @Binding var focusLocation: Location?
 
@@ -77,7 +78,7 @@ struct Karte: View {
                     }
                 }
             }
-            .ignoresSafeArea()
+            .ignoresSafeArea(.container)
             .onChange(of: selectedLocationId) { _, newValue in
                 if newValue != nil {
                     showDetail = true

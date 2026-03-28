@@ -254,14 +254,13 @@ private class ScannerPreviewUIView: UIView {
 // MARK: - Ring Code Decoder (works directly on pixel buffer — no CIContext overhead)
 
 enum RingCodeDecoder {
-    private static let ringCount = 3
+    private static let ringCount = 4
     private static let positionsPerRing = 24
     private static let samplesPerPosition = 3
 
-    // Ring radii as fractions of detected pattern radius
-    // Calculated from RingCodeView: innerRadius + ringIndex * (gapSize + strokeWidth)
-    // With gapSize=7, strokeWidth=5: ratios are ~0.48, 0.66, 0.85
-    private static let ringRadii: [CGFloat] = [0.73, 0.87, 1.0]
+    // Ring radii as fractions of outermost ring radius
+    // Calculated from RingCodeView: ringGap=4, strokeWidth=5
+    private static let ringRadii: [CGFloat] = [0.71, 0.81, 0.90, 1.0]
 
     static func decode(from pixelBuffer: CVPixelBuffer) -> String? {
         CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)

@@ -6,14 +6,15 @@
 import SwiftUI
 
 struct RingCodeView: View {
-    let code: String           // 72-char binary string (3 rings × 24 positions)
+    let code: String           // 96-char binary string (4 rings × 24 positions)
     let profileImage: UIImage?
     let initial: String
     let size: CGFloat
 
-    private let ringCount = 3
+    private let ringCount = 4
     private let positionsPerRing = 24
-    private let gapSize: CGFloat = 7       // Gap between segments AND between rings (in points)
+    private let segmentGap: CGFloat = 7    // Gap between segments (in points)
+    private let ringGap: CGFloat = 4       // Gap between rings (in points)
     private let strokeWidth: CGFloat = 5
 
     var body: some View {
@@ -21,9 +22,9 @@ struct RingCodeView: View {
             ForEach(0..<ringCount, id: \.self) { ringIndex in
                 RingLayer(
                     segments: segmentsForRing(ringIndex),
-                    radius: innerRadius + CGFloat(ringIndex) * (gapSize + strokeWidth),
+                    radius: innerRadius + CGFloat(ringIndex) * (ringGap + strokeWidth),
                     strokeWidth: strokeWidth,
-                    gapPixels: gapSize
+                    gapPixels: segmentGap
                 )
             }
 
@@ -49,7 +50,7 @@ struct RingCodeView: View {
     }
 
     private var profileSize: CGFloat {
-        size - CGFloat(ringCount) * 2 * (gapSize + strokeWidth) - 8
+        size - CGFloat(ringCount) * 2 * (ringGap + strokeWidth) - 8
     }
 
     private var innerRadius: CGFloat {

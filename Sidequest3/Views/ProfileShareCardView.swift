@@ -22,7 +22,7 @@ struct ProfileShareCardContent: View {
 
                 // Ring Code + Profile Image
                 RingCodeView(
-                    code: user.ringCode ?? String(repeating: "0", count: 72),
+                    code: user.ringCode ?? String(repeating: "0", count: 96),
                     profileImage: profileImage,
                     initial: String(user.displayName.prefix(1)).uppercased(),
                     size: 130

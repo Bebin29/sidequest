@@ -186,7 +186,7 @@ struct Profile: View {
                 Text("Profil bearbeiten")
                     .font(.subheadline.weight(.semibold))
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
+                    .frame(height: 36)
                     .background(Color(.systemGray5))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
@@ -197,8 +197,7 @@ struct Profile: View {
             } label: {
                 Image(systemName: "square.and.arrow.up")
                     .font(.subheadline.weight(.semibold))
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 16)
+                    .frame(width: 44, height: 36)
                     .background(Color(.systemGray5))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
@@ -304,6 +303,7 @@ struct Profile: View {
                     Image(systemName: "rectangle.portrait.and.arrow.right")
                         .frame(width: 20)
                         .foregroundStyle(.red)
+                        .fontWeight(.semibold)
                     Text("Abmelden")
                         .foregroundStyle(.red)
                     Spacer()
@@ -332,6 +332,7 @@ struct Profile: View {
                 Image(systemName: icon)
                     .frame(width: 20)
                     .foregroundStyle(.primary)
+                    .fontWeight(.semibold)
                 Text(title)
                     .foregroundStyle(.primary)
                 Spacer()

@@ -231,41 +231,28 @@ struct FeedCard: View {
 
                 // Images
                 if !location.imageUrls.isEmpty {
-
-                    if location.imageUrls.count > 1 {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            LazyHStack(spacing: 0) {
-                                ForEach(Array(location.imageUrls.enumerated()), id: \.offset) { index, urlString in
-                                    CachedAsyncImage(url: URL(string: urlString)) { image in
-                                        image
-                                            .resizable()
-                                            .scaledToFill()
-                                    } placeholder: {
-                                        Color(.systemGray6)
-                                            .overlay(ProgressView())
-                                    }
-                                    .aspectRatio(1, contentMode: .fill)
-                                    .clipped()
-                                    .containerRelativeFrame(.horizontal)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(spacing: 0) {
+                            ForEach(Array(location.imageUrls.enumerated()), id: \.offset) { index, urlString in
+                                CachedAsyncImage(url: URL(string: urlString)) { image in
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                } placeholder: {
+                                    Color(.systemGray6)
+                                        .overlay(ProgressView())
                                 }
+                                .frame(minWidth: 0, maxWidth: .infinity)
+                                .aspectRatio(1, contentMode: .fill)
+                                .clipped()
+                                .containerRelativeFrame(.horizontal)
                             }
-                            .scrollTargetLayout()
                         }
-                        .scrollTargetBehavior(.paging)
-                        .scrollPosition(id: $currentPage)
-
-                    } else {
-                        // nur ein Bild -> kein ScrollView
-                        CachedAsyncImage(url: URL(string: location.imageUrls[0])) { image in
-                            image
-                                .resizable()
-                                .scaledToFill()
-                        } placeholder: {
-                            Color(.systemGray6)
-                                .overlay(ProgressView())
-                        }
+                        .scrollTargetLayout()
                     }
-
+                    .scrollTargetBehavior(.paging)
+                    .scrollPosition(id: $currentPage)
+                    
                 } else {
                     imagePlaceholder
                 }

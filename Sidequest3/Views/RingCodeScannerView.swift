@@ -5,6 +5,7 @@
 
 import SwiftUI
 import AVFoundation
+import Combine
 
 // MARK: - Scanner View
 
@@ -40,10 +41,10 @@ struct RingCodeScannerView: View {
                     )
                     .allowsHitTesting(false)
 
-                VStack {
+                VStack(spacing: 0) {
                     Spacer()
 
-                    // Scan guide
+                    // Scan guide — centered, same position as cutout
                     ZStack {
                         Circle()
                             .stroke(
@@ -62,9 +63,9 @@ struct RingCodeScannerView: View {
                         }
                     }
 
-                    Spacer().frame(height: 40)
+                    Spacer()
 
-                    // Status
+                    // Status — pinned to bottom
                     HStack(spacing: 8) {
                         if isSearching {
                             ProgressView().tint(.white)
@@ -77,8 +78,7 @@ struct RingCodeScannerView: View {
                     .padding(.vertical, 12)
                     .background(.black.opacity(0.6))
                     .clipShape(Capsule())
-
-                    Spacer().frame(height: 60)
+                    .padding(.bottom, 60)
                 }
             }
             .navigationTitle("Code scannen")
@@ -256,12 +256,12 @@ private class ScannerPreviewUIView: UIView {
 enum RingCodeDecoder {
     private static let ringCount = 3
     private static let positionsPerRing = 24
-    private static let samplesPerPosition = 2
+    private static let samplesPerPosition = 3
 
     // Ring radii as fractions of detected pattern radius
     // Calculated from RingCodeView: innerRadius + ringIndex * (gapSize + strokeWidth)
     // With gapSize=7, strokeWidth=5: ratios are ~0.48, 0.66, 0.85
-    private static let ringRadii: [CGFloat] = [0.48, 0.66, 0.85]
+    private static let ringRadii: [CGFloat] = [0.73, 0.87, 1.0]
 
     static func decode(from pixelBuffer: CVPixelBuffer) -> String? {
         CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
@@ -284,7 +284,8 @@ enum RingCodeDecoder {
         // The rings are white on a dark background — look for a radial brightness profile
         guard let patternRadius = findPatternRadius(
             pointer: pointer, centerX: centerX, centerY: centerY,
-            maxRadius: maxRadius, bytesPerRow: bytesPerRow
+            maxRadius: maxRadius, bytesPerRow: bytesPerRow,
+            width: width, height: height
         ) else { return nil }
 
         var allBits = ""
@@ -336,10 +337,11 @@ enum RingCodeDecoder {
     private static func findPatternRadius(
         pointer: UnsafePointer<UInt8>,
         centerX: Int, centerY: Int,
-        maxRadius: CGFloat, bytesPerRow: Int
+        maxRadius: CGFloat, bytesPerRow: Int,
+        width: Int, height: Int
     ) -> CGFloat? {
-        let numAngles = 4
-        let numSteps = 20
+        let numAngles = 8
+        let numSteps = 30
         var radialProfile: [CGFloat] = Array(repeating: 0, count: numSteps)
 
         for angleIdx in 0..<numAngles {
@@ -352,8 +354,7 @@ enum RingCodeDecoder {
                 let brightness = readBrightness(
                     pointer: pointer,
                     x: Int(sampleX), y: Int(sampleY),
-                    width: Int(maxRadius) * 4, // generous bounds
-                    height: Int(maxRadius) * 4,
+                    width: width, height: height,
                     bytesPerRow: bytesPerRow
                 )
                 radialProfile[step] += brightness / CGFloat(numAngles)
@@ -372,10 +373,9 @@ enum RingCodeDecoder {
 
         guard lastBrightStep > 5 else { return nil } // Too small or not found
 
-        // The outer ring is at ~85% of the total pattern radius
-        // So total pattern radius = lastBrightStep radius / 0.85
+        // Outer ring radius = pattern radius (ringRadii[2] = 1.0)
         let outerRingRadius = maxRadius * CGFloat(lastBrightStep + 1) / CGFloat(numSteps)
-        return outerRingRadius / ringRadii[2]
+        return outerRingRadius
     }
 
     /// Detect segment boundaries from a ring's brightness profile.
@@ -416,20 +416,25 @@ enum RingCodeDecoder {
         return bits
     }
 
-    /// Read brightness at a pixel position (BGRA format). Single pixel for speed.
+    /// Read brightness at a pixel position (BGRA format), averaged over 3×3 area.
     private static func readBrightness(
         pointer: UnsafePointer<UInt8>,
         x: Int, y: Int,
         width: Int, height: Int,
         bytesPerRow: Int
     ) -> CGFloat {
-        let px = max(0, min(width - 1, x))
-        let py = max(0, min(height - 1, y))
-        let offset = py * bytesPerRow + px * 4
-
-        let blue = CGFloat(pointer[offset]) / 255.0
-        let green = CGFloat(pointer[offset + 1]) / 255.0
-        let red = CGFloat(pointer[offset + 2]) / 255.0
-        return 0.299 * red + 0.587 * green + 0.114 * blue
+        let cx = max(1, min(width - 2, x))
+        let cy = max(1, min(height - 2, y))
+        var total: CGFloat = 0
+        for dy in -1...1 {
+            for dx in -1...1 {
+                let offset = (cy + dy) * bytesPerRow + (cx + dx) * 4
+                let blue = CGFloat(pointer[offset]) / 255.0
+                let green = CGFloat(pointer[offset + 1]) / 255.0
+                let red = CGFloat(pointer[offset + 2]) / 255.0
+                total += 0.299 * red + 0.587 * green + 0.114 * blue
+            }
+        }
+        return total / 9.0
     }
 }

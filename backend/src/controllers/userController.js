@@ -161,7 +161,7 @@ async function findByRingCode(req, res, query) {
 
         const allUsers = await pool.query('SELECT * FROM users WHERE ring_code IS NOT NULL');
         let bestMatch = null;
-        let bestDistance = 9; // max Hamming distance allowed
+        let bestDistance = 18; // max Hamming distance allowed (25% of 72 bits)
 
         // Split scanned code into 3 rings of 24 bits
         const scannedRings = [code.slice(0, 24), code.slice(24, 48), code.slice(48, 72)];

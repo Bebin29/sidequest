@@ -62,7 +62,7 @@ struct RingCodeView: View {
     private func segmentsForRing(_ ringIndex: Int) -> [RingSegment] {
         let start = ringIndex * positionsPerRing
         let end = min(start + positionsPerRing, code.count)
-        guard start < code.count else { return [RingSegment(start: 0, length: positionsPerRing)] }
+        guard start < code.count else { return [RingSegment(start: 0, length: positionsPerRing, opacity: 1.0)] }
 
         let bits = code[code.index(code.startIndex, offsetBy: start)..<code.index(code.startIndex, offsetBy: end)]
             .map { $0 == "1" }
@@ -73,24 +73,31 @@ struct RingCodeView: View {
 
         for position in 1..<bits.count {
             if bits[position] {
-                // New segment boundary
-                segments.append(RingSegment(start: currentStart, length: currentLength))
+                let opacity = opacityForSegment(ringIndex: ringIndex, segmentIndex: segments.count, start: currentStart)
+                segments.append(RingSegment(start: currentStart, length: currentLength, opacity: opacity))
                 currentStart = position
                 currentLength = 1
             } else {
                 currentLength += 1
             }
         }
-        // Close last segment
-        segments.append(RingSegment(start: currentStart, length: currentLength))
+        let opacity = opacityForSegment(ringIndex: ringIndex, segmentIndex: segments.count, start: currentStart)
+        segments.append(RingSegment(start: currentStart, length: currentLength, opacity: opacity))
 
         return segments
+    }
+
+    /// Deterministic opacity based on position — alternates between 1.0 and 0.66
+    private func opacityForSegment(ringIndex: Int, segmentIndex: Int, start: Int) -> Double {
+        let hash = (ringIndex * 7 + start * 3 + segmentIndex) % 3
+        return hash == 0 ? 0.66 : 1.0
     }
 }
 
 struct RingSegment {
     let start: Int
     let length: Int
+    let opacity: Double
 }
 
 // MARK: - Single Ring Layer
@@ -125,7 +132,7 @@ private struct RingLayer: View {
 
                 context.stroke(
                     path,
-                    with: .color(.white),
+                    with: .color(.white.opacity(segment.opacity)),
                     style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round)
                 )
             }

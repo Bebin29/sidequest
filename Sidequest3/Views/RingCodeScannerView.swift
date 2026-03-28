@@ -140,7 +140,7 @@ final class RingCodeScanner: NSObject, ObservableObject {
     // Confidence system
     private var candidateCode: String?
     private var candidateCount = 0
-    private let requiredConfidence = 4
+    private let requiredConfidence = 3
     private var spinTimer: Timer?
 
     func setup() {
@@ -256,8 +256,7 @@ private class ScannerPreviewUIView: UIView {
 enum RingCodeDecoder {
     private static let ringCount = 3
     private static let positionsPerRing = 24
-    // Oversampling: read more points per position for better accuracy
-    private static let samplesPerPosition = 3
+    private static let samplesPerPosition = 2
 
     // Ring radii as fractions of detected pattern radius
     // Calculated from RingCodeView: innerRadius + ringIndex * (gapSize + strokeWidth)
@@ -339,9 +338,8 @@ enum RingCodeDecoder {
         centerX: Int, centerY: Int,
         maxRadius: CGFloat, bytesPerRow: Int
     ) -> CGFloat? {
-        // Sample brightness along 8 radial lines outward from center
-        let numAngles = 8
-        let numSteps = 40
+        let numAngles = 4
+        let numSteps = 20
         var radialProfile: [CGFloat] = Array(repeating: 0, count: numSteps)
 
         for angleIdx in 0..<numAngles {
@@ -418,33 +416,20 @@ enum RingCodeDecoder {
         return bits
     }
 
-    /// Read brightness at a pixel position (BGRA format).
+    /// Read brightness at a pixel position (BGRA format). Single pixel for speed.
     private static func readBrightness(
         pointer: UnsafePointer<UInt8>,
         x: Int, y: Int,
         width: Int, height: Int,
         bytesPerRow: Int
     ) -> CGFloat {
-        let clampedX = max(0, min(width - 1, x))
-        let clampedY = max(0, min(height - 1, y))
+        let px = max(0, min(width - 1, x))
+        let py = max(0, min(height - 1, y))
+        let offset = py * bytesPerRow + px * 4
 
-        // Average 3x3 area for noise reduction
-        var total: CGFloat = 0
-        var count: CGFloat = 0
-        for deltaX in -1...1 {
-            for deltaY in -1...1 {
-                let pixelX = max(0, min(width - 1, clampedX + deltaX))
-                let pixelY = max(0, min(height - 1, clampedY + deltaY))
-                let offset = pixelY * bytesPerRow + pixelX * 4 // BGRA = 4 bytes
-
-                let blue = CGFloat(pointer[offset]) / 255.0
-                let green = CGFloat(pointer[offset + 1]) / 255.0
-                let red = CGFloat(pointer[offset + 2]) / 255.0
-                total += 0.299 * red + 0.587 * green + 0.114 * blue
-                count += 1
-            }
-        }
-
-        return total / count
+        let blue = CGFloat(pointer[offset]) / 255.0
+        let green = CGFloat(pointer[offset + 1]) / 255.0
+        let red = CGFloat(pointer[offset + 2]) / 255.0
+        return 0.299 * red + 0.587 * green + 0.114 * blue
     }
 }

@@ -18,7 +18,7 @@ struct Home: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("Home", systemImage: "house.fill", value: .home) {
+            Tab("Feed", systemImage: "house.fill", value: .home) {
                 Feed(
                     userId: authViewModel.currentUser?.id,
                     currentUserId: authViewModel.currentUser?.id,

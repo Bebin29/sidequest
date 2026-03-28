@@ -17,6 +17,8 @@ struct Profile: View {
     @State private var showShareCard = false
     @State private var selectedLocation: Location?
 
+    @State private var pendingCount = 0
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -28,12 +30,16 @@ struct Profile: View {
                         // Stats Bar
                         statsBar(user: user)
                             .padding(.top, 4)
-
+                        if pendingCount > 0 {
+                            Text("Freundschaftsanfragen: \(pendingCount)")
+                                .foregroundColor(.accentColor)
+                                .bold()
+                        }
                         // Action Buttons
                         actionButtons
                             .padding(.horizontal)
                             .padding(.top, 16)
-
+                        
                         // Meine Orte
                         myLocations
                             .padding(.top, 24)
@@ -84,14 +90,23 @@ struct Profile: View {
                 guard let userId = authViewModel.currentUser?.id else { return }
                 await friendsViewModel.loadFriends(userId: userId)
                 await mapViewModel.loadLocations(userId: userId)
+                await loadPendingRequests()
             }
             .refreshable {
                 guard let userId = authViewModel.currentUser?.id else { return }
                 await friendsViewModel.loadFriends(userId: userId)
                 await mapViewModel.loadLocations(userId: userId)
+                await loadPendingRequests()
             }
         }
     }
+    
+    func loadPendingRequests() async {
+            guard let userId = authViewModel.currentUser?.id else { return }
+            let viewModel = FriendsViewModel()
+            await viewModel.loadPendingRequests(userId: userId)
+            pendingCount = viewModel.pendingRequests.count
+        }
 
     // MARK: - Profile Header
 

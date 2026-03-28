@@ -50,6 +50,7 @@ struct Feed: View {
                     }
                     .padding(.top)
                 }
+                Spacer(minLength: 32)
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Feed")
@@ -94,9 +95,9 @@ struct Feed: View {
                 .padding(.horizontal, 32)
         }
         .padding(.top, 80)
+        .frame(maxWidth: .infinity, maxHeight: .infinity) // füllt den gesamten View
+        .background(Color(.systemGroupedBackground))
     }
-
-    // MARK: - Error State
 
     private func errorState(message: String) -> some View {
         VStack(spacing: 16) {
@@ -127,6 +128,8 @@ struct Feed: View {
             }
         }
         .padding(.top, 80)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground))
     }
 
     // MARK: - Skeleton Loading

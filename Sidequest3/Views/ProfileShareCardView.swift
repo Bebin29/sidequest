@@ -54,38 +54,6 @@ struct ProfileShareCardContent: View {
                     }
                 }
 
-             
-                // Locations nur oben (Dreiviertelkreis)
-                /*GeometryReader { geo in
-                    let center = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
-                    let ringRadius: CGFloat = 65      // Radius des Ring Codes
-                    let spotRadius: CGFloat = 25      // Radius eines Spots
-                    let minDistance = ringRadius + spotRadius + 8
-                    let maxDistance: CGFloat = min(geo.size.width, geo.size.height)/2 - spotRadius - 8
-
-                    let maxSpots = min(locations.count, 8)
-                    
-                    // Dreiviertelkreis von -150° bis -30° (oben links bis oben rechts)
-                    let startAngle = -150.0
-                    let endAngle = -30.0
-                    let angleStep = (endAngle - startAngle) / Double(max(maxSpots - 1, 1))
-                    let baseAngles = (0..<maxSpots).map { startAngle + Double($0) * angleStep }
-
-                    ForEach(Array(locations.prefix(maxSpots).enumerated()), id: \.offset) { index, location in
-                        let angleDeg = baseAngles[index] + Double.random(in: -5...5) // kleine Abweichung
-                        let angle = angleDeg * .pi / 180
-                        let radius = CGFloat.random(in: minDistance...maxDistance)
-
-                        let x = cos(angle) * radius
-                        let y = sin(angle) * radius
-
-                        SpotCircle(location: location)
-                            .frame(width: spotRadius * 2, height: spotRadius * 2)
-                            .position(x: center.x + x,
-                                      y: center.y + y)
-                    }
-                }
-                .frame(width: cardWidth, height: cardHeight)*/
                  }
             .frame(width: cardWidth, height: cardHeight)
 

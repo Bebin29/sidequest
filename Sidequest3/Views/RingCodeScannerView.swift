@@ -41,31 +41,28 @@ struct RingCodeScannerView: View {
                     )
                     .allowsHitTesting(false)
 
-                VStack(spacing: 0) {
-                    Spacer()
+                // Scan guide — exactly centered like the cutout
+                ZStack {
+                    Circle()
+                        .stroke(
+                            hasDetection ? Color.green.opacity(0.8) : Color.white.opacity(0.5),
+                            lineWidth: hasDetection ? 3 : 2
+                        )
+                        .frame(width: guideSize, height: guideSize)
+                        .animation(.easeInOut(duration: 0.3), value: hasDetection)
 
-                    // Scan guide — centered, same position as cutout
-                    ZStack {
+                    if isSearching {
                         Circle()
-                            .stroke(
-                                hasDetection ? Color.green.opacity(0.8) : Color.white.opacity(0.5),
-                                lineWidth: hasDetection ? 3 : 2
-                            )
+                            .trim(from: 0, to: 0.3)
+                            .stroke(Color.indigo, lineWidth: 3)
                             .frame(width: guideSize, height: guideSize)
-                            .animation(.easeInOut(duration: 0.3), value: hasDetection)
-
-                        if isSearching {
-                            Circle()
-                                .trim(from: 0, to: 0.3)
-                                .stroke(Color.indigo, lineWidth: 3)
-                                .frame(width: guideSize, height: guideSize)
-                                .rotationEffect(.degrees(scanner.scanAngle))
-                        }
+                            .rotationEffect(.degrees(scanner.scanAngle))
                     }
+                }
 
+                // Status — pinned to bottom
+                VStack {
                     Spacer()
-
-                    // Status — pinned to bottom
                     HStack(spacing: 8) {
                         if isSearching {
                             ProgressView().tint(.white)
@@ -94,6 +91,8 @@ struct RingCodeScannerView: View {
             .onDisappear { scanner.stop() }
             .onChange(of: scanner.confirmedCode) { _, code in
                 guard let code, !isSearching else { return }
+                print("DEBUG DECODED:  \(code)")
+                print("DEBUG EXPECTED: 110011010111101100100010110101000111111101111001100111110011011010011010100001000010111001100011")
                 Task { await lookupUser(code: code) }
             }
             .onChange(of: scanner.hasCandidate) { _, value in
@@ -185,6 +184,7 @@ final class RingCodeScanner: NSObject, ObservableObject {
         candidateCount = 0
         confirmedCode = nil
         hasCandidate = false
+        RingCodeDecoder.resetState()
     }
 
     fileprivate func processDetection(_ code: String?) {
@@ -251,16 +251,26 @@ private class ScannerPreviewUIView: UIView {
     }
 }
 
-// MARK: - Ring Code Decoder (works directly on pixel buffer — no CIContext overhead)
+// MARK: - Ring Code Decoder (gap-based detection on pixel buffer)
 
 enum RingCodeDecoder {
     private static let ringCount = 4
     private static let positionsPerRing = 24
-    private static let samplesPerPosition = 3
+    private static let samplesPerPosition = 8
+    private static let totalSamplesPerRing = positionsPerRing * samplesPerPosition // 192
 
-    // Ring radii as fractions of outermost ring radius
-    // Calculated from RingCodeView: ringGap=4, strokeWidth=5
-    private static let ringRadii: [CGFloat] = [0.71, 0.81, 0.90, 1.0]
+    // Ring radii as fractions of pattern outer edge.
+    // Derived from RingCodeView (size=130): innerRadius=31, step=9, outerEdge=60.5
+    // Ring centers: 31, 40, 49, 58 → divided by 60.5
+    private static let ringRadii: [CGFloat] = [0.51, 0.66, 0.81, 0.96]
+
+    // Temporal smoothing for stable pattern radius
+    private static var recentRadii: [CGFloat] = []
+    private static let radiusHistorySize = 5
+
+    static func resetState() {
+        recentRadii.removeAll()
+    }
 
     static func decode(from pixelBuffer: CVPixelBuffer) -> String? {
         CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
@@ -273,150 +283,210 @@ enum RingCodeDecoder {
         let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
         let pointer = baseAddress.assumingMemoryBound(to: UInt8.self)
 
-        // Work in center crop area
-        let cropSize = min(width, height) / 2
         let centerX = width / 2
         let centerY = height / 2
-        let maxRadius = CGFloat(cropSize) / 2
+        let maxRadius = CGFloat(min(width, height)) / 2.5
 
-        // Try to find the ring pattern by scanning for brightness contrast
-        // The rings are white on a dark background — look for a radial brightness profile
-        guard let patternRadius = findPatternRadius(
+        // 1. Find pattern radius with temporal smoothing (median of last N frames)
+        guard let rawRadius = findPatternRadius(
             pointer: pointer, centerX: centerX, centerY: centerY,
             maxRadius: maxRadius, bytesPerRow: bytesPerRow,
             width: width, height: height
-        ) else { return nil }
-
-        var allBits = ""
-
-        for ringIndex in 0..<ringCount {
-            let radius = patternRadius * ringRadii[ringIndex]
-
-            // High-resolution sampling: 24 positions × samplesPerPosition
-            let totalSamples = positionsPerRing * samplesPerPosition
-            var brightnesses: [CGFloat] = []
-
-            for sample in 0..<totalSamples {
-                let angle = CGFloat(sample) / CGFloat(totalSamples) * 2 * .pi
-                let sampleX = CGFloat(centerX) + cos(angle) * radius
-                let sampleY = CGFloat(centerY) + sin(angle) * radius
-
-                let brightness = readBrightness(
-                    pointer: pointer, x: Int(sampleX), y: Int(sampleY),
-                    width: width, height: height, bytesPerRow: bytesPerRow
-                )
-                brightnesses.append(brightness)
-            }
-
-            // Average down to 24 positions
-            var positionBrightness: [CGFloat] = []
-            for pos in 0..<positionsPerRing {
-                var sum: CGFloat = 0
-                for sub in 0..<samplesPerPosition {
-                    sum += brightnesses[pos * samplesPerPosition + sub]
-                }
-                positionBrightness.append(sum / CGFloat(samplesPerPosition))
-            }
-
-            // Find gaps using gradient detection
-            let bits = detectSegmentBoundaries(brightnesses: positionBrightness)
-            guard bits.count == positionsPerRing else { return nil }
-            allBits += bits
+        ) else {
+            print("DEBUG: findPatternRadius returned nil (maxRadius=\(maxRadius))")
+            return nil
         }
 
-        // Validate
+        recentRadii.append(rawRadius)
+        if recentRadii.count > radiusHistorySize { recentRadii.removeFirst() }
+        guard recentRadii.count >= 3 else { return nil }
+        let patternRadius = recentRadii.sorted()[recentRadii.count / 2]
+        print("DEBUG: rawRadius=\(String(format: "%.1f", rawRadius)), patternRadius=\(String(format: "%.1f", patternRadius)), maxRadius=\(String(format: "%.1f", maxRadius))")
+
+        // 2. Sample all 4 rings at high resolution
+        var ringProfiles: [[CGFloat]] = []
+        for ringIndex in 0..<ringCount {
+            let radius = patternRadius * ringRadii[ringIndex]
+            var profile: [CGFloat] = []
+            for sample in 0..<totalSamplesPerRing {
+                let angle = CGFloat(sample) / CGFloat(totalSamplesPerRing) * 2 * .pi
+                let sx = CGFloat(centerX) + cos(angle) * radius
+                let sy = CGFloat(centerY) + sin(angle) * radius
+                profile.append(readLuma(pointer: pointer, x: Int(sx), y: Int(sy),
+                                        width: width, height: height, bytesPerRow: bytesPerRow))
+            }
+            ringProfiles.append(profile)
+        }
+
+        // 3. Compute per-ring adaptive threshold
+        let n = totalSamplesPerRing
+        var ringThresholds: [CGFloat] = []
+        for ring in 0..<ringCount {
+            let sorted = ringProfiles[ring].sorted()
+            let darkLevel = sorted[n / 5]       // 20th percentile
+            let brightLevel = sorted[n * 4 / 5] // 80th percentile
+            ringThresholds.append((darkLevel + brightLevel) / 2)
+            print("DEBUG: ring \(ring) dark=\(String(format: "%.3f", darkLevel)) bright=\(String(format: "%.3f", brightLevel)) thresh=\(String(format: "%.3f", (darkLevel + brightLevel) / 2))")
+        }
+
+        // Helper: brightness at a position boundary (average ±1 sample for noise reduction)
+        func boundaryBrightness(ring: Int, sample: Int) -> CGFloat {
+            let p = ringProfiles[ring]
+            return (p[(sample - 1 + n) % n] + p[sample] + p[(sample + 1) % n]) / 3.0
+        }
+
+        // 4. Find sync rotation — the boundary where all 4 rings are darkest simultaneously
+        var bestRotation = 0
+        var bestScore = 0
+        var bestDarkness: CGFloat = 0
+        for rotation in 0..<positionsPerRing {
+            let sample = rotation * samplesPerPosition
+            var score = 0
+            var totalDarkness: CGFloat = 0
+            for ring in 0..<ringCount {
+                let b = boundaryBrightness(ring: ring, sample: sample)
+                if b < ringThresholds[ring] {
+                    score += 1
+                    totalDarkness += ringThresholds[ring] - b
+                }
+            }
+            if score > bestScore || (score == bestScore && totalDarkness > bestDarkness) {
+                bestScore = score
+                bestDarkness = totalDarkness
+                bestRotation = rotation
+            }
+        }
+
+        print("DEBUG: syncRotation=\(bestRotation) (sample \(bestRotation * samplesPerPosition)), score=\(bestScore)/4")
+        guard bestScore >= 3 else {
+            print("DEBUG: sync failed, bestScore=\(bestScore)")
+            return nil
+        }
+
+        // 5. Decode bits — sample brightness at each position boundary
+        //    Dark boundary = gap = "1" (new segment), Bright boundary = "0" (segment continues)
+        var allBits = ""
+        for ring in 0..<ringCount {
+            var ringBits = ""
+            for pos in 0..<positionsPerRing {
+                let sample = ((bestRotation + pos) * samplesPerPosition) % n
+                let b = boundaryBrightness(ring: ring, sample: sample)
+                ringBits += b < ringThresholds[ring] ? "1" : "0"
+            }
+            print("DEBUG: ring \(ring) bits=\(ringBits) (ones=\(ringBits.filter { $0 == "1" }.count))")
+            allBits += ringBits
+        }
+
+        // 6. Validate — each ring's first bit must be "1" (sync marker)
+        for ring in 0..<ringCount {
+            let idx = allBits.index(allBits.startIndex, offsetBy: ring * positionsPerRing)
+            guard allBits[idx] == "1" else { return nil }
+        }
+
         let ones = allBits.filter { $0 == "1" }.count
-        guard ones >= 6 && ones <= 60 else { return nil }
+        print("DEBUG DECODED: \(allBits) (ones=\(ones))")
+        guard ones >= 8 && ones <= 80 else {
+            print("DEBUG: ones count out of range: \(ones)")
+            return nil
+        }
 
         return allBits
     }
 
-    /// Scan radially outward to find the approximate size of the ring pattern.
-    /// Returns the outer radius of the pattern, or nil if no pattern detected.
+    // MARK: - Pattern Radius Detection
+
+    /// Find pattern radius by testing multiple candidates and scoring based on ring-code structure.
+    /// The correct radius shows: high contrast on ALL 4 rings + strong sync (shared dark boundary).
     private static func findPatternRadius(
         pointer: UnsafePointer<UInt8>,
         centerX: Int, centerY: Int,
         maxRadius: CGFloat, bytesPerRow: Int,
         width: Int, height: Int
     ) -> CGFloat? {
-        let numAngles = 8
-        let numSteps = 30
-        var radialProfile: [CGFloat] = Array(repeating: 0, count: numSteps)
+        let numCandidates = 15
+        let lowRes = 96 // 4 samples per position
+        let lowResPerPos = lowRes / positionsPerRing // 4
 
-        for angleIdx in 0..<numAngles {
-            let angle = CGFloat(angleIdx) / CGFloat(numAngles) * 2 * .pi
-            for step in 0..<numSteps {
-                let radius = maxRadius * CGFloat(step + 1) / CGFloat(numSteps)
-                let sampleX = CGFloat(centerX) + cos(angle) * radius
-                let sampleY = CGFloat(centerY) + sin(angle) * radius
+        var bestRadius: CGFloat = 0
+        var bestScore: CGFloat = 0
 
-                let brightness = readBrightness(
-                    pointer: pointer,
-                    x: Int(sampleX), y: Int(sampleY),
-                    width: width, height: height,
-                    bytesPerRow: bytesPerRow
-                )
-                radialProfile[step] += brightness / CGFloat(numAngles)
+        for c in 0..<numCandidates {
+            // Guide circle (250pt) ≈ 70px radius in camera buffer.
+            // Ring code outer edge ≈ 65px when filling guide circle.
+            // Search 25%-65% of maxRadius to stay within the ring code area.
+            let fraction = 0.25 + CGFloat(c) * 0.40 / CGFloat(numCandidates - 1) // 0.25 to 0.65
+            let candidateRadius = maxRadius * fraction
+
+            // Sample all 4 rings at low resolution
+            var ringProfiles: [[CGFloat]] = []
+            var ringThresholds: [CGFloat] = []
+            var minContrast: CGFloat = 1.0
+
+            for ringIndex in 0..<ringCount {
+                let radius = candidateRadius * ringRadii[ringIndex]
+                var profile: [CGFloat] = []
+                for a in 0..<lowRes {
+                    let angle = CGFloat(a) / CGFloat(lowRes) * 2 * .pi
+                    let sx = CGFloat(centerX) + cos(angle) * radius
+                    let sy = CGFloat(centerY) + sin(angle) * radius
+                    profile.append(readLuma(
+                        pointer: pointer, x: Int(sx), y: Int(sy),
+                        width: width, height: height, bytesPerRow: bytesPerRow
+                    ))
+                }
+                let sorted = profile.sorted()
+                let dark = sorted[lowRes / 5]
+                let bright = sorted[lowRes * 4 / 5]
+                ringThresholds.append((dark + bright) / 2)
+                minContrast = min(minContrast, bright - dark)
+                ringProfiles.append(profile)
+            }
+
+            // Skip if any ring lacks contrast
+            guard minContrast > 0.05 else { continue }
+
+            // Find best sync: position where ≥3 rings have a dark boundary, weighted by depth
+            var bestSyncStrength: CGFloat = 0
+            for rotation in 0..<positionsPerRing {
+                let sample = rotation * lowResPerPos
+                var count = 0
+                var strength: CGFloat = 0
+                for ring in 0..<ringCount {
+                    let b = (ringProfiles[ring][(sample - 1 + lowRes) % lowRes] +
+                             ringProfiles[ring][sample] +
+                             ringProfiles[ring][(sample + 1) % lowRes]) / 3.0
+                    if b < ringThresholds[ring] {
+                        count += 1
+                        strength += ringThresholds[ring] - b
+                    }
+                }
+                if count >= 3 {
+                    bestSyncStrength = max(bestSyncStrength, strength)
+                }
+            }
+
+            guard bestSyncStrength > 0 else { continue }
+
+            // Score: sync depth × minimum contrast — both must be high
+            let score = bestSyncStrength * minContrast
+            if score > bestScore {
+                bestScore = score
+                bestRadius = candidateRadius
             }
         }
 
-        // Find the outermost ring: look for last significant brightness peak
-        let avg = radialProfile.reduce(0, +) / CGFloat(numSteps)
-        var lastBrightStep = 0
-        for step in stride(from: numSteps - 1, through: 0, by: -1) {
-            if radialProfile[step] > avg * 1.2 {
-                lastBrightStep = step
-                break
-            }
+        print("DEBUG: findRadius bestRadius=\(String(format: "%.1f", bestRadius)) score=\(String(format: "%.4f", bestScore)) maxR=\(String(format: "%.1f", maxRadius))")
+
+        guard bestScore > 0 else {
+            print("DEBUG: patternRadius not found")
+            return nil
         }
-
-        guard lastBrightStep > 5 else { return nil } // Too small or not found
-
-        // Outer ring radius = pattern radius (ringRadii[2] = 1.0)
-        let outerRingRadius = maxRadius * CGFloat(lastBrightStep + 1) / CGFloat(numSteps)
-        return outerRingRadius
+        return bestRadius
     }
 
-    /// Detect segment boundaries from a ring's brightness profile.
-    /// Returns a 24-char binary string where "1" = new segment starts here.
-    private static func detectSegmentBoundaries(brightnesses: [CGFloat]) -> String {
-        let count = brightnesses.count
-        guard count == positionsPerRing else { return "" }
+    // MARK: - Pixel Reading (BGRA → Luma)
 
-        // Find min and max for this ring
-        let minVal = brightnesses.min() ?? 0
-        let maxVal = brightnesses.max() ?? 1
-        let range = maxVal - minVal
-
-        // Need sufficient contrast
-        guard range > 0.05 else { return String(repeating: "0", count: count) }
-
-        // Threshold: midpoint between min and max
-        let threshold = minVal + range * 0.45
-
-        // Classify each position
-        let isSegment = brightnesses.map { $0 > threshold }
-
-        // Build bit string: "1" where a new segment begins (transition from dark to bright)
-        var bits = ""
-        for pos in 0..<count {
-            let prev = (pos - 1 + count) % count
-            if isSegment[pos] && !isSegment[prev] {
-                bits += "1" // Gap→Segment transition = new segment
-            } else if !isSegment[pos] && isSegment[prev] {
-                bits += "1" // Segment→Gap = this is a gap position, mark as boundary
-            } else if !isSegment[pos] {
-                bits += "1" // In a gap
-            } else {
-                bits += "0" // In a segment, no boundary
-            }
-        }
-
-        return bits
-    }
-
-    /// Read brightness at a pixel position (BGRA format), averaged over 3×3 area.
-    private static func readBrightness(
+    private static func readLuma(
         pointer: UnsafePointer<UInt8>,
         x: Int, y: Int,
         width: Int, height: Int,
@@ -428,10 +498,10 @@ enum RingCodeDecoder {
         for dy in -1...1 {
             for dx in -1...1 {
                 let offset = (cy + dy) * bytesPerRow + (cx + dx) * 4
-                let blue = CGFloat(pointer[offset]) / 255.0
-                let green = CGFloat(pointer[offset + 1]) / 255.0
-                let red = CGFloat(pointer[offset + 2]) / 255.0
-                total += 0.299 * red + 0.587 * green + 0.114 * blue
+                let b = CGFloat(pointer[offset]) / 255.0
+                let g = CGFloat(pointer[offset + 1]) / 255.0
+                let r = CGFloat(pointer[offset + 2]) / 255.0
+                total += 0.299 * r + 0.587 * g + 0.114 * b
             }
         }
         return total / 9.0

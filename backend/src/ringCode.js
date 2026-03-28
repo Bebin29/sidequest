@@ -9,10 +9,17 @@ const crypto = require('crypto');
  */
 function generateRingCode(uuid) {
     const hash = crypto.createHash('sha256').update(uuid).digest();
-    // Take first 12 bytes = 96 bits
+    // 4 rings × 24 positions = 96 bits
+    // Position 0 of each ring is always "1" (sync marker for rotation detection)
     let code = '';
-    for (let i = 0; i < 12; i++) {
-        code += hash[i].toString(2).padStart(8, '0');
+    for (let ring = 0; ring < 4; ring++) {
+        code += '1'; // sync bit
+        // Fill remaining 23 positions from hash
+        const byteOffset = ring * 3;
+        for (let i = 0; i < 3; i++) {
+            const byte = hash[byteOffset + i].toString(2).padStart(8, '0');
+            code += i === 2 ? byte.slice(0, 7) : byte; // 8+8+7 = 23 bits
+        }
     }
     return code;
 }

@@ -566,10 +566,3 @@ struct InvitationSwiper: View {
         .animation(.easeInOut(duration: 0.25), value: currentIndex)
     }
 }
-
-// MARK: - Preview
-
-#Preview {
-    InvitationSwiper()
-        .preferredColorScheme(.dark)
-}

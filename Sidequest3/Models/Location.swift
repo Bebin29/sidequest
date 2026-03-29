@@ -28,7 +28,7 @@ struct CategoryHelper {
         CategoryInfo(name: "Nachtleben", icon: "moon.stars.fill"),
         CategoryInfo(name: "Kultur", icon: "theatermasks.fill"),
         CategoryInfo(name: "Natur", icon: "tree.fill"),
-        CategoryInfo(name: "Wellness", icon: "sparkles"),
+        CategoryInfo(name: "Wellness", icon: "sparkles")
     ]
 
     static let defaultIcon = "mappin.circle.fill"

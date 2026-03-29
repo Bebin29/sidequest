@@ -380,12 +380,13 @@ struct PlaceSearchView: View {
 
 struct AddLocationFormView: View {
     let mapItem: MKMapItem
+    let initialCategory: String
     @Bindable var mapViewModel: MapViewModel
     var userId: UUID?
     var onDismiss: () -> Void
     var onBack: () -> Void
 
-    @State private var category: String
+    @State private var category = ""
     @State private var description = ""
     @State private var selectedImages: [UIImage] = []
     @State private var showImagePicker = false
@@ -400,15 +401,6 @@ struct AddLocationFormView: View {
     private let locationService = LocationService()
 
     private let maxImages = 5
-
-    init(mapItem: MKMapItem, initialCategory: String, mapViewModel: MapViewModel, userId: UUID?, onDismiss: @escaping () -> Void, onBack: @escaping () -> Void) {
-        self.mapItem = mapItem
-        self.mapViewModel = mapViewModel
-        self.userId = userId
-        self.onDismiss = onDismiss
-        self.onBack = onBack
-        _category = State(initialValue: initialCategory)
-    }
 
     private var canSubmit: Bool {
         !category.isEmpty && !selectedImages.isEmpty && !isUploading
@@ -502,6 +494,11 @@ struct AddLocationFormView: View {
                     }
                 }
                 .disabled(!canSubmit)
+            }
+        }
+        .onAppear {
+            if category.isEmpty {
+                category = initialCategory
             }
         }
         .task {

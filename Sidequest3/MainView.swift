@@ -10,20 +10,30 @@ import SwiftUI
 struct MainView: View {
     @State private var showSettings = false
     @Bindable var authViewModel: AuthViewModel
+    
+
+
+    
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-            
-            Button {
-                showSettings = true
-            } label: {
-                Label("Einstellungen", systemImage: "gearshape.fill")
-                    .font(.headline)
-                    .padding()
-                    .background(Color.white)
-                    .foregroundColor(.black)
-                    .clipShape(Capsule())
+            VStack {
+                
+                
+                
+                
+                Button {
+                    showSettings = true
+                } label: {
+                    Label("Einstellungen", systemImage: "gearshape.fill")
+                        .font(.headline)
+                        .padding()
+                        .background(Color.white)
+                        .foregroundColor(.black)
+                        .clipShape(Capsule())
+                }
             }
+            
         }
         .sheet(isPresented: $showSettings) {
             SettingsView(authViewModel: authViewModel)
@@ -212,19 +222,7 @@ struct SettingsView: View {
                                         Text("Moechtest du dich wirklich abmelden?")
                                     }
                                 
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
+
                                 
                                 
                                 HStack(spacing: 4) {
@@ -259,7 +257,6 @@ struct SettingsView: View {
         }
     }
 }
-// NotificationsSettingsView ersetzt durch NotificationSettingsView in Views/NotificationSettingsView.swift
 
 struct LocationSettingsView: View {
     
@@ -317,4 +314,10 @@ struct LinkRow: View {
         .padding()
     }
 }
+
+
+
+
+
+
 

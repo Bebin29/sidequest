@@ -221,6 +221,3 @@ struct FriendSearchView: View {
     }
 }
 
-#Preview {
-    Home(authViewModel: AuthViewModel())
-}

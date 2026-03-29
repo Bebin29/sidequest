@@ -45,7 +45,7 @@ final class AuthViewModel {
         errorMessage = nil
 
         do {
-            let (user, isNewUser) = try await authService.signInWithApple(
+            let (user, _) = try await authService.signInWithApple(
                 appleUserId: appleUserId,
                 email: email,
                 displayName: displayName

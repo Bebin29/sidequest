@@ -300,12 +300,13 @@ struct ModelDecodingTests {
         #expect(trip.startDate == "2026-04-01")
     }
 
-    @Test func locationCategoryRawValues() {
-        #expect(LocationCategory.restaurant.rawValue == "Restaurant")
-        #expect(LocationCategory.cafe.rawValue == "Café")
-        #expect(LocationCategory.bar.rawValue == "Bar")
-        #expect(LocationCategory.park.rawValue == "Park")
-        #expect(LocationCategory.allCases.count == 13)
+    @Test func categoryHelperPredefined() {
+        #expect(CategoryHelper.icon(for: "Restaurant") == "fork.knife")
+        #expect(CategoryHelper.icon(for: "Café") == "cup.and.saucer.fill")
+        #expect(CategoryHelper.icon(for: "Bar") == "wineglass.fill")
+        #expect(CategoryHelper.icon(for: "Park") == "leaf.fill")
+        #expect(CategoryHelper.icon(for: "Unknown") == CategoryHelper.defaultIcon)
+        #expect(CategoryHelper.predefinedNames.count == 17)
     }
 
     @Test func feedResponseDecoding() async throws {

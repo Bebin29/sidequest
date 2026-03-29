@@ -30,10 +30,9 @@ struct Feed: View {
                             FeedCard(
                                 location: location,
                                 userLocation: locationManager.lastLocation,
-                                onShowOnMap: { onShowOnMap?(location) }
-                            ) {
-                                selectedLocation = location
-                            }
+                                onShowOnMap: { onShowOnMap?(location) },
+                                onTap: { selectedLocation = location }
+                            )
                             .padding(.horizontal)
                             .onAppear {
                                 if location.id == viewModel.locations.last?.id {
@@ -50,8 +49,12 @@ struct Feed: View {
                     }
                     .padding(.top)
                 }
+                Spacer(minLength: 32)
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Feed")
+            .navigationBarTitleDisplayMode(.inline)
+            // .navigationTitle("Feed")
             .task {
                 guard let userId else { return }
                 await viewModel.loadFeed(userId: userId)
@@ -91,9 +94,9 @@ struct Feed: View {
                 .padding(.horizontal, 32)
         }
         .padding(.top, 80)
+        .frame(maxWidth: .infinity, maxHeight: .infinity) // füllt den gesamten View
+        .background(Color(.systemGroupedBackground))
     }
-
-    // MARK: - Error State
 
     private func errorState(message: String) -> some View {
         VStack(spacing: 16) {
@@ -124,6 +127,8 @@ struct Feed: View {
             }
         }
         .padding(.top, 80)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground))
     }
 
     // MARK: - Skeleton Loading
@@ -224,11 +229,13 @@ struct FeedCard: View {
             .padding(.bottom, 10)
 
             // Image carousel with gradient overlay
-            ZStack(alignment: .bottomLeading) {
+            ZStack(alignment: .topLeading) {
+
+                // Images
                 if !location.imageUrls.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(spacing: 0) {
-                            ForEach(Array(location.imageUrls.enumerated()), id: \.offset) { index, urlString in
+                            ForEach(Array(location.imageUrls.enumerated()), id: \.offset) { _, urlString in
                                 CachedAsyncImage(url: URL(string: urlString)) { image in
                                     image
                                         .resizable()
@@ -247,44 +254,31 @@ struct FeedCard: View {
                     }
                     .scrollTargetBehavior(.paging)
                     .scrollPosition(id: $currentPage)
+                    
                 } else {
                     imagePlaceholder
                 }
 
-                // Page indicator dots
-                if location.imageUrls.count > 1 {
-                    HStack(spacing: 6) {
-                        ForEach(0..<location.imageUrls.count, id: \.self) { index in
-                            Circle()
-                                .fill(index == (currentPage ?? 0) ? .white : .white.opacity(0.4))
-                                .frame(width: 7, height: 7)
-                        }
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(.black.opacity(0.3))
-                    .clipShape(Capsule())
-                    .frame(maxWidth: .infinity)
-                    .padding(.bottom, 72)
-                }
-
-                // Gradient overlay with name + category
+                // Top Gradient
                 LinearGradient(
-                    colors: [.clear, .black.opacity(0.7)],
-                    startPoint: .center,
-                    endPoint: .bottom
+                    colors: [.black.opacity(0.7), .clear],
+                    startPoint: .top,
+                    endPoint: .center
                 )
                 .allowsHitTesting(false)
 
+                // Name + Category (oben im Bild)
                 VStack(alignment: .leading, spacing: 6) {
                     Text(location.name)
                         .font(.title3.bold())
                         .foregroundStyle(.white)
 
                     HStack(spacing: 8) {
+
                         HStack(spacing: 4) {
-                            Image(systemName: categoryIcon(for: location.category))
+                            Image(systemName: CategoryHelper.icon(for: location.category))
                                 .font(.caption2)
+
                             Text(location.category)
                                 .font(.caption.weight(.semibold))
                         }
@@ -296,21 +290,42 @@ struct FeedCard: View {
                         HStack(spacing: 3) {
                             Image(systemName: "mappin")
                                 .font(.caption2)
+
                             Text(location.address)
                                 .font(.caption)
                                 .lineLimit(1)
                         }
-                        .opacity(0.8)
+                        .opacity(0.85)
                     }
                     .foregroundStyle(.white)
                 }
                 .padding()
+
+                // Dots ganz unten
+                if location.imageUrls.count > 1 {
+                    VStack {
+                        Spacer()
+
+                        HStack(spacing: 6) {
+                            ForEach(0..<location.imageUrls.count, id: \.self) { index in
+                                Circle()
+                                    .fill(index == (currentPage ?? 0) ? .white : .white.opacity(0.4))
+                                    .frame(width: 7, height: 7)
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.black.opacity(0.35))
+                        .clipShape(Capsule())
+                        .padding(.bottom, 10)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
             }
             .aspectRatio(1, contentMode: .fit)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .contentShape(RoundedRectangle(cornerRadius: 16))
             .onTapGesture { onTap() }
-
             // Description
             if let description = location.description, !description.isEmpty {
                 Text(description)
@@ -402,26 +417,8 @@ struct FeedCard: View {
         if meters < 1000 {
             return "\(Int(meters)) m"
         } else {
-            let km = meters / 1000
-            return String(format: "%.1f km", km)
-        }
-    }
-
-    private func categoryIcon(for category: String) -> String {
-        switch category {
-        case "Restaurant": return "fork.knife"
-        case "Café": return "cup.and.saucer.fill"
-        case "Bar": return "wineglass.fill"
-        case "Club": return "music.note.house.fill"
-        case "Bäckerei": return "birthday.cake.fill"
-        case "Fast Food": return "takeoutbag.and.cup.and.straw.fill"
-        case "Eisdiele": return "snowflake"
-        case "Park": return "leaf.fill"
-        case "Museum": return "building.columns.fill"
-        case "Shopping": return "bag.fill"
-        case "Aussichtspunkt": return "binoculars.fill"
-        case "Strand": return "beach.umbrella.fill"
-        default: return "mappin.circle.fill"
+            let kilometers = meters / 1000
+            return String(format: "%.1f km", kilometers)
         }
     }
 
@@ -448,6 +445,5 @@ struct FeedCard: View {
 }
 
 #Preview {
-    let vm = AuthViewModel()
-    Home(authViewModel: vm)
+    Home(authViewModel: AuthViewModel())
 }

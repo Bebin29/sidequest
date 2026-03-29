@@ -66,13 +66,7 @@ struct PostPreviewView: View {
                                     .foregroundStyle(.secondary)
                             }
 
-                            Text(category)
-                                .font(.caption.weight(.medium))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(.blue.opacity(0.1))
-                                .foregroundStyle(.blue)
-                                .clipShape(Capsule())
+                            CategoryBadge(category: category)
                         }
 
                         if !description.isEmpty {

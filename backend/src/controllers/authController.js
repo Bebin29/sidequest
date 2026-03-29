@@ -22,11 +22,24 @@ async function signInWithApple(req, res) {
 
         if (existing.rowCount > 0) {
             // Login: User existiert
-            await pool.query(
-                'UPDATE users SET last_seen_at = CURRENT_TIMESTAMP WHERE id = $1',
-                [existing.rows[0].id]
-            );
-            return sendJSON(res, 200, { data: existing.rows[0], isNewUser: false });
+            const user = existing.rows[0];
+
+            // Regenerate ring_code if missing (e.g. after migration to RoundCode format)
+            if (!user.ring_code) {
+                const newCode = generateRingCode(user.id);
+                await pool.query(
+                    'UPDATE users SET last_seen_at = CURRENT_TIMESTAMP, ring_code = $2 WHERE id = $1 RETURNING *',
+                    [user.id, newCode]
+                );
+                user.ring_code = newCode;
+            } else {
+                await pool.query(
+                    'UPDATE users SET last_seen_at = CURRENT_TIMESTAMP WHERE id = $1',
+                    [user.id]
+                );
+            }
+
+            return sendJSON(res, 200, { data: user, isNewUser: false });
         }
 
         // Registrierung: Neuen User anlegen

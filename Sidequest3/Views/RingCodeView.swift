@@ -2,33 +2,34 @@
 //  RingCodeView.swift
 //  Sidequest
 //
+//  Renders a user's round code using the RoundCode library.
+//  The code string is the user's UUID prefix (uppercase hex, max 27 chars).
+//
 
 import SwiftUI
+import UIKit
 
 struct RingCodeView: View {
-    let code: String           // 96-char binary string (4 rings × 24 positions)
+    let code: String           // UUID-based message string for RoundCode
     let profileImage: UIImage?
     let initial: String
     let size: CGFloat
 
-    private let ringCount = 4
-    private let positionsPerRing = 24
-    private let segmentGap: CGFloat = 7    // Gap between segments (in points)
-    private let ringGap: CGFloat = 4       // Gap between rings (in points)
-    private let strokeWidth: CGFloat = 5
-
     var body: some View {
         ZStack {
-            ForEach(0..<ringCount, id: \.self) { ringIndex in
-                RingLayer(
-                    segments: segmentsForRing(ringIndex),
-                    radius: innerRadius + CGFloat(ringIndex) * (ringGap + strokeWidth),
-                    strokeWidth: strokeWidth,
-                    gapPixels: segmentGap
-                )
+            if let codeImage = generateRoundCode() {
+                Image(uiImage: codeImage)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+            } else {
+                // Fallback: empty circle
+                Circle()
+                    .stroke(Color.white.opacity(0.3), lineWidth: 2)
             }
 
-            // Profile image in center
+            // Profile image in center (RoundCode leaves the center open
+            // for an attachment image, but we overlay it here for consistency)
             Group {
                 if let profileImage {
                     Image(uiImage: profileImage)
@@ -50,93 +51,21 @@ struct RingCodeView: View {
     }
 
     private var profileSize: CGFloat {
-        size - CGFloat(ringCount) * 2 * (ringGap + strokeWidth) - 8
+        // RoundCode center area: size * imageScale (0.8)
+        // Profile should fit inside the innermost ring with a small gap
+        size * RCConstants.imageScale * 0.85
     }
 
-    private var innerRadius: CGFloat {
-        profileSize / 2 + 6
-    }
+    private func generateRoundCode() -> UIImage? {
+        let coder = RCCoder(configuration: .uuidConfiguration)
+        guard coder.validate(code) else { return nil }
 
-    /// Convert bits into segments: each segment has a start position and a length.
-    /// A "1" bit means "start a new segment", "0" means "continue previous segment".
-    /// This way the ring is always fully filled — only the segment boundaries change.
-    private func segmentsForRing(_ ringIndex: Int) -> [RingSegment] {
-        let start = ringIndex * positionsPerRing
-        let end = min(start + positionsPerRing, code.count)
-        guard start < code.count else { return [RingSegment(start: 0, length: positionsPerRing, opacity: 1.0)] }
+        var rcImage = RCImage(message: code)
+        rcImage.size = size * 3  // render at 3x for crispness
+        rcImage.tintColors = [UIColor.white, UIColor.white]
+        rcImage.isTransparent = true
+        rcImage.attachmentImage = nil  // we overlay the profile ourselves
 
-        let bits = code[code.index(code.startIndex, offsetBy: start)..<code.index(code.startIndex, offsetBy: end)]
-            .map { $0 == "1" }
-
-        var segments: [RingSegment] = []
-        var currentStart = 0
-        var currentLength = 1
-
-        for position in 1..<bits.count {
-            if bits[position] {
-                let opacity = opacityForSegment(ringIndex: ringIndex, segmentIndex: segments.count, start: currentStart)
-                segments.append(RingSegment(start: currentStart, length: currentLength, opacity: opacity))
-                currentStart = position
-                currentLength = 1
-            } else {
-                currentLength += 1
-            }
-        }
-        let opacity = opacityForSegment(ringIndex: ringIndex, segmentIndex: segments.count, start: currentStart)
-        segments.append(RingSegment(start: currentStart, length: currentLength, opacity: opacity))
-
-        return segments
-    }
-
-    /// Deterministic opacity based on position — alternates between 1.0 and 0.66
-    private func opacityForSegment(ringIndex: Int, segmentIndex: Int, start: Int) -> Double {
-        let hash = (ringIndex * 7 + start * 3 + segmentIndex) % 3
-        return hash == 0 ? 0.66 : 1.0
-    }
-}
-
-struct RingSegment {
-    let start: Int
-    let length: Int
-    let opacity: Double
-}
-
-// MARK: - Single Ring Layer
-
-private struct RingLayer: View {
-    let segments: [RingSegment]
-    let radius: CGFloat
-    let strokeWidth: CGFloat
-    let gapPixels: CGFloat      // Gap size in points — consistent across all rings
-
-    private let totalPositions = 24
-
-    var body: some View {
-        Canvas { context, canvasSize in
-            let center = CGPoint(x: canvasSize.width / 2, y: canvasSize.height / 2)
-            // Convert pixel gap to radians for THIS ring's radius
-            let gapRad = Double(gapPixels) / Double(radius)
-            let slotAngle = 2 * .pi / Double(totalPositions)
-
-            for segment in segments {
-                let startRad = Double(segment.start) * slotAngle + gapRad / 2 - .pi / 2
-                let endRad = startRad + Double(segment.length) * slotAngle - gapRad
-
-                var path = Path()
-                path.addArc(
-                    center: center,
-                    radius: radius,
-                    startAngle: .radians(startRad),
-                    endAngle: .radians(endRad),
-                    clockwise: false
-                )
-
-                context.stroke(
-                    path,
-                    with: .color(.white.opacity(segment.opacity)),
-                    style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round)
-                )
-            }
-        }
+        return try? coder.encode(rcImage)
     }
 }

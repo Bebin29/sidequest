@@ -155,45 +155,21 @@ async function checkUsername(req, res, query) {
 async function findByRingCode(req, res, query) {
     try {
         const code = query.code;
-        if (!code || code.length < 96) {
-            return sendError(res, 400, 'Valid 96-bit ring code is required');
+        if (!code || code.length < 1) {
+            return sendError(res, 400, 'Code is required');
         }
 
-        const allUsers = await pool.query('SELECT * FROM users WHERE ring_code IS NOT NULL');
-        let bestMatch = null;
-        let bestDistance = 24; // max Hamming distance allowed (25% of 96 bits)
+        // Exact match — RoundCode handles error correction internally via parity
+        const result = await pool.query(
+            'SELECT * FROM users WHERE ring_code = $1 LIMIT 1',
+            [code]
+        );
 
-        // Split scanned code into 4 rings of 24 bits
-        const scannedRings = [code.slice(0, 24), code.slice(24, 48), code.slice(48, 72), code.slice(72, 96)];
-
-        for (const user of allUsers.rows) {
-            if (!user.ring_code || user.ring_code.length !== 96) continue;
-            const dbRings = [user.ring_code.slice(0, 24), user.ring_code.slice(24, 48), user.ring_code.slice(48, 72), user.ring_code.slice(72, 96)];
-
-            // Try all 24 rotations (all rings rotate together)
-            for (let rotation = 0; rotation < 24; rotation++) {
-                let distance = 0;
-                for (let ring = 0; ring < 4; ring++) {
-                    for (let pos = 0; pos < 24; pos++) {
-                        const rotatedPos = (pos + rotation) % 24;
-                        if (scannedRings[ring][pos] !== dbRings[ring][rotatedPos]) distance++;
-                    }
-                    if (distance >= bestDistance) break;
-                }
-                if (distance < bestDistance) {
-                    bestDistance = distance;
-                    bestMatch = user;
-                    if (distance === 0) break;
-                }
-            }
-            if (bestDistance === 0) break;
-        }
-
-        if (!bestMatch) {
+        if (result.rowCount === 0) {
             return sendError(res, 404, 'User not found');
         }
 
-        sendJSON(res, 200, { data: bestMatch, matchDistance: bestDistance });
+        sendJSON(res, 200, { data: result.rows[0] });
     } catch (err) {
         console.error('findByRingCode error:', err);
         sendError(res, 500, 'Internal server error');

@@ -564,7 +564,7 @@ extension User {
         isPrivate: false,
         fcmToken: nil,
         stats: ["quests": 12, "friends": 5],
-        ringCode: "101100110010110011001011100110010110011001011001100101100"
+        ringCode: "550E8400E29B41D4A716446655"
     )
 }
 

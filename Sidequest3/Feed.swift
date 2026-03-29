@@ -208,7 +208,8 @@ struct FeedCard: View {
     var onTap: () -> Void
 
     @State private var currentPage: Int? = 0
-
+   
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Creator Bar
@@ -461,9 +462,4 @@ struct FeedCard: View {
         }
         return Self.relativeFormatter.localizedString(for: date, relativeTo: Date())
     }
-}
-
-#Preview {
-    let vm = AuthViewModel()
-    Home(authViewModel: vm)
 }

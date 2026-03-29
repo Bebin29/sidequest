@@ -59,9 +59,7 @@ struct Sidequest3App: App {
     private func setupPushNotifications() async {
         UNUserNotificationCenter.current().delegate = pushService
 
-        let granted = await pushService.requestAuthorization()
-        guard granted else { return }
-
+        // Callback ZUERST setzen, bevor registerForRemoteNotifications() aufgerufen wird
         appDelegate.onTokenReceived = { token in
             pushService.deviceToken = token
             if let userId = authViewModel.currentUser?.id {
@@ -71,6 +69,10 @@ struct Sidequest3App: App {
             }
         }
 
+        let granted = await pushService.requestAuthorization()
+        guard granted else { return }
+
+        // Falls Token schon vor dem await angekommen ist
         if let existingToken = pushService.deviceToken,
            let userId = authViewModel.currentUser?.id {
             await pushService.uploadToken(userId: userId, token: existingToken)

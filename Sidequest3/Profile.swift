@@ -17,6 +17,8 @@ struct Profile: View {
     @State private var showShareCard = false
     @State private var selectedLocation: Location?
 
+    @State private var pendingCount = 0
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -28,12 +30,16 @@ struct Profile: View {
                         // Stats Bar
                         statsBar(user: user)
                             .padding(.top, 4)
-
+                        if pendingCount > 0 {
+                            Text("Freundschaftsanfragen: \(pendingCount)")
+                                .foregroundColor(.accentColor)
+                                .bold()
+                        }
                         // Action Buttons
                         actionButtons
                             .padding(.horizontal)
                             .padding(.top, 16)
-
+                        
                         // Meine Orte
                         myLocations
                             .padding(.top, 24)
@@ -84,14 +90,23 @@ struct Profile: View {
                 guard let userId = authViewModel.currentUser?.id else { return }
                 await friendsViewModel.loadFriends(userId: userId)
                 await mapViewModel.loadLocations(userId: userId)
+                await loadPendingRequests()
             }
             .refreshable {
                 guard let userId = authViewModel.currentUser?.id else { return }
                 await friendsViewModel.loadFriends(userId: userId)
                 await mapViewModel.loadLocations(userId: userId)
+                await loadPendingRequests()
             }
         }
     }
+    
+    func loadPendingRequests() async {
+            guard let userId = authViewModel.currentUser?.id else { return }
+            let viewModel = FriendsViewModel()
+            await viewModel.loadPendingRequests(userId: userId)
+            pendingCount = viewModel.pendingRequests.count
+        }
 
     // MARK: - Profile Header
 
@@ -186,7 +201,7 @@ struct Profile: View {
                 Text("Profil bearbeiten")
                     .font(.subheadline.weight(.semibold))
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
+                    .frame(height: 36)
                     .background(Color(.systemGray5))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
@@ -197,8 +212,7 @@ struct Profile: View {
             } label: {
                 Image(systemName: "square.and.arrow.up")
                     .font(.subheadline.weight(.semibold))
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 16)
+                    .frame(width: 44, height: 36)
                     .background(Color(.systemGray5))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
@@ -304,6 +318,7 @@ struct Profile: View {
                     Image(systemName: "rectangle.portrait.and.arrow.right")
                         .frame(width: 20)
                         .foregroundStyle(.red)
+                        .fontWeight(.semibold)
                     Text("Abmelden")
                         .foregroundStyle(.red)
                     Spacer()
@@ -332,6 +347,7 @@ struct Profile: View {
                 Image(systemName: icon)
                     .frame(width: 20)
                     .foregroundStyle(.primary)
+                    .fontWeight(.semibold)
                 Text(title)
                     .foregroundStyle(.primary)
                 Spacer()
@@ -356,13 +372,16 @@ struct Profile: View {
 }
 
 #Preview {
-    let viewModel = AuthViewModel()
-    viewModel.currentUser = .preview
-    return Profile(authViewModel: viewModel)
+    Profile(authViewModel: {
+        let authVM = AuthViewModel()
+        authVM.currentUser = .preview
+        return authVM
+    }())
 }
 
 extension User {
     static let preview = User(
+        // swiftlint:disable:next force_unwrapping
         id: UUID(uuidString: "e5f9bcaa-20f7-4296-a7f1-f2caf539d474")!,
         email: "oleboehm4321@icloud.com",
         username: "oleboehm4321",
@@ -378,6 +397,7 @@ extension User {
         isModerator: false,
         isPrivate: false,
         fcmToken: nil,
-        stats: ["quests": 12, "friends": 5]
+        stats: ["quests": 12, "friends": 5],
+        ringCode: nil
     )
 }

@@ -10,10 +10,12 @@ struct FriendsView: View {
     @State private var searchText = ""
     @State private var showSearch = false
     
-    // NEU: für Bestätigung
     @State private var friendToRemove: Friendship?
     @State private var showRemoveConfirmation = false
-    
+    @State private var showScanner = false
+    @State private var scannedUser: User?
+    @State private var showScannedUserAlert = false
+
     var currentUser: User?
 
     var body: some View {
@@ -77,16 +79,48 @@ struct FriendsView: View {
             .navigationTitle("Freunde")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showSearch = true
-                    } label: {
-                        Image(systemName: "person.badge.plus")
+                    HStack(spacing: 16) {
+                        Button {
+                            showScanner = true
+                        } label: {
+                            Image(systemName: "camera")
+                        }
+
+                        Button {
+                            showSearch = true
+                        } label: {
+                            Image(systemName: "person.badge.plus")
+                        }
                     }
                 }
             }
             .sheet(isPresented: $showSearch) {
                 FriendSearchView(viewModel: viewModel, currentUser: currentUser) {
                     showSearch = false
+                }
+            }
+            .fullScreenCover(isPresented: $showScanner) {
+                RingCodeScannerView(currentUserId: currentUser?.id) { user in
+                    scannedUser = user
+                    showScanner = false
+                    showScannedUserAlert = true
+                }
+            }
+            .alert("Freund hinzufügen?", isPresented: $showScannedUserAlert) {
+                Button("Anfrage senden") {
+                    guard let requesterId = currentUser?.id,
+                          let receiver = scannedUser else { return }
+                    Task {
+                        await viewModel.sendRequest(
+                            requesterId: requesterId,
+                            receiverUsername: receiver.username
+                        )
+                    }
+                }
+                Button("Abbrechen", role: .cancel) {}
+            } message: {
+                if let user = scannedUser {
+                    Text("\(user.displayName) (@\(user.username)) gefunden. Freundschaftsanfrage senden?")
                 }
             }
             .task {

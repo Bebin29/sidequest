@@ -59,6 +59,7 @@ struct Karte: View {
     @State private var showFilterSheet = false
     @State private var selectedLocationId: UUID?
     @State private var showDetail = false
+    
     var userId: UUID?
     @Binding var focusLocation: Location?
 
@@ -77,7 +78,7 @@ struct Karte: View {
                     }
                 }
             }
-            .ignoresSafeArea()
+            .ignoresSafeArea(.container)
             .onChange(of: selectedLocationId) { _, newValue in
                 if newValue != nil {
                     showDetail = true
@@ -104,9 +105,9 @@ struct Karte: View {
                   
                     VStack(spacing: 12) {
 
-                        Button(action: {
+                        Button {
                             showFilterSheet = true
-                        }) {
+                        } label: {
                             Image(systemName: mapViewModel.filter.isEmpty ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
                                 .font(.title2)
                                 .foregroundColor(mapViewModel.filter.isEmpty ? Color.indigo : .white)
@@ -117,9 +118,9 @@ struct Karte: View {
                                 .fontWeight(.semibold)
                         }
 
-                        Button(action: {
+                        Button {
                             locationManager.centerOnUser()
-                        }) {
+                        } label: {
                             Image(systemName: "location.fill")
                                 .font(.title2)
                                 .foregroundColor(Color.indigo)
@@ -130,9 +131,9 @@ struct Karte: View {
                                 .fontWeight(.semibold)
                         }
 
-                        Button(action: {
+                        Button {
                             showSearchSheet = true
-                        }) {
+                        } label: {
                             Image(systemName: "plus")
                                 .font(.title2)
                                 .foregroundColor(.white)
@@ -168,28 +169,50 @@ struct Karte: View {
             guard let userId else { return }
             await mapViewModel.loadLocations(userId: userId)
         }
-        .sheet(isPresented: $showDetail, onDismiss: {
-            selectedLocationId = nil
-            guard let userId else { return }
-            Task { await mapViewModel.loadLocations(userId: userId) }
-        }) {
-            if let location = mapViewModel.locations.first(where: { $0.id == selectedLocationId }) {
-                NavigationStack {
-                    LocationDetailView(location: location, currentUserId: userId, onDelete: {
-                        mapViewModel.locations.removeAll { $0.id == location.id }
-                        showDetail = false
-                    }, onUpdate: { updated in
-                        if let index = mapViewModel.locations.firstIndex(where: { $0.id == updated.id }) {
-                            mapViewModel.locations[index] = updated
-                        }
-                    })
+        .sheet(
+            isPresented: $showDetail,
+            onDismiss: {
+                selectedLocationId = nil
+                guard let userId else { return }
+                Task { await mapViewModel.loadLocations(userId: userId) }
+            },
+            content: {
+                if let location = mapViewModel.locations.first(where: { $0.id == selectedLocationId }) {
+                    NavigationStack {
+                        LocationDetailView(location: location, currentUserId: userId, onDelete: {
+                            mapViewModel.locations.removeAll { $0.id == location.id }
+                            showDetail = false
+                        }, onUpdate: { updated in
+                            if let index = mapViewModel.locations.firstIndex(where: { $0.id == updated.id }) {
+                                mapViewModel.locations[index] = updated
+                            }
+                        })
+                    }
                 }
             }
-        }
+        )
     }
 }
 
 // Autocomplete Service
+struct SearchResult: Identifiable, Hashable {
+    let id = UUID()
+    let completion: MKLocalSearchCompletion
+    var distance: CLLocationDistance?
+
+    var formattedDistance: String? {
+        guard let distance else { return nil }
+        if distance < 1000 {
+            return "\(Int(distance)) m"
+        } else {
+            return String(format: "%.1f km", distance / 1000)
+        }
+    }
+
+    static func == (lhs: SearchResult, rhs: SearchResult) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+}
+
 class SearchCompleter: NSObject, ObservableObject, MKLocalSearchCompleterDelegate {
 
     @Published var results: [SearchResult] = []
@@ -197,31 +220,21 @@ class SearchCompleter: NSObject, ObservableObject, MKLocalSearchCompleterDelegat
 
     private let completer = MKLocalSearchCompleter()
 
-    struct SearchResult: Identifiable, Hashable {
-        let id = UUID()
-        let completion: MKLocalSearchCompletion
-        var distance: CLLocationDistance?
-
-        var formattedDistance: String? {
-            guard let distance else { return nil }
-            if distance < 1000 {
-                return "\(Int(distance)) m"
-            } else {
-                return String(format: "%.1f km", distance / 1000)
-            }
-        }
-
-        static func == (lhs: SearchResult, rhs: SearchResult) -> Bool { lhs.id == rhs.id }
-        func hash(into hasher: inout Hasher) { hasher.combine(id) }
-    }
-
     override init() {
         super.init()
         completer.delegate = self
         completer.resultTypes = .pointOfInterest
     }
 
+    private var lastQuery = ""
+
     func update(query: String) {
+        guard query != lastQuery else { return }
+        lastQuery = query
+        if query.isEmpty {
+            results = []
+            return
+        }
         completer.queryFragment = query
     }
 
@@ -232,26 +245,45 @@ class SearchCompleter: NSObject, ObservableObject, MKLocalSearchCompleterDelegat
             return
         }
 
-        // Resolve distances
-        let group = DispatchGroup()
-        var searchResults: [SearchResult] = []
+        // Nur neue Completions auflösen, bereits bekannte behalten
+        let existingDistances = Dictionary(uniqueKeysWithValues:
+            results.compactMap { result -> (String, CLLocationDistance)? in
+                guard let dist = result.distance else { return nil }
+                return (result.completion.title + result.completion.subtitle, dist)
+            }
+        )
+
+        var pending: [(Int, MKLocalSearchCompletion)] = []
+        var newResults: [SearchResult] = []
 
         for completion in completions {
-            group.enter()
-            let request = MKLocalSearch.Request(completion: completion)
-            let search = MKLocalSearch(request: request)
-            search.start { response, _ in
-                var dist: CLLocationDistance?
-                if let coord = response?.mapItems.first?.placemark.location {
-                    dist = userLoc.distance(from: coord)
-                }
-                searchResults.append(SearchResult(completion: completion, distance: dist))
-                group.leave()
+            let key = completion.title + completion.subtitle
+            if let cached = existingDistances[key] {
+                newResults.append(SearchResult(completion: completion, distance: cached))
+            } else {
+                let idx = newResults.count
+                newResults.append(SearchResult(completion: completion, distance: nil))
+                pending.append((idx, completion))
             }
         }
 
-        group.notify(queue: .main) {
-            self.results = searchResults.sorted { ($0.distance ?? .greatestFiniteMagnitude) < ($1.distance ?? .greatestFiniteMagnitude) }
+        results = newResults.sorted { ($0.distance ?? .greatestFiniteMagnitude) < ($1.distance ?? .greatestFiniteMagnitude) }
+
+        // Neue Entfernungen im Hintergrund auflösen
+        for (_, completion) in pending {
+            let request = MKLocalSearch.Request(completion: completion)
+            let search = MKLocalSearch(request: request)
+            search.start { response, _ in
+                guard let coord = response?.mapItems.first?.placemark.location else { return }
+                let dist = userLoc.distance(from: coord)
+                let key = completion.title + completion.subtitle
+                DispatchQueue.main.async {
+                    if let idx = self.results.firstIndex(where: { $0.completion.title + $0.completion.subtitle == key }) {
+                        self.results[idx] = SearchResult(completion: completion, distance: dist)
+                        self.results.sort { ($0.distance ?? .greatestFiniteMagnitude) < ($1.distance ?? .greatestFiniteMagnitude) }
+                    }
+                }
+            }
         }
     }
 }
@@ -274,7 +306,7 @@ struct PlaceSearchView: View {
             if let item = selectedItem {
                 AddLocationFormView(
                     mapItem: item,
-                    category: selectedCategory,
+                    initialCategory: selectedCategory,
                     mapViewModel: mapViewModel,
                     userId: userId,
                     onDismiss: onDismiss,
@@ -288,7 +320,7 @@ struct PlaceSearchView: View {
                         .onChange(of: searchText) { _, newValue in
                             searchDebounceTask?.cancel()
                             searchDebounceTask = Task {
-                                try? await Task.sleep(for: .milliseconds(300))
+                                try? await Task.sleep(for: .milliseconds(500))
                                 guard !Task.isCancelled else { return }
                                 completer.userLocation = locationManager.lastLocation
                                 completer.update(query: newValue)
@@ -336,7 +368,7 @@ struct PlaceSearchView: View {
     }
 
     func mapCategory(from category: MKPointOfInterestCategory?) -> String {
-        guard let category else { return "Sonstiges" }
+        guard let category else { return "" }
         switch category {
         case .restaurant: return "Restaurant"
         case .cafe: return "Café"
@@ -345,19 +377,20 @@ struct PlaceSearchView: View {
         case .park: return "Park"
         case .museum: return "Museum"
         case .store: return "Shopping"
-        default: return "Sonstiges"
+        default: return ""
         }
     }
 }
 
 struct AddLocationFormView: View {
     let mapItem: MKMapItem
-    let category: String
+    let initialCategory: String
     @Bindable var mapViewModel: MapViewModel
     var userId: UUID?
     var onDismiss: () -> Void
     var onBack: () -> Void
 
+    @State private var category = ""
     @State private var description = ""
     @State private var selectedImages: [UIImage] = []
     @State private var showImagePicker = false
@@ -366,8 +399,16 @@ struct AddLocationFormView: View {
     @State private var cameraImage: UIImage?
     @State private var showPreview = false
     @State private var isUploading = false
+    @State private var customCategories: [String] = []
 
     private let imageUploadService = ImageUploadService()
+    private let locationService = LocationService()
+
+    private let maxImages = 5
+
+    private var canSubmit: Bool {
+        !category.isEmpty && !selectedImages.isEmpty && !isUploading
+    }
 
     var body: some View {
         List {
@@ -379,13 +420,10 @@ struct AddLocationFormView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                Text(category)
-                    .font(.caption.weight(.medium))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(.blue.opacity(0.1))
-                    .foregroundStyle(.blue)
-                    .clipShape(Capsule())
+            }
+
+            Section("Kategorie") {
+                CategoryPickerField(category: $category, customCategories: customCategories)
             }
 
             Section("Beschreibung") {
@@ -393,7 +431,13 @@ struct AddLocationFormView: View {
                     .lineLimit(3...6)
             }
 
-            Section("Fotos (\(selectedImages.count))") {
+            Section("Fotos (\(selectedImages.count)/\(maxImages))") {
+                if selectedImages.isEmpty {
+                    Text("Mindestens ein Foto erforderlich")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+
                 if !selectedImages.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
@@ -419,10 +463,12 @@ struct AddLocationFormView: View {
                     }
                 }
 
-                Button {
-                    showImageSourceDialog = true
-                } label: {
-                    Label("Foto hinzufügen", systemImage: "camera")
+                if selectedImages.count < maxImages {
+                    Button {
+                        showImageSourceDialog = true
+                    } label: {
+                        Label("Foto hinzufügen", systemImage: "camera")
+                    }
                 }
             }
 
@@ -451,7 +497,19 @@ struct AddLocationFormView: View {
                             .bold()
                     }
                 }
-                .disabled(isUploading)
+                .disabled(!canSubmit)
+            }
+        }
+        .onAppear {
+            if category.isEmpty {
+                category = initialCategory
+            }
+        }
+        .task {
+            do {
+                customCategories = try await locationService.fetchCategories()
+            } catch {
+                print("Failed to load categories:", error)
             }
         }
         .scrollDismissesKeyboard(.immediately)
@@ -493,7 +551,9 @@ struct AddLocationFormView: View {
                 .ignoresSafeArea()
         }
         .onChange(of: cameraImage) { _, newImage in
-            if let newImage { selectedImages.append(newImage) }
+            if let newImage, selectedImages.count < maxImages {
+                selectedImages.append(newImage)
+            }
         }
     }
 
@@ -540,14 +600,16 @@ struct AddLocationFormView: View {
 }
 
 #Preview {
-    let vm = AuthViewModel()
-    vm.currentUser = .preview2
-    return Home(authViewModel: vm)
+    Home(authViewModel: {
+        let authVM = AuthViewModel()
+        authVM.currentUser = .preview2
+        return authVM
+    }())
 }
-
 
 extension User {
     static let preview2 = User(
+        // swiftlint:disable:next force_unwrapping
         id: UUID(uuidString: "e5f9bcaa-20f7-4296-a7f1-f2caf539d474")!,
         email: "oleboehm4321@icloud.com",
         username: "oleboehm4321",
@@ -563,10 +625,7 @@ extension User {
         isModerator: false,
         isPrivate: false,
         fcmToken: nil,
-        stats: ["quests": 12, "friends": 5]
+        stats: ["quests": 12, "friends": 5],
+        ringCode: "101100110010110011001011100110010110011001011001100101100"
     )
 }
-
-
-
-

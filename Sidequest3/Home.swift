@@ -18,7 +18,7 @@ struct Home: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("Home", systemImage: "house.fill", value: .home) {
+            Tab("Feed", systemImage: "house.fill", value: .home) {
                 Feed(
                     userId: authViewModel.currentUser?.id,
                     currentUserId: authViewModel.currentUser?.id,
@@ -31,14 +31,16 @@ struct Home: View {
             Tab("Map", systemImage: "map.fill", value: .map) {
                 Karte(userId: authViewModel.currentUser?.id, focusLocation: $focusLocation)
             }
+            /*
             Tab("Friends", systemImage: "person.2.fill", value: .friends) {
                 FriendsView(currentUser: authViewModel.currentUser)
             }
+             */
             Tab("Profile", systemImage: "person.fill", value: .profile) {
                 Profile(authViewModel: authViewModel)
             }
             if let user = authViewModel.currentUser {
-                if(user.isModerator) {
+                if user.isModerator {
                     Tab("Admin", systemImage: "gearshape.fill", value: .admin) {
                         AdminView()
                     }

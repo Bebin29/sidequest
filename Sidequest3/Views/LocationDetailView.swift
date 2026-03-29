@@ -15,12 +15,8 @@ struct LocationDetailView: View {
     @State private var viewModel = LocationDetailViewModel()
     @State private var newComment = ""
     @State private var showFullImage = false
-    @State private var isEditing = false
+    @State private var showEditSheet = false
     @State private var showDeleteConfirm = false
-    @State private var editDescription = ""
-    @State private var editCategory = ""
-    @State private var displayDescription: String?
-    @State private var displayCategory: String?
     @Environment(\.dismiss) private var dismiss
 
     private let locationService = LocationService()
@@ -67,36 +63,11 @@ struct LocationDetailView: View {
                                 .clipShape(Capsule())
                         }
 
-                        if isEditing {
-                            Picker("Kategorie", selection: $editCategory) {
-                                ForEach(["Restaurant", "Café", "Bar", "Club", "Bäckerei", "Fast Food",
-                                         "Eisdiele", "Park", "Museum", "Shopping", "Aussichtspunkt",
-                                         "Strand", "Sonstiges"], id: \.self) { cat in
-                                    Text(cat).tag(cat)
-                                }
-                            }
-                            .pickerStyle(.menu)
-                        } else {
-                            Text(displayCategory ?? location.category)
-                                .font(.caption.weight(.medium))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(.blue.opacity(0.1))
-                                .foregroundStyle(.blue)
-                                .clipShape(Capsule())
-                        }
+                        CategoryBadge(category: location.category)
                     }
 
                     // Beschreibung
-                    if isEditing {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Beschreibung")
-                                .font(.headline)
-                            TextField("Beschreibung", text: $editDescription, axis: .vertical)
-                                .lineLimit(3...6)
-                                .textFieldStyle(.roundedBorder)
-                        }
-                    } else if let description = displayDescription ?? location.description, !description.isEmpty {
+                    if let description = location.description, !description.isEmpty {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Beschreibung")
                                 .font(.headline)
@@ -223,35 +194,19 @@ struct LocationDetailView: View {
         .toolbar {
             if isOwner {
                 ToolbarItem(placement: .topBarTrailing) {
-                    if isEditing {
-                        Button("Speichern") {
-                            Task { await saveEdit() }
-                        }
-                        .bold()
-                    } else {
-                        Menu {
-                            Button {
-                                editDescription = displayDescription ?? location.description ?? ""
-                                editCategory = displayCategory ?? location.category
-                                isEditing = true
-                            } label: {
-                                Label("Bearbeiten", systemImage: "pencil")
-                            }
-                            Button(role: .destructive) {
-                                showDeleteConfirm = true
-                            } label: {
-                                Label("Löschen", systemImage: "trash")
-                            }
+                    Menu {
+                        Button {
+                            showEditSheet = true
                         } label: {
-                            Image(systemName: "ellipsis.circle")
+                            Label("Bearbeiten", systemImage: "pencil")
                         }
-                    }
-                }
-                if isEditing {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button("Abbrechen") {
-                            isEditing = false
+                        Button(role: .destructive) {
+                            showDeleteConfirm = true
+                        } label: {
+                            Label("Löschen", systemImage: "trash")
                         }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
                     }
                 }
             }
@@ -270,6 +225,12 @@ struct LocationDetailView: View {
             }
         } message: {
             Text("Diese Location wird unwiderruflich gelöscht.")
+        }
+        .sheet(isPresented: $showEditSheet) {
+            EditLocationView(location: location) { updated in
+                location = updated
+                onUpdate?(updated)
+            }
         }
         .scrollDismissesKeyboard(.immediately)
         .task {
@@ -319,23 +280,6 @@ struct LocationDetailView: View {
                     .font(.caption.bold())
                     .foregroundStyle(.white)
             )
-    }
-
-    func saveEdit() async {
-        let body: [String: Any] = [
-            "category": editCategory,
-            "description": editDescription
-        ]
-        do {
-            let updated = try await locationService.updateLocation(id: location.id, body: body)
-            displayDescription = updated.description
-            displayCategory = updated.category
-            location = updated
-            onUpdate?(updated)
-            isEditing = false
-        } catch {
-            print("Save error: \(error)")
-        }
     }
 
     private func openInAppleMaps() {

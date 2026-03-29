@@ -5,20 +5,41 @@
 
 import Foundation
 
-enum LocationCategory: String, Codable, CaseIterable {
-    case restaurant = "Restaurant"
-    case cafe = "Café"
-    case bar = "Bar"
-    case club = "Club"
-    case bakery = "Bäckerei"
-    case fastFood = "Fast Food"
-    case iceCream = "Eisdiele"
-    case park = "Park"
-    case museum = "Museum"
-    case shopping = "Shopping"
-    case viewpoint = "Aussichtspunkt"
-    case beach = "Strand"
-    case other = "Sonstiges"
+struct CategoryHelper {
+    struct CategoryInfo {
+        let name: String
+        let icon: String
+    }
+
+    static let predefined: [CategoryInfo] = [
+        CategoryInfo(name: "Restaurant", icon: "fork.knife"),
+        CategoryInfo(name: "Café", icon: "cup.and.saucer.fill"),
+        CategoryInfo(name: "Bar", icon: "wineglass.fill"),
+        CategoryInfo(name: "Club", icon: "music.note.house.fill"),
+        CategoryInfo(name: "Bäckerei", icon: "birthday.cake.fill"),
+        CategoryInfo(name: "Fast Food", icon: "takeoutbag.and.cup.and.straw.fill"),
+        CategoryInfo(name: "Eisdiele", icon: "snowflake"),
+        CategoryInfo(name: "Park", icon: "leaf.fill"),
+        CategoryInfo(name: "Museum", icon: "building.columns.fill"),
+        CategoryInfo(name: "Shopping", icon: "bag.fill"),
+        CategoryInfo(name: "Aussichtspunkt", icon: "binoculars.fill"),
+        CategoryInfo(name: "Strand", icon: "beach.umbrella.fill"),
+        CategoryInfo(name: "Sport", icon: "sportscourt.fill"),
+        CategoryInfo(name: "Nachtleben", icon: "moon.stars.fill"),
+        CategoryInfo(name: "Kultur", icon: "theatermasks.fill"),
+        CategoryInfo(name: "Natur", icon: "tree.fill"),
+        CategoryInfo(name: "Wellness", icon: "sparkles")
+    ]
+
+    static let defaultIcon = "mappin.circle.fill"
+
+    static func icon(for category: String) -> String {
+        predefined.first { $0.name == category }?.icon ?? defaultIcon
+    }
+
+    static var predefinedNames: [String] {
+        predefined.map(\.name)
+    }
 }
 
 enum PriceRange: String, Codable, CaseIterable {

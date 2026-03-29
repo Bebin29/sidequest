@@ -1,5 +1,7 @@
+const crypto = require('crypto');
 const pool = require('../db/pool');
 const { parseBody, sendJSON, sendError } = require('../helpers');
+const { generateRingCode } = require('../ringCode');
 
 async function getAll(req, res, query) {
     try {
@@ -41,11 +43,13 @@ async function create(req, res) {
             return sendError(res, 400, 'email, username and display_name are required');
         }
 
+        const ringCode = generateRingCode(crypto.randomUUID());
+
         const result = await pool.query(
-            `INSERT INTO users (email, username, display_name, bio, profile_image_url)
-             VALUES ($1, $2, $3, $4, $5)
+            `INSERT INTO users (email, username, display_name, bio, profile_image_url, ring_code)
+             VALUES ($1, $2, $3, $4, $5, $6)
              RETURNING *`,
-            [email, username, display_name, bio || null, profile_image_url || null]
+            [email, username, display_name, bio || null, profile_image_url || null, ringCode]
         );
 
         sendJSON(res, 201, { data: result.rows[0] });
@@ -148,4 +152,52 @@ async function checkUsername(req, res, query) {
     }
 }
 
-module.exports = { getAll, getById, create, update, remove, checkUsername };
+async function findByRingCode(req, res, query) {
+    try {
+        const code = query.code;
+        if (!code || code.length < 72) {
+            return sendError(res, 400, 'Valid 72-bit ring code is required');
+        }
+
+        const allUsers = await pool.query('SELECT * FROM users WHERE ring_code IS NOT NULL');
+        let bestMatch = null;
+        let bestDistance = 18; // max Hamming distance allowed (25% of 72 bits)
+
+        // Split scanned code into 3 rings of 24 bits
+        const scannedRings = [code.slice(0, 24), code.slice(24, 48), code.slice(48, 72)];
+
+        for (const user of allUsers.rows) {
+            if (!user.ring_code || user.ring_code.length !== 72) continue;
+            const dbRings = [user.ring_code.slice(0, 24), user.ring_code.slice(24, 48), user.ring_code.slice(48, 72)];
+
+            // Try all 24 rotations (all rings rotate together)
+            for (let rotation = 0; rotation < 24; rotation++) {
+                let distance = 0;
+                for (let ring = 0; ring < 3; ring++) {
+                    for (let pos = 0; pos < 24; pos++) {
+                        const rotatedPos = (pos + rotation) % 24;
+                        if (scannedRings[ring][pos] !== dbRings[ring][rotatedPos]) distance++;
+                    }
+                    if (distance >= bestDistance) break;
+                }
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    bestMatch = user;
+                    if (distance === 0) break;
+                }
+            }
+            if (bestDistance === 0) break;
+        }
+
+        if (!bestMatch) {
+            return sendError(res, 404, 'User not found');
+        }
+
+        sendJSON(res, 200, { data: bestMatch, matchDistance: bestDistance });
+    } catch (err) {
+        console.error('findByRingCode error:', err);
+        sendError(res, 500, 'Internal server error');
+    }
+}
+
+module.exports = { getAll, getById, create, update, remove, checkUsername, findByRingCode };

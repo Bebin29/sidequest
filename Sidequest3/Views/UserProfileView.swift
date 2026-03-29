@@ -394,7 +394,7 @@ struct UserProfileView: View {
     }
 
     private func acceptFriendRequest() async {
-        guard let friendship = friendshipWithMe, let currentUserId else { return }
+        guard let friendship = friendshipWithMe, currentUserId != nil else { return }
         do {
             _ = try await friendshipService.updateStatus(friendshipId: friendship.id, status: "accepted")
             await loadData()

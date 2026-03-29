@@ -541,9 +541,11 @@ struct AddLocationFormView: View {
 }
 
 #Preview {
-    let vm = AuthViewModel()
-    vm.currentUser = .preview2
-    return Home(authViewModel: vm)
+    Home(authViewModel: {
+        let vm = AuthViewModel()
+        vm.currentUser = .preview2
+        return vm
+    }())
 }
 
 

@@ -13,7 +13,7 @@ enum AppTab: Hashable {
 
 struct Home: View {
     @Bindable var authViewModel: AuthViewModel
-    var deepLinkRouter: DeepLinkRouter
+    var deepLinkRouter = DeepLinkRouter()
     //@State private var selectedTab: AppTab = .home
     @State private var selectedTab: AppTab = .test
     @State private var focusLocation: Location?

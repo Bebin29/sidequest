@@ -25,7 +25,7 @@ struct Profile: View {
                 if let user = authViewModel.currentUser {
                     VStack(spacing: 0) {
                         // Profile Header
-                        profileHeader(user: user)
+                       
 
                         // Stats Bar
                         statsBar(user: user)
@@ -110,50 +110,7 @@ struct Profile: View {
 
     // MARK: - Profile Header
 
-    private func profileHeader(user: User) -> some View {
-        VStack(spacing: 12) {
-            // Avatar
-            Group {
-                if let urlString = user.profileImageUrl,
-                   let url = URL(string: urlString) {
-                    AsyncImage(url: url) { image in
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    } placeholder: {
-                        profilePlaceholder
-                    }
-                } else {
-                    profilePlaceholder
-                }
-            }
-            .frame(width: 96, height: 96)
-            .clipShape(Circle())
-            .overlay(Circle().stroke(Color(.systemGray4), lineWidth: 0.5))
-            .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
-
-            // Name & Username
-            VStack(spacing: 4) {
-                Text(user.displayName)
-                    .font(.title2.bold())
-
-                Text("@\(user.username)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            // Bio
-            if let bio = user.bio, !bio.isEmpty {
-                Text(bio)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-            }
-        }
-        .padding(.top, 16)
-        .padding(.bottom, 8)
-    }
+  
 
     // MARK: - Stats
 
@@ -360,15 +317,7 @@ struct Profile: View {
         }
     }
 
-    private var profilePlaceholder: some View {
-        Circle()
-            .fill(Color(.systemGray4))
-            .overlay(
-                Image(systemName: "person.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(.white)
-            )
-    }
+    
 }
 
 #Preview {

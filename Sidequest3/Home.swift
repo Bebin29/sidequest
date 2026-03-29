@@ -36,14 +36,15 @@ struct Home: View {
                     }
                 )
             }
+            
             Tab("Map", systemImage: "map.fill", value: .map) {
                 Karte(userId: authViewModel.currentUser?.id, focusLocation: $focusLocation)
             }
-            /*
+            
             Tab("Friends", systemImage: "person.2.fill", value: .friends) {
-                FriendsView(currentUser: authViewModel.currentUser)
+                InvitationSwiper()
             }
-             */
+             
             Tab("Profile", systemImage: "person.fill", value: .profile) {
                 Profile(authViewModel: authViewModel)
             }

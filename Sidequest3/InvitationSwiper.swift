@@ -11,94 +11,259 @@ struct Invitation: Identifiable {
     let host: String
     let tag: String
     let tagColor: Color
+    /// Dominant colors extracted/approximated per image for the background gradient
+    let bgColors: [Color]
 }
-
-// MARK: - Sample Data
 
 extension Invitation {
     static let samples: [Invitation] = [
-        Invitation(imageName: "IMGSTART01", title: "Sommernacht am See", date: "Sa, 12. Jul · 20:00 Uhr", location: "Strandbad Wannsee, Berlin", host: "Von Jonas & Mia", tag: "Party", tagColor: .purple),
-        Invitation(imageName: "IMGSTART02", title: "Hochzeit Müller", date: "Fr, 18. Jul · 14:00 Uhr", location: "Schloss Neuschwanstein", host: "Von Familie Müller", tag: "Hochzeit", tagColor: .pink),
-        Invitation(imageName: "IMGSTART03", title: "Geburtstag 30!", date: "Sa, 26. Jul · 19:00 Uhr", location: "Rooftop Bar, Hamburg", host: "Von Lena Bauer", tag: "Geburtstag", tagColor: .orange),
-        Invitation(imageName: "IMGSTART04", title: "BBQ & Chill", date: "So, 3. Aug · 14:00 Uhr", location: "Stadtpark München", host: "Von Tim Krause", tag: "Grillen", tagColor: .green),
-        Invitation(imageName: "IMGSTART05", title: "Galerie Opening", date: "Do, 7. Aug · 18:30 Uhr", location: "Galerie am Ku'damm", host: "Von Sophia Art", tag: "Kunst", tagColor: .cyan),
-        Invitation(imageName: "IMGSTART06", title: "Wine & Dine", date: "Fr, 15. Aug · 19:00 Uhr", location: "Vinothek Schumann, Köln", host: "Von Markus Wein", tag: "Dinner", tagColor: .red),
-        Invitation(imageName: "IMGSTART07", title: "Yoga Retreat", date: "Mo, 18. Aug · 08:00 Uhr", location: "Schwarzwald Lodge", host: "Von Clara Zen", tag: "Wellness", tagColor: .teal),
-        Invitation(imageName: "IMGSTART08", title: "Startup Pitch Night", date: "Mi, 20. Aug · 18:00 Uhr", location: "Factory Berlin", host: "Von TechHub Berlin", tag: "Business", tagColor: .blue),
-        Invitation(imageName: "IMGSTART09", title: "Herbstfest", date: "Sa, 27. Sep · 15:00 Uhr", location: "Marktplatz Heidelberg", host: "Von Stadt Heidelberg", tag: "Festival", tagColor: .yellow),
+        Invitation(
+            imageName: "IMGSTART01", title: "Sommernacht am See",
+            date: "Sa, 12. Jul · 20:00 Uhr", location: "Strandbad Wannsee, Berlin",
+            host: "Von Jonas & Mia", tag: "Party", tagColor: .purple,
+            bgColors: [Color(red:0.10,green:0.05,blue:0.28), Color(red:0.05,green:0.10,blue:0.35)]
+        ),
+        Invitation(
+            imageName: "IMGSTART02", title: "Hochzeit Müller",
+            date: "Fr, 18. Jul · 14:00 Uhr", location: "Schloss Neuschwanstein",
+            host: "Von Familie Müller", tag: "Hochzeit", tagColor: .pink,
+            bgColors: [Color(red:0.28,green:0.08,blue:0.18), Color(red:0.15,green:0.05,blue:0.22)]
+        ),
+        Invitation(
+            imageName: "IMGSTART03", title: "Geburtstag 30!",
+            date: "Sa, 26. Jul · 19:00 Uhr", location: "Rooftop Bar, Hamburg",
+            host: "Von Lena Bauer", tag: "Geburtstag", tagColor: .orange,
+            bgColors: [Color(red:0.30,green:0.12,blue:0.04), Color(red:0.18,green:0.08,blue:0.02)]
+        ),
+        Invitation(
+            imageName: "IMGSTART04", title: "BBQ & Chill",
+            date: "So, 3. Aug · 14:00 Uhr", location: "Stadtpark München",
+            host: "Von Tim Krause", tag: "Grillen", tagColor: .green,
+            bgColors: [Color(red:0.04,green:0.20,blue:0.08), Color(red:0.02,green:0.12,blue:0.06)]
+        ),
+        Invitation(
+            imageName: "IMGSTART05", title: "Galerie Opening",
+            date: "Do, 7. Aug · 18:30 Uhr", location: "Galerie am Ku'damm, Berlin",
+            host: "Von Sophia Art", tag: "Kunst", tagColor: .cyan,
+            bgColors: [Color(red:0.04,green:0.20,blue:0.28), Color(red:0.02,green:0.12,blue:0.20)]
+        ),
+        Invitation(
+            imageName: "IMGSTART06", title: "Wine & Dine",
+            date: "Fr, 15. Aug · 19:00 Uhr", location: "Vinothek Schumann, Köln",
+            host: "Von Markus Wein", tag: "Dinner", tagColor: .red,
+            bgColors: [Color(red:0.28,green:0.05,blue:0.05), Color(red:0.18,green:0.03,blue:0.06)]
+        ),
+        Invitation(
+            imageName: "IMGSTART07", title: "Yoga Retreat",
+            date: "Mo, 18. Aug · 08:00 Uhr", location: "Schwarzwald Lodge",
+            host: "Von Clara Zen", tag: "Wellness", tagColor: .teal,
+            bgColors: [Color(red:0.04,green:0.18,blue:0.18), Color(red:0.03,green:0.10,blue:0.14)]
+        ),
+        Invitation(
+            imageName: "IMGSTART08", title: "Startup Pitch Night",
+            date: "Mi, 20. Aug · 18:00 Uhr", location: "Factory Berlin",
+            host: "Von TechHub Berlin", tag: "Business", tagColor: .blue,
+            bgColors: [Color(red:0.05,green:0.08,blue:0.30), Color(red:0.03,green:0.05,blue:0.20)]
+        ),
+        Invitation(
+            imageName: "IMGSTART09", title: "Herbstfest",
+            date: "Sa, 27. Sep · 15:00 Uhr", location: "Marktplatz Heidelberg",
+            host: "Von Stadt Heidelberg", tag: "Festival", tagColor: .yellow,
+            bgColors: [Color(red:0.25,green:0.16,blue:0.03), Color(red:0.15,green:0.08,blue:0.02)]
+        ),
     ]
 }
 
-// MARK: - Liquid Glass Modifier (iOS 26 / visionOS style)
+// MARK: - Liquid Glass Edge Effect
+//
+// Applied DIRECTLY on the image: feathered frosted-glass vignette on all
+// four edges that fades toward the centre — the image stays fully visible
+// in the middle, while the perimeter gets a translucent glass shimmer.
 
-struct LiquidGlassModifier: ViewModifier {
-    var cornerRadius: CGFloat = 28
-    var opacity: Double = 0.18
+struct LiquidGlassEdges: ViewModifier {
+    var cornerRadius: CGFloat = 32
+    /// Controls how far inward the frosted edge extends (0–1 relative to shortest side)
+    var edgeFade: CGFloat = 0.18
 
     func body(content: Content) -> some View {
         content
-            .background {
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(.ultraThinMaterial)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        Color.white.opacity(0.35),
-                                        Color.white.opacity(0.08),
-                                        Color.white.opacity(0.20)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .overlay {
+                // Frosted material + specular, masked so only the perimeter shows
+                ZStack {
+                    // Base material
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                    // Specular gradient (light source: top-left)
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                stops: [
+                                    .init(color: Color.white.opacity(0.55), location: 0.00),
+                                    .init(color: Color.white.opacity(0.20), location: 0.25),
+                                    .init(color: Color.white.opacity(0.03), location: 0.55),
+                                    .init(color: Color.white.opacity(0.28), location: 1.00),
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
                             )
-                    }
-                    .overlay {
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .strokeBorder(
-                                LinearGradient(
-                                    colors: [
-                                        Color.white.opacity(0.7),
-                                        Color.white.opacity(0.1),
-                                        Color.white.opacity(0.4)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1.0
+                        )
+                }
+                // Mask: keep only a ring around the edges by subtracting a
+                // soft-edged ellipse from the centre.
+                .mask {
+                    GeometryReader { g in
+                        let w = g.size.width
+                        let h = g.size.height
+                        let insetX = w * edgeFade * 1.6
+                        let insetY = h * edgeFade * 1.6
+                        ZStack {
+                            // Full card shape (white = visible)
+                            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                                .fill(Color.white)
+                            // Centre knock-out (black = hidden), with soft gradient edges
+                            LinearGradient(
+                                colors: [.black, .clear],
+                                startPoint: .leading,
+                                endPoint: UnitPoint(x: edgeFade * 2.5, y: 0.5)
                             )
+                            .blendMode(.destinationOut)
+
+                            LinearGradient(
+                                colors: [.black, .clear],
+                                startPoint: .trailing,
+                                endPoint: UnitPoint(x: 1 - edgeFade * 2.5, y: 0.5)
+                            )
+                            .blendMode(.destinationOut)
+
+                            LinearGradient(
+                                colors: [.black, .clear],
+                                startPoint: .top,
+                                endPoint: UnitPoint(x: 0.5, y: edgeFade * 2.2)
+                            )
+                            .blendMode(.destinationOut)
+
+                            LinearGradient(
+                                colors: [.black, .clear],
+                                startPoint: .bottom,
+                                endPoint: UnitPoint(x: 0.5, y: 1 - edgeFade * 2.2)
+                            )
+                            .blendMode(.destinationOut)
+                        }
+                        .compositingGroup()
                     }
-                    .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 10)
-                    .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
+                }
+                .compositingGroup()
             }
+            // Outer rim stroke
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.70),
+                                Color.white.opacity(0.08),
+                                Color.white.opacity(0.38),
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.0
+                    )
+            }
+            .shadow(color: .black.opacity(0.32), radius: 32, x: 0, y: 18)
+            .shadow(color: .black.opacity(0.12), radius:  6, x: 0, y:  3)
     }
 }
 
 extension View {
-    func liquidGlass(cornerRadius: CGFloat = 28) -> some View {
-        self.modifier(LiquidGlassModifier(cornerRadius: cornerRadius))
+    func liquidGlassEdges(cornerRadius: CGFloat = 32, edgeFade: CGFloat = 0.18) -> some View {
+        modifier(LiquidGlassEdges(cornerRadius: cornerRadius, edgeFade: edgeFade))
     }
 }
 
-// MARK: - Tag Pill
+// MARK: - Liquid Glass Pill
 
-struct TagPill: View {
+extension View {
+    func liquidGlassPill() -> some View {
+        background {
+            Capsule()
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    Capsule().fill(LinearGradient(
+                        colors: [Color.white.opacity(0.36), Color.white.opacity(0.06)],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
+                    ))
+                }
+                .overlay {
+                    Capsule().strokeBorder(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.62), Color.white.opacity(0.10)],
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 0.8
+                    )
+                }
+        }
+    }
+}
+
+// MARK: - Tag Badge
+
+struct TagBadge: View {
     let label: String
     let color: Color
-
     var body: some View {
-        Text(label)
-            .font(.system(size: 11, weight: .semibold, design: .rounded))
-            .tracking(0.4)
+        Text(label.uppercased())
+            .font(.system(size: 10, weight: .bold, design: .rounded))
+            .tracking(0.8)
             .foregroundStyle(.white)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background {
                 Capsule()
-                    .fill(color.gradient)
-                    .shadow(color: color.opacity(0.5), radius: 6, y: 3)
-            )
+                    .fill(LinearGradient(
+                        colors: [color, color.opacity(0.65)],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
+                    ))
+                    .overlay { Capsule().strokeBorder(Color.white.opacity(0.28), lineWidth: 0.8) }
+                    .shadow(color: color.opacity(0.55), radius: 8, y: 4)
+            }
+    }
+}
+
+// MARK: - Dot Indicator
+
+struct DotIndicator: View {
+    let count: Int
+    let current: Int
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(0..<min(count, 12), id: \.self) { i in
+                Capsule()
+                    .fill(i == current ? Color.white : Color.white.opacity(0.28))
+                    .frame(width: i == current ? 22 : 7, height: 7)
+                    .animation(.spring(response: 0.35, dampingFraction: 0.72), value: current)
+            }
+        }
+    }
+}
+
+// MARK: - InfoRow
+
+private struct InfoRow: View {
+    let icon: String
+    let text: String
+    var body: some View {
+        HStack(spacing: 7) {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .semibold))
+                .frame(width: 16)
+            Text(text)
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .lineLimit(1)
+        }
+        .foregroundStyle(.white.opacity(0.90))
     }
 }
 
@@ -106,534 +271,299 @@ struct TagPill: View {
 
 struct InvitationCard: View {
     let invitation: Invitation
-    var dragOffset: CGSize = .zero
-    var rotation: Double = 0
 
     var body: some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-            let h = geo.size.height
+        // We need a fixed-size container — GeometryReader inside causes centering drift,
+        // so we use a ZStack that fills its parent naturally.
+        ZStack(alignment: .bottom) {
 
-            ZStack(alignment: .bottom) {
+            // ── Hero image ───────────────────────────────────────────────────
+            Image(invitation.imageName)
+                .resizable()
+                .scaledToFill()
+                .layoutPriority(-1)
 
-                // Background image
-                Image(invitation.imageName)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: w, height: h)
-                    .clipped()
+            // ── Tag (top-right) ──────────────────────────────────────────────
+            VStack {
+                HStack {
+                    Spacer()
+                    TagBadge(label: invitation.tag, color: invitation.tagColor)
+                        .padding(.top, 24)
+                        .padding(.trailing, 22)
+                }
+                Spacer()
+            }
 
-                // Gradient overlay for readability
+            // ── Info area: pure gradient, no box ────────────────────────────
+            // A tall gradient fades the image to dark from ~40% height.
+            // Text floats directly on top — no background shape at all.
+            VStack(alignment: .leading, spacing: 0) {
+                // Push content to bottom
+                Spacer()
+
+                Text(invitation.title)
+                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.30), radius: 6, y: 3)
+
+                Spacer().frame(height: 10)
+
+                InfoRow(icon: "calendar",           text: invitation.date)
+                Spacer().frame(height: 5)
+                InfoRow(icon: "mappin.and.ellipse",  text: invitation.location)
+                Spacer().frame(height: 5)
+                InfoRow(icon: "person.crop.circle",  text: invitation.host)
+
+                Spacer().frame(height: 20)
+
+                // CTA
+                HStack {
+                    Spacer()
+                    Text("Einladung öffnen")
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 26)
+                        .padding(.vertical, 11)
+                        .liquidGlassPill()
+                    Spacer()
+                }
+
+                Spacer().frame(height: 24)
+            }
+            .padding(.horizontal, 22)
+            // The gradient is part of the card overlay, not the info panel
+            .background(alignment: .bottom) {
                 LinearGradient(
-                    colors: [
-                        .clear,
-                        .clear,
-                        .black.opacity(0.2),
-                        .black.opacity(0.72)
+                    stops: [
+                        .init(color: .clear,                   location: 0.0),
+                        .init(color: .black.opacity(0.0),      location: 0.20),
+                        .init(color: .black.opacity(0.45),     location: 0.48),
+                        .init(color: .black.opacity(0.82),     location: 0.75),
+                        .init(color: .black.opacity(0.92),     location: 1.0),
                     ],
                     startPoint: .top,
                     endPoint: .bottom
                 )
-
-                // Tag top-right
-                VStack {
-                    HStack {
-                        Spacer()
-                        TagPill(label: invitation.tag, color: invitation.tagColor)
-                            .padding(.top, 20)
-                            .padding(.trailing, 20)
-                    }
-                    Spacer()
-                }
-
-                // Bottom info card (Liquid Glass)
-                VStack(alignment: .leading, spacing: 0) {
-                    // Title
-                    Text(invitation.title)
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .lineLimit(2)
-                        .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
-
-                    Spacer().frame(height: 10)
-
-                    // Date row
-                    HStack(spacing: 6) {
-                        Image(systemName: "calendar")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.85))
-                        Text(invitation.date)
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.9))
-                    }
-
-                    Spacer().frame(height: 6)
-
-                    // Location row
-                    HStack(spacing: 6) {
-                        Image(systemName: "mappin.and.ellipse")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.85))
-                        Text(invitation.location)
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.9))
-                            .lineLimit(1)
-                    }
-
-                    Spacer().frame(height: 6)
-
-                    // Host row
-                    HStack(spacing: 6) {
-                        Image(systemName: "person.crop.circle")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.85))
-                        Text(invitation.host)
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.9))
-                    }
-
-                    Spacer().frame(height: 18)
-
-                    // Action buttons
-                    HStack(spacing: 12) {
-                        // Decline
-                        Label("Ablehnen", systemImage: "xmark")
-                            .font(.system(size: 14, weight: .semibold, design: .rounded))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 13)
-                            .liquidGlass(cornerRadius: 18)
-
-                        // Accept
-                        Label("Zusagen", systemImage: "checkmark")
-                            .font(.system(size: 14, weight: .semibold, design: .rounded))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 13)
-                            .background {
-                                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [invitation.tagColor, invitation.tagColor.opacity(0.7)],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                    .overlay {
-                                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                            .strokeBorder(Color.white.opacity(0.25), lineWidth: 1)
-                                    }
-                                    .shadow(color: invitation.tagColor.opacity(0.5), radius: 8, y: 4)
-                            }
-                    }
-                }
-                .padding(22)
-                .liquidGlass(cornerRadius: 28)
-                .padding(.horizontal, 14)
-                .padding(.bottom, 22)
-
-                // Swipe direction overlays
-                swipeOverlay
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
-            .shadow(color: .black.opacity(0.22), radius: 24, x: 0, y: 14)
-        }
-    }
-
-    // MARK: Swipe hint overlay
-    @ViewBuilder
-    private var swipeOverlay: some View {
-        let threshold: CGFloat = 40
-
-        ZStack {
-            // Accept overlay (swipe right)
-            if dragOffset.width > threshold {
-                RoundedRectangle(cornerRadius: 32, style: .continuous)
-                    .fill(Color.green.opacity(min(Double(dragOffset.width - threshold) / 100.0, 0.55)))
-                VStack {
-                    Spacer()
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 54, weight: .bold))
-                            .foregroundStyle(.white)
-                            .shadow(color: .green.opacity(0.6), radius: 12, y: 4)
-                            .opacity(min(Double(dragOffset.width - threshold) / 80.0, 1.0))
-                            .scaleEffect(min(0.6 + Double(dragOffset.width - threshold) / 200.0, 1.1))
-                        Spacer()
-                    }
-                    .padding(.leading, 32)
-                    Spacer()
-                }
-            }
-
-            // Decline overlay (swipe left)
-            if dragOffset.width < -threshold {
-                RoundedRectangle(cornerRadius: 32, style: .continuous)
-                    .fill(Color.red.opacity(min(Double(-dragOffset.width - threshold) / 100.0, 0.55)))
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 54, weight: .bold))
-                            .foregroundStyle(.white)
-                            .shadow(color: .red.opacity(0.6), radius: 12, y: 4)
-                            .opacity(min(Double(-dragOffset.width - threshold) / 80.0, 1.0))
-                            .scaleEffect(min(0.6 + Double(-dragOffset.width - threshold) / 200.0, 1.1))
-                        Spacer().frame(width: 32)
-                    }
-                    Spacer()
-                }
+                .frame(height: 380) // tall enough to cover info area + breathing room
             }
         }
+        .clipped()
+        // Liquid Glass edge shimmer applied directly to the image card
+        .liquidGlassEdges(cornerRadius: 32, edgeFade: 0.16)
     }
 }
 
-// MARK: - Swiper Stack
+// MARK: - Main Swiper
 
 struct InvitationSwiper: View {
-    @State private var invitations: [Invitation] = Invitation.samples
-    @State private var topCardOffset: CGSize = .zero
-    @State private var isDragging = false
-    @State private var lastSwipeDirection: SwipeDirection? = nil
-    @State private var removedCount = 0
 
-    private let haptic = UIImpactFeedbackGenerator(style: .medium)
-    private let notificationHaptic = UINotificationFeedbackGenerator()
-    private let selectionHaptic = UISelectionFeedbackGenerator()
+    @State private var currentIndex: Int = 0
+    @State private var dragOffset: CGFloat = 0
+    @State private var isDragging: Bool = false
 
-    enum SwipeDirection { case left, right }
-
-    private var swipeThreshold: CGFloat { 100 }
+    private let invitations = Invitation.samples
+    // Only one haptic generator — fires only when a new card is actually committed
+    private let hapticImpact = UIImpactFeedbackGenerator(style: .medium)
+    private let swipeThreshold: CGFloat = 85
 
     var body: some View {
-        ZStack {
-            // Background mesh gradient
-            backgroundGradient
+        GeometryReader { geo in
+            // ── Card dimensions ──────────────────────────────────────────────
+            // Use the FULL available width minus equal margins on both sides
+            // so the card is truly centered in the screen.
+            let hPad: CGFloat  = 20
+            let cardW: CGFloat = geo.size.width - hPad * 2
+            let cardH: CGFloat = min(geo.size.height * 0.67, 570.0)
 
-            VStack(spacing: 0) {
-                // Header
-                headerView
-                    .padding(.top, 12)
+            ZStack {
+                // ── Animated background gradient matching current card ────────
+                adaptiveBackground(size: geo.size)
 
-                Spacer().frame(height: 20)
+                VStack(spacing: 0) {
+                    // Header
+                    headerView
+                        .padding(.top, geo.safeAreaInsets.top + 10)
+                        .padding(.horizontal, hPad + 6)
 
-                // Card stack
-                ZStack {
-                    if invitations.isEmpty {
-                        emptyStateView
-                    } else {
-                        ForEach(Array(invitations.prefix(3).enumerated().reversed()), id: \.element.id) { index, invitation in
-                            let isTop = index == 0
-                            InvitationCard(
-                                invitation: invitation,
-                                dragOffset: isTop ? topCardOffset : .zero,
-                                rotation: isTop ? cardRotation : 0
-                            )
-                            .frame(
-                                width: cardWidth(index: index),
-                                height: cardHeight(index: index)
-                            )
-                            .offset(y: cardYOffset(index: index))
-                            .scaleEffect(cardScale(index: index))
-                            .offset(x: isTop ? topCardOffset.width : 0,
-                                    y: isTop ? topCardOffset.height * 0.15 : 0)
-                            .rotationEffect(.degrees(isTop ? cardRotation : 0))
-                            .zIndex(Double(3 - index))
-                            .animation(.spring(response: 0.35, dampingFraction: 0.75), value: topCardOffset)
-                            .gesture(isTop ? dragGesture : nil)
+                    Spacer().frame(height: 24)
+
+                    // ── Card stack ───────────────────────────────────────────
+                    // ZStack is given EXACT size and positioned in center.
+                    // All card offsets are computed relative to that center.
+                    ZStack {
+                        ForEach(visibleIndices, id: \.self) { idx in
+                            InvitationCard(invitation: invitations[idx])
+                                .frame(width: cardW, height: cardH)
+                                // Offset: each card is spaced by cardW + gap
+                                .offset(x: xOffset(for: idx, cardWidth: cardW))
+                                .scaleEffect(scaleFor(idx))
+                                .opacity(idx == currentIndex ? 1.0 : 0.60)
+                                .zIndex(idx == currentIndex ? 10 : 5)
+                                .animation(
+                                    isDragging
+                                    ? .interactiveSpring(response: 0.25, dampingFraction: 0.88)
+                                    : .spring(response: 0.44, dampingFraction: 0.82),
+                                    value: dragOffset
+                                )
                         }
                     }
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: UIScreen.main.bounds.height * 0.58)
+                    // The ZStack is exactly cardW wide and centered — NO extra width
+                    .frame(width: cardW, height: cardH)
+                    // Expand hit-test area to full screen width so swiping anywhere works
+                    .contentShape(Rectangle().size(CGSize(width: geo.size.width, height: cardH)))
+                    .frame(width: geo.size.width) // expand frame for gesture without shifting cards
+                    .gesture(dragGesture(cardWidth: cardW))
+                    // Clip so neighbouring cards peek in from the edges but don't overflow
+                    .clipped()
 
-                Spacer()
+                    Spacer().frame(height: 26)
 
-                // Bottom action bar
-                if !invitations.isEmpty {
-                    actionBar
-                        .padding(.bottom, 36)
+                    DotIndicator(count: invitations.count, current: currentIndex)
+
+                    Spacer()
                 }
             }
+            .ignoresSafeArea()
         }
-        .ignoresSafeArea(edges: .top)
     }
 
-    // MARK: - Drag Gesture
+    // MARK: - Background
 
-    private var dragGesture: some Gesture {
-        DragGesture()
+    @ViewBuilder
+    private func adaptiveBackground(size: CGSize) -> some View {
+        let inv = invitations[currentIndex]
+        ZStack {
+            // Dark base
+            Color(red: 0.04, green: 0.03, blue: 0.10)
+
+            // Primary color blob (top)
+            RadialGradient(
+                colors: [inv.bgColors[0].opacity(0.85), .clear],
+                center: .center, startRadius: 0, endRadius: 300
+            )
+            .frame(width: 600)
+            .offset(x: -60, y: -size.height * 0.30)
+            .blur(radius: 60)
+
+            // Secondary color blob (bottom)
+            RadialGradient(
+                colors: [inv.bgColors.count > 1 ? inv.bgColors[1].opacity(0.70) : inv.bgColors[0].opacity(0.50), .clear],
+                center: .center, startRadius: 0, endRadius: 280
+            )
+            .frame(width: 560)
+            .offset(x: 100, y: size.height * 0.30)
+            .blur(radius: 55)
+        }
+        .ignoresSafeArea()
+        .animation(.easeInOut(duration: 0.55), value: currentIndex)
+    }
+
+    // MARK: - Gesture
+
+    private func dragGesture(cardWidth: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 10)
             .onChanged { value in
-                topCardOffset = value.translation
+                // Only allow horizontal drag
                 isDragging = true
-
-                // Haptic tick at threshold
-                if abs(value.translation.width) > swipeThreshold {
-                    if lastSwipeDirection == nil {
-                        selectionHaptic.selectionChanged()
-                        lastSwipeDirection = value.translation.width > 0 ? .right : .left
-                    }
-                } else {
-                    lastSwipeDirection = nil
-                }
+                dragOffset = value.translation.width
+                // No haptic during drag — only on commit
             }
             .onEnded { value in
                 isDragging = false
-                lastSwipeDirection = nil
+                let velocity = value.predictedEndTranslation.width
 
-                if value.translation.width > swipeThreshold {
-                    acceptCard()
-                } else if value.translation.width < -swipeThreshold {
-                    declineCard()
+                if dragOffset < -swipeThreshold || velocity < -260 {
+                    goToNext()
+                } else if dragOffset > swipeThreshold || velocity > 260 {
+                    goToPrev()
                 } else {
-                    // Snap back
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                        topCardOffset = .zero
-                    }
-                    haptic.impactOccurred(intensity: 0.4)
+                    snapBack()
                 }
             }
     }
 
-    // MARK: - Card Actions
-
-    private func acceptCard() {
-        notificationHaptic.notificationOccurred(.success)
-        flyCard(toRight: true)
-    }
-
-    private func declineCard() {
-        notificationHaptic.notificationOccurred(.warning)
-        flyCard(toRight: false)
-    }
-
-    private func flyCard(toRight: Bool) {
-        withAnimation(.spring(response: 0.38, dampingFraction: 0.78)) {
-            topCardOffset = CGSize(
-                width: toRight ? 800 : -800,
-                height: topCardOffset.height
-            )
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.36) {
-            if !invitations.isEmpty {
-                invitations.removeFirst()
-                removedCount += 1
-            }
-            withAnimation(.none) {
-                topCardOffset = .zero
-            }
+    private func goToNext() {
+        guard currentIndex < invitations.count - 1 else { return bounceBack() }
+        // ── Haptic fires ONLY here, when a new card is committed ──
+        hapticImpact.impactOccurred(intensity: 0.80)
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+            currentIndex += 1
+            dragOffset = 0
         }
     }
 
-    // MARK: - Card Layout Helpers
-
-    private var cardRotation: Double {
-        let factor = topCardOffset.width / 22
-        return min(max(factor, -18), 18)
-    }
-
-    private let screenWidth = UIScreen.main.bounds.width
-
-    private func cardWidth(index: Int) -> CGFloat {
-        let base = screenWidth - 44
-        return base - CGFloat(index) * 10
-    }
-
-    private func cardHeight(index: Int) -> CGFloat {
-        let base: CGFloat = UIScreen.main.bounds.height * 0.56
-        return base - CGFloat(index) * 14
-    }
-
-    private func cardYOffset(index: Int) -> CGFloat {
-        return CGFloat(index) * 14
-    }
-
-    private func cardScale(index: Int) -> CGFloat {
-        return 1.0 - CGFloat(index) * 0.035
-    }
-
-    // MARK: - Sub Views
-
-    private var backgroundGradient: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.06, green: 0.05, blue: 0.12),
-                    Color(red: 0.10, green: 0.08, blue: 0.22),
-                    Color(red: 0.08, green: 0.12, blue: 0.28)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-
-            // Ambient blobs
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [Color.purple.opacity(0.35), .clear],
-                        center: .center,
-                        startRadius: 0,
-                        endRadius: 220
-                    )
-                )
-                .frame(width: 380)
-                .offset(x: -80, y: -200)
-                .blur(radius: 60)
-
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [Color.blue.opacity(0.28), .clear],
-                        center: .center,
-                        startRadius: 0,
-                        endRadius: 200
-                    )
-                )
-                .frame(width: 340)
-                .offset(x: 140, y: 300)
-                .blur(radius: 55)
-
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [Color.pink.opacity(0.2), .clear],
-                        center: .center,
-                        startRadius: 0,
-                        endRadius: 180
-                    )
-                )
-                .frame(width: 300)
-                .offset(x: -60, y: 500)
-                .blur(radius: 50)
+    private func goToPrev() {
+        guard currentIndex > 0 else { return bounceBack() }
+        // ── Haptic fires ONLY here ──
+        hapticImpact.impactOccurred(intensity: 0.80)
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+            currentIndex -= 1
+            dragOffset = 0
         }
-        .ignoresSafeArea()
     }
+
+    private func snapBack() {
+        withAnimation(.spring(response: 0.38, dampingFraction: 0.72)) { dragOffset = 0 }
+    }
+
+    private func bounceBack() {
+        hapticImpact.impactOccurred(intensity: 0.45)
+        withAnimation(.spring(response: 0.30, dampingFraction: 0.44)) {
+            dragOffset = dragOffset > 0 ? 16 : -16
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.11) {
+            withAnimation(.spring(response: 0.30, dampingFraction: 0.68)) { dragOffset = 0 }
+        }
+    }
+
+    // MARK: - Layout
+
+    private var visibleIndices: [Int] {
+        var r = [currentIndex]
+        if currentIndex > 0                      { r.append(currentIndex - 1) }
+        if currentIndex < invitations.count - 1  { r.append(currentIndex + 1) }
+        return r
+    }
+
+    /// X offset: cards sit to the left/right of center based on their relative position.
+    /// dragOffset shifts all of them together so the centre card moves under the finger.
+    private func xOffset(for idx: Int, cardWidth: CGFloat) -> CGFloat {
+        let gap: CGFloat = 18
+        let relative = CGFloat(idx - currentIndex)
+        return relative * (cardWidth + gap) + dragOffset
+    }
+
+    private func scaleFor(_ idx: Int) -> CGFloat {
+        guard idx != currentIndex else { return 1.0 }
+        // Slightly scale up neighbouring cards as they approach center during drag
+        let progress = min(abs(dragOffset) / 160, 1.0)
+        return 0.93 + progress * 0.04
+    }
+
+    // MARK: - Header
 
     private var headerView: some View {
         HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text("Einladungen")
                     .font(.system(size: 30, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
-                Text("\(invitations.count) offen · \(removedCount) beantwortet")
+                Text("\(currentIndex + 1) von \(invitations.count)")
                     .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyle(.white.opacity(0.48))
             }
             Spacer()
-            // Progress pills
-            HStack(spacing: 5) {
-                ForEach(0..<min(invitations.count, 5), id: \.self) { i in
-                    Capsule()
-                        .fill(i == 0 ? Color.white : Color.white.opacity(0.25))
-                        .frame(width: i == 0 ? 20 : 6, height: 6)
-                        .animation(.spring(response: 0.3), value: invitations.count)
+            HStack(spacing: -9) {
+                ForEach(Array([Color.purple, Color.pink, Color.orange].enumerated()), id: \.offset) { i, color in
+                    Circle()
+                        .fill(color.gradient)
+                        .frame(width: 30, height: 30)
+                        .overlay { Circle().strokeBorder(Color.black.opacity(0.4), lineWidth: 1.5) }
+                        .zIndex(Double(3 - i))
                 }
             }
         }
-        .padding(.horizontal, 24)
-    }
-
-    private var actionBar: some View {
-        HStack(spacing: 28) {
-            // Decline button
-            Button { declineCard() } label: {
-                ZStack {
-                    Circle()
-                        .fill(.ultraThinMaterial)
-                        .frame(width: 62, height: 62)
-                        .overlay {
-                            Circle()
-                                .strokeBorder(
-                                    LinearGradient(
-                                        colors: [Color.white.opacity(0.4), Color.red.opacity(0.3)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 1
-                                )
-                        }
-                        .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
-                    Image(systemName: "xmark")
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(Color.red.opacity(0.9))
-                }
-            }
-            .disabled(invitations.isEmpty)
-
-            // Superlike / Info button
-            Button { } label: {
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(red:0.4,green:0.3,blue:1.0), Color(red:0.7,green:0.3,blue:1.0)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 78, height: 78)
-                        .shadow(color: Color.purple.opacity(0.55), radius: 16, y: 8)
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 28, weight: .semibold))
-                        .foregroundStyle(.white)
-                }
-            }
-            .disabled(invitations.isEmpty)
-
-            // Accept button
-            Button { acceptCard() } label: {
-                ZStack {
-                    Circle()
-                        .fill(.ultraThinMaterial)
-                        .frame(width: 62, height: 62)
-                        .overlay {
-                            Circle()
-                                .strokeBorder(
-                                    LinearGradient(
-                                        colors: [Color.white.opacity(0.4), Color.green.opacity(0.3)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 1
-                                )
-                        }
-                        .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(Color.green.opacity(0.9))
-                }
-            }
-            .disabled(invitations.isEmpty)
-        }
-        .padding(.horizontal, 48)
-    }
-
-    private var emptyStateView: some View {
-        VStack(spacing: 18) {
-            Image(systemName: "envelope.open.fill")
-                .font(.system(size: 60))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.purple, .pink],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .shadow(color: .purple.opacity(0.4), radius: 16, y: 8)
-
-            Text("Alles erledigt!")
-                .font(.system(size: 26, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
-
-            Text("Du hast alle Einladungen\nbeantwortet.")
-                .font(.system(size: 16, weight: .medium, design: .rounded))
-                .foregroundStyle(.white.opacity(0.55))
-                .multilineTextAlignment(.center)
-        }
-        .padding(36)
-        .liquidGlass(cornerRadius: 32)
-        .padding(.horizontal, 36)
+        .animation(.easeInOut(duration: 0.25), value: currentIndex)
     }
 }
 

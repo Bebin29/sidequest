@@ -15,25 +15,41 @@ final class ImageUploadService {
 
     func upload(image: UIImage) async throws -> String {
         let resized = Self.resize(image, maxDimension: 1920)
-        guard let data = resized.jpegData(compressionQuality: 0.7) else {
+        guard let imageData = resized.jpegData(compressionQuality: 0.7) else {
             throw AppError.unknown(underlying: nil)
         }
-
-        let base64 = data.base64EncodedString()
 
         guard let url = URL(string: "\(Constants.API.baseURL)/api/uploads") else {
             throw AppError.unknown(underlying: nil)
         }
 
+        // Multipart/form-data statt Base64 JSON (33% weniger Bandbreite)
+        let boundary = UUID().uuidString
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = Constants.API.timeoutInterval
 
-        let body: [String: String] = [
-            "image": base64,
-            "extension": "jpg"
-        ]
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        var body = Data()
+
+        // Extension-Feld
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"extension\"\r\n\r\n".data(using: .utf8)!)
+        body.append("jpg\r\n".data(using: .utf8)!)
+
+        // Bild-Datei
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"image\"; filename=\"photo.jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData)
+        body.append("\r\n".data(using: .utf8)!)
+
+        // End-Boundary
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+
+        request.httpBody = body
+
+        Log.network.info("Upload: multipart \(imageData.count) bytes (was \(imageData.count * 4 / 3) as base64)")
 
         let (responseData, response) = try await session.data(for: request)
 

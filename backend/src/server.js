@@ -20,7 +20,10 @@ const server = http.createServer((req, res) => {
         if (fs.existsSync(filepath)) {
             const ext = path.extname(filename).toLowerCase();
             const mimeTypes = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
-            res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' });
+            res.writeHead(200, {
+                'Content-Type': mimeTypes[ext] || 'application/octet-stream',
+                'Cache-Control': 'public, max-age=31536000, immutable',
+            });
             fs.createReadStream(filepath).pipe(res);
             return;
         }

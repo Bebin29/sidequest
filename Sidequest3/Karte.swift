@@ -105,9 +105,9 @@ struct Karte: View {
                   
                     VStack(spacing: 12) {
 
-                        Button(action: {
+                        Button {
                             showFilterSheet = true
-                        }) {
+                        } label: {
                             Image(systemName: mapViewModel.filter.isEmpty ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
                                 .font(.title2)
                                 .foregroundColor(mapViewModel.filter.isEmpty ? Color.indigo : .white)
@@ -118,9 +118,9 @@ struct Karte: View {
                                 .fontWeight(.semibold)
                         }
 
-                        Button(action: {
+                        Button {
                             locationManager.centerOnUser()
-                        }) {
+                        } label: {
                             Image(systemName: "location.fill")
                                 .font(.title2)
                                 .foregroundColor(Color.indigo)
@@ -131,9 +131,9 @@ struct Karte: View {
                                 .fontWeight(.semibold)
                         }
 
-                        Button(action: {
+                        Button {
                             showSearchSheet = true
-                        }) {
+                        } label: {
                             Image(systemName: "plus")
                                 .font(.title2)
                                 .foregroundColor(.white)
@@ -169,11 +169,14 @@ struct Karte: View {
             guard let userId else { return }
             await mapViewModel.loadLocations(userId: userId)
         }
-        .sheet(isPresented: $showDetail, onDismiss: {
-            selectedLocationId = nil
-            guard let userId else { return }
-            Task { await mapViewModel.loadLocations(userId: userId) }
-        }) {
+        .sheet(
+            isPresented: $showDetail,
+            onDismiss: {
+                selectedLocationId = nil
+                guard let userId else { return }
+                Task { await mapViewModel.loadLocations(userId: userId) }
+            },
+            content: {
             if let location = mapViewModel.locations.first(where: { $0.id == selectedLocationId }) {
                 NavigationStack {
                     LocationDetailView(location: location, currentUserId: userId, onDelete: {
@@ -185,36 +188,35 @@ struct Karte: View {
                         }
                     })
                 }
-            }
-        }
+            })
     }
 }
 
 // Autocomplete Service
+struct SearchResult: Identifiable, Hashable {
+    let id = UUID()
+    let completion: MKLocalSearchCompletion
+    var distance: CLLocationDistance?
+
+    var formattedDistance: String? {
+        guard let distance else { return nil }
+        if distance < 1000 {
+            return "\(Int(distance)) m"
+        } else {
+            return String(format: "%.1f km", distance / 1000)
+        }
+    }
+
+    static func == (lhs: SearchResult, rhs: SearchResult) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+}
+
 class SearchCompleter: NSObject, ObservableObject, MKLocalSearchCompleterDelegate {
 
     @Published var results: [SearchResult] = []
     var userLocation: CLLocation?
 
     private let completer = MKLocalSearchCompleter()
-
-    struct SearchResult: Identifiable, Hashable {
-        let id = UUID()
-        let completion: MKLocalSearchCompletion
-        var distance: CLLocationDistance?
-
-        var formattedDistance: String? {
-            guard let distance else { return nil }
-            if distance < 1000 {
-                return "\(Int(distance)) m"
-            } else {
-                return String(format: "%.1f km", distance / 1000)
-            }
-        }
-
-        static func == (lhs: SearchResult, rhs: SearchResult) -> Bool { lhs.id == rhs.id }
-        func hash(into hasher: inout Hasher) { hasher.combine(id) }
-    }
 
     override init() {
         super.init()
@@ -243,9 +245,9 @@ class SearchCompleter: NSObject, ObservableObject, MKLocalSearchCompleterDelegat
 
         // Nur neue Completions auflösen, bereits bekannte behalten
         let existingDistances = Dictionary(uniqueKeysWithValues:
-            results.compactMap { r -> (String, CLLocationDistance)? in
-                guard let d = r.distance else { return nil }
-                return (r.completion.title + r.completion.subtitle, d)
+            results.compactMap { result -> (String, CLLocationDistance)? in
+                guard let dist = result.distance else { return nil }
+                return (result.completion.title + result.completion.subtitle, dist)
             }
         )
 
@@ -596,14 +598,14 @@ struct AddLocationFormView: View {
 }
 
 #Preview {
-    let vm = AuthViewModel()
-    vm.currentUser = .preview2
-    return Home(authViewModel: vm)
+    let authVM = AuthViewModel()
+    authVM.currentUser = .preview2
+    return Home(authViewModel: authVM)
 }
-
 
 extension User {
     static let preview2 = User(
+        // swiftlint:disable:next force_unwrapping
         id: UUID(uuidString: "e5f9bcaa-20f7-4296-a7f1-f2caf539d474")!,
         email: "oleboehm4321@icloud.com",
         username: "oleboehm4321",
@@ -623,7 +625,3 @@ extension User {
         ringCode: "101100110010110011001011100110010110011001011001100101100"
     )
 }
-
-
-
-

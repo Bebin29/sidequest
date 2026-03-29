@@ -75,8 +75,8 @@ struct LocationFilterView: View {
 
                     if useRadius {
                         Picker("Radius", selection: $radiusKm) {
-                            ForEach(radiusOptions, id: \.self) { km in
-                                Text("\(Int(km)) km").tag(km)
+                            ForEach(radiusOptions, id: \.self) { kilometers in
+                                Text("\(Int(kilometers)) km").tag(kilometers)
                             }
                         }
                         .pickerStyle(.segmented)

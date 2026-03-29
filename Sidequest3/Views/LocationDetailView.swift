@@ -282,7 +282,6 @@ struct LocationDetailView: View {
             )
     }
 
-
     private func openInAppleMaps() {
         let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(
             latitude: location.latitude,

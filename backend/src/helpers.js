@@ -1,7 +1,20 @@
-function parseBody(req) {
+const zlib = require('zlib');
+
+const MAX_BODY_SIZE = 1 * 1024 * 1024; // 1 MB default
+const MAX_UPLOAD_BODY_SIZE = 10 * 1024 * 1024; // 10 MB for uploads
+
+function parseBody(req, { maxSize = MAX_BODY_SIZE } = {}) {
     return new Promise((resolve, reject) => {
         let body = '';
-        req.on('data', (chunk) => { body += chunk; });
+        let size = 0;
+        req.on('data', (chunk) => {
+            size += chunk.length;
+            if (size > maxSize) {
+                req.destroy();
+                return reject(Object.assign(new Error('Payload too large'), { statusCode: 413 }));
+            }
+            body += chunk;
+        });
         req.on('end', () => {
             if (!body) return resolve(null);
             try {
@@ -15,8 +28,28 @@ function parseBody(req) {
 }
 
 function sendJSON(res, statusCode, data) {
-    res.writeHead(statusCode, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(data));
+    const json = JSON.stringify(data);
+
+    // Gzip wenn Client es unterstützt (Flag wird in server.js gesetzt)
+    if (res._acceptsGzip && json.length > 1024) {
+        zlib.gzip(json, (err, compressed) => {
+            if (err) {
+                // Fallback: unkomprimiert senden
+                res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+                res.end(json);
+                return;
+            }
+            res.writeHead(statusCode, {
+                'Content-Type': 'application/json',
+                'Content-Encoding': 'gzip',
+                'Content-Length': compressed.length,
+            });
+            res.end(compressed);
+        });
+    } else {
+        res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+        res.end(json);
+    }
 }
 
 function sendError(res, statusCode, message) {
@@ -29,4 +62,4 @@ function getIdFromPath(pathname, prefix) {
     return parts[0] || null;
 }
 
-module.exports = { parseBody, sendJSON, sendError, getIdFromPath };
+module.exports = { parseBody, sendJSON, sendError, getIdFromPath, MAX_UPLOAD_BODY_SIZE };

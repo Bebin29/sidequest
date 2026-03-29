@@ -9,6 +9,9 @@ const PORT = process.env.PORT || 3000;
 const UPLOAD_DIR = process.env.UPLOAD_DIR || '/app/uploads';
 
 const server = http.createServer((req, res) => {
+    // Gzip-Flag fuer sendJSON (pruefen ob Client gzip akzeptiert)
+    res._acceptsGzip = (req.headers['accept-encoding'] || '').includes('gzip');
+
     // Statische Dateien aus /uploads served
     if (req.method === 'GET' && req.url.startsWith('/uploads/')) {
         const filename = path.basename(req.url);

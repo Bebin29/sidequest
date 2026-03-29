@@ -98,16 +98,24 @@ async function update(req, res, id) {
             return sendError(res, 404, 'User not found');
         }
 
-        // When username changes, update all denormalized copies
+        // When username changes, update all denormalized copies in a transaction
         if (body.username) {
             const newUsername = body.username;
-            await Promise.all([
-                pool.query('UPDATE ratings SET username = $1 WHERE user_id = $2', [newUsername, id]),
-                pool.query('UPDATE comments SET username = $1 WHERE user_id = $2', [newUsername, id]),
-                pool.query('UPDATE friendships SET requester_username = $1 WHERE requester_id = $2', [newUsername, id]),
-                pool.query('UPDATE friendships SET receiver_username = $1 WHERE receiver_id = $2', [newUsername, id]),
-                pool.query('UPDATE trips SET username = $1 WHERE user_id = $2', [newUsername, id]),
-            ]);
+            const client = await pool.connect();
+            try {
+                await client.query('BEGIN');
+                await client.query('UPDATE ratings SET username = $1 WHERE user_id = $2', [newUsername, id]);
+                await client.query('UPDATE comments SET username = $1 WHERE user_id = $2', [newUsername, id]);
+                await client.query('UPDATE friendships SET requester_username = $1 WHERE requester_id = $2', [newUsername, id]);
+                await client.query('UPDATE friendships SET receiver_username = $1 WHERE receiver_id = $2', [newUsername, id]);
+                await client.query('UPDATE trips SET username = $1 WHERE user_id = $2', [newUsername, id]);
+                await client.query('COMMIT');
+            } catch (txErr) {
+                await client.query('ROLLBACK');
+                throw txErr;
+            } finally {
+                client.release();
+            }
         }
 
         sendJSON(res, 200, { data: result.rows[0] });

@@ -51,17 +51,12 @@ async function createAndSend({ recipientId, senderId, type, title, body, data })
 // --- Typisierte Notification-Funktionen ---
 
 async function notifyFriendRequest(senderId, receiverId) {
-    const sender = await pool.query('SELECT display_name FROM users WHERE id = $1', [senderId]);
-    if (sender.rowCount === 0) return;
-
-    const name = sender.rows[0].display_name;
-
     await createAndSend({
         recipientId: receiverId,
         senderId,
         type: 'friend_request',
-        title: 'Neue Freundschaftsanfrage',
-        body: `${name} moechte mit dir befreundet sein`,
+        title: 'Neue Freundschaftsanfrage erhalten',
+        body: 'Jemand moechte sich mit dir verbinden. Schau nach, wer es ist!',
         data: { sender_id: senderId },
     });
 }
@@ -76,40 +71,31 @@ async function notifyFriendAccepted(accepterId, requesterId) {
         recipientId: requesterId,
         senderId: accepterId,
         type: 'friend_accepted',
-        title: 'Freundschaftsanfrage akzeptiert',
-        body: `${name} hat deine Freundschaftsanfrage angenommen`,
+        title: `${name} hat deine Anfrage angenommen`,
+        body: 'Ihr seid jetzt befreundet. Entdeckt gemeinsam neue Spots!',
         data: { accepter_id: accepterId },
     });
 }
 
 async function notifyNewComment(commenterId, locationId) {
-    // Location-Owner und Location-Name holen
     const loc = await pool.query('SELECT created_by, name FROM locations WHERE id = $1', [locationId]);
     if (loc.rowCount === 0) return;
 
     const ownerId = loc.rows[0].created_by;
 
-    // Nicht benachrichtigen wenn man seinen eigenen Spot kommentiert
     if (ownerId === commenterId) return;
-
-    const commenter = await pool.query('SELECT display_name FROM users WHERE id = $1', [commenterId]);
-    if (commenter.rowCount === 0) return;
-
-    const commenterName = commenter.rows[0].display_name;
-    const locationName = loc.rows[0].name;
 
     await createAndSend({
         recipientId: ownerId,
         senderId: commenterId,
         type: 'new_comment',
-        title: 'Neuer Kommentar',
-        body: `${commenterName} hat "${locationName}" kommentiert`,
+        title: 'Neuer Kommentar auf deinem Spot',
+        body: 'Jemand hat einen deiner Beitraege kommentiert.',
         data: { location_id: locationId, commenter_id: commenterId },
     });
 }
 
 async function notifyFriendNewSpot(creatorId, locationName) {
-    // Alle Freunde des Erstellers holen
     const friends = await pool.query(
         `SELECT CASE
             WHEN requester_id = $1 THEN receiver_id
@@ -122,19 +108,13 @@ async function notifyFriendNewSpot(creatorId, locationName) {
 
     if (friends.rowCount === 0) return;
 
-    const creator = await pool.query('SELECT display_name FROM users WHERE id = $1', [creatorId]);
-    if (creator.rowCount === 0) return;
-
-    const creatorName = creator.rows[0].display_name;
-
-    // An jeden Freund senden (parallel)
     const promises = friends.rows.map((row) =>
         createAndSend({
             recipientId: row.friend_id,
             senderId: creatorId,
             type: 'friend_new_spot',
-            title: 'Neuer Spot',
-            body: `${creatorName} hat "${locationName}" hinzugefuegt`,
+            title: 'Neuer Spot von einem Freund',
+            body: 'Jemand aus deiner Freundesliste hat einen neuen Ort entdeckt.',
             data: { creator_id: creatorId },
         }).catch((err) => console.error('notifyFriendNewSpot error:', err.message))
     );

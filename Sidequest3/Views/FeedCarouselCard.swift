@@ -17,53 +17,82 @@ struct FeedCarouselCard: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            // Hero image — Color.clear accepts proposed size,
-            // overlay fills it, clipped prevents layout overflow
+            // Full-bleed hero image behind everything
             Color.clear
                 .overlay {
                     heroImage
                 }
                 .clipped()
 
-            // Gradient ONLY on bottom portion for text readability
-            // Uses GeometryReader to be proportional to card height
-            GeometryReader { geo in
-                VStack(spacing: 0) {
-                    Spacer()
-                    LinearGradient(
-                        stops: [
-                            .init(color: .clear, location: 0.0),
-                            .init(color: .black.opacity(0.20), location: 0.15),
-                            .init(color: .black.opacity(0.60), location: 0.45),
-                            .init(color: .black.opacity(0.85), location: 0.75),
-                            .init(color: .black.opacity(0.95), location: 1.0),
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: geo.size.height * 0.45)
-                    .allowsHitTesting(false)
-                }
+            // Warm gradient + glass transition at bottom
+            // Layered: warm color gradient → glass blur → content
+            VStack(spacing: 0) {
+                Spacer()
+
+                // Warm color gradient that blends image into glass
+                // (like the orange/warm glow in Apple Invitations)
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.0),
+                        .init(color: borderColor.opacity(0.3), location: 0.4),
+                        .init(color: borderColor.opacity(0.6), location: 0.7),
+                        .init(color: borderColor.opacity(0.8), location: 1.0),
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 120)
+
+                // Solid warm base for glass panel
+                Rectangle()
+                    .fill(borderColor.opacity(0.7))
+                    .frame(height: 140)
             }
 
-            // Bottom content overlay
+            // Glass blur overlay on the bottom portion
+            VStack(spacing: 0) {
+                Spacer()
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .frame(height: 220)
+                    .mask {
+                        LinearGradient(
+                            stops: [
+                                .init(color: .clear, location: 0.0),
+                                .init(color: .black.opacity(0.6), location: 0.2),
+                                .init(color: .black, location: 0.45),
+                                .init(color: .black, location: 1.0),
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    }
+            }
+            .allowsHitTesting(false)
+
+            // Bottom content (avatar, name, title, address)
             bottomContent
-        }
-        // Category badge (top-left, subtle)
-        .overlay(alignment: .topLeading) {
-            TagBadge(
-                label: location.category,
-                color: categoryColor(for: location.category)
-            )
-            .padding(16)
+
+            // Category badge (top-left)
+            VStack {
+                HStack {
+                    TagBadge(
+                        label: location.category,
+                        color: categoryColor(for: location.category)
+                    )
+                    Spacer()
+                }
+                .padding(16)
+                Spacer()
+            }
         }
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-        // Warm colored border matching dominant/category color
+        // Warm colored border glow
         .overlay {
             RoundedRectangle(cornerRadius: 28, style: .continuous)
                 .strokeBorder(
-                    borderColor.opacity(0.4),
-                    lineWidth: 1.0
+                    borderColor.opacity(0.45),
+                    lineWidth: 1.2
                 )
         }
         .shadow(color: .black.opacity(0.35), radius: 32, y: 18)
@@ -80,58 +109,45 @@ struct FeedCarouselCard: View {
 
     private var bottomContent: some View {
         VStack(spacing: 0) {
-            // Dot indicator (visual hint for multiple images)
-            if location.imageUrls.count > 1 {
-                DotIndicator(count: location.imageUrls.count, current: 0)
-                    .padding(.bottom, 14)
-            }
-
-            // Creator avatar — centered above title
+            // Creator avatar — centered, sits at transition zone
             creatorAvatar
-                .frame(width: 40, height: 40)
+                .frame(width: 38, height: 38)
                 .overlay {
                     Circle()
                         .strokeBorder(
                             LinearGradient(
-                                colors: [Color.indigo, Color.purple],
+                                colors: [Color.white.opacity(0.6), Color.white.opacity(0.2)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
-                            lineWidth: 2.0
+                            lineWidth: 1.5
                         )
                 }
                 .shadow(color: .black.opacity(0.3), radius: 6, y: 2)
-                .padding(.bottom, 10)
-
-            // Creator name
-            Text(location.creatorDisplayName ?? location.creatorUsername ?? "Unbekannt")
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.7))
-                .lineLimit(1)
-                .padding(.bottom, 12)
+                .padding(.bottom, 8)
 
             // Location name — large, centered
             Text(location.name)
-                .font(.system(size: 30, weight: .bold, design: .rounded))
+                .font(.system(size: 28, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.40), radius: 8, y: 3)
+                .shadow(color: .black.opacity(0.30), radius: 6, y: 2)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
 
             // Address — centered
             HStack(spacing: 5) {
                 Image(systemName: "mappin.and.ellipse")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold))
                 Text(location.address)
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
                     .lineLimit(1)
             }
-            .foregroundStyle(.white.opacity(0.85))
-            .padding(.top, 8)
+            .foregroundStyle(.white.opacity(0.75))
+            .padding(.top, 5)
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 22)
-        .padding(.bottom, 26)
+        .padding(.bottom, 22)
     }
 
     // MARK: - Hero Image

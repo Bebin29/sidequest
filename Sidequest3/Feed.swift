@@ -56,8 +56,8 @@ struct Feed: View {
                     emptyState
                     Spacer()
                 } else {
-                    // Carousel — centered vertically by Spacers
-                    Spacer()
+                    // Carousel — positioned close to header with bottom flex
+                    Spacer().frame(height: 8)
                     carousel
                         .opacity(hasAppeared ? 1.0 : 0.0)
                         .offset(y: hasAppeared ? 0 : 30)
@@ -104,17 +104,23 @@ struct Feed: View {
     // MARK: - Header
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        HStack {
             Text("Feed")
-                .font(.system(size: 30, weight: .bold, design: .rounded))
+                .font(.system(size: 34, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
-            if !viewModel.locations.isEmpty {
-                Text("\(viewModel.locations.count) Spots")
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.48))
-            }
+
+            Spacer()
+
+            // Placeholder for future action buttons (profile, etc.)
+            Circle()
+                .fill(Color.white.opacity(0.08))
+                .frame(width: 34, height: 34)
+                .overlay {
+                    Image(systemName: "person.crop.circle")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.5))
+                }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 28)
         .padding(.top, 8)
         .padding(.bottom, 4)
@@ -133,6 +139,7 @@ struct Feed: View {
                 ForEach(viewModel.locations) { location in
                     FeedCarouselCard(
                         location: location,
+                        borderColor: viewModel.dominantColors[location.id] ?? categoryColor(for: location.category),
                         onTap: { selectedLocation = location },
                         onImageLoaded: { image in
                             handleImageLoaded(image, for: location)
@@ -317,33 +324,37 @@ struct SkeletonCarouselCard: View {
             RoundedRectangle(cornerRadius: 28, style: .continuous)
                 .fill(Color.white.opacity(0.06))
 
-            VStack(alignment: .leading, spacing: 8) {
-                RoundedRectangle(cornerRadius: 10)
+            // Centered bottom content matching new card layout
+            VStack(spacing: 8) {
+                // Avatar placeholder
+                Circle()
                     .fill(Color.white.opacity(0.08))
-                    .frame(width: 60, height: 24)
+                    .frame(width: 40, height: 40)
+
+                // Creator name placeholder
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.white.opacity(0.06))
+                    .frame(width: 80, height: 12)
+
+                // Title placeholder
                 RoundedRectangle(cornerRadius: 4)
                     .fill(Color.white.opacity(0.10))
-                    .frame(height: 22)
+                    .frame(width: 200, height: 26)
+
+                // Address placeholder
                 RoundedRectangle(cornerRadius: 4)
                     .fill(Color.white.opacity(0.06))
                     .frame(width: 160, height: 14)
             }
+            .frame(maxWidth: .infinity)
             .padding(24)
         }
+        // Category badge placeholder (top-left)
         .overlay(alignment: .topLeading) {
-            HStack(spacing: 7) {
-                Circle()
-                    .fill(Color.white.opacity(0.08))
-                    .frame(width: 26, height: 26)
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.white.opacity(0.08))
-                    .frame(width: 80, height: 12)
-            }
-            .padding(.leading, 5)
-            .padding(.trailing, 12)
-            .padding(.vertical, 5)
-            .background(Capsule().fill(Color.white.opacity(0.04)))
-            .padding(16)
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.white.opacity(0.08))
+                .frame(width: 60, height: 24)
+                .padding(16)
         }
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .overlay {

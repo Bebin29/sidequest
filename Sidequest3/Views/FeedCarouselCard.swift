@@ -9,6 +9,7 @@ import SwiftUI
 
 struct FeedCarouselCard: View {
     let location: Location
+    var borderColor: Color = .indigo
     var onTap: () -> Void
     var onImageLoaded: ((UIImage) -> Void)?
 
@@ -40,7 +41,7 @@ struct FeedCarouselCard: View {
                         startPoint: .top,
                         endPoint: .bottom
                     )
-                    .frame(height: geo.size.height * 0.40)
+                    .frame(height: geo.size.height * 0.45)
                     .allowsHitTesting(false)
                 }
             }
@@ -48,26 +49,21 @@ struct FeedCarouselCard: View {
             // Bottom content overlay
             bottomContent
         }
-        // Creator badge (top-left)
+        // Category badge (top-left, subtle)
         .overlay(alignment: .topLeading) {
-            creatorBadge
-                .padding(16)
+            TagBadge(
+                label: location.category,
+                color: categoryColor(for: location.category)
+            )
+            .padding(16)
         }
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-        // Subtle glass border
+        // Warm colored border matching dominant/category color
         .overlay {
             RoundedRectangle(cornerRadius: 28, style: .continuous)
                 .strokeBorder(
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.35),
-                            Color.white.opacity(0.06),
-                            Color.white.opacity(0.20),
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 0.8
+                    borderColor.opacity(0.4),
+                    lineWidth: 1.0
                 )
         }
         .shadow(color: .black.opacity(0.35), radius: 32, y: 18)
@@ -83,44 +79,59 @@ struct FeedCarouselCard: View {
     // MARK: - Bottom Content
 
     private var bottomContent: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(spacing: 0) {
             // Dot indicator (visual hint for multiple images)
             if location.imageUrls.count > 1 {
-                HStack {
-                    Spacer()
-                    DotIndicator(count: location.imageUrls.count, current: 0)
-                    Spacer()
-                }
-                .padding(.bottom, 14)
+                DotIndicator(count: location.imageUrls.count, current: 0)
+                    .padding(.bottom, 14)
             }
 
-            // Category badge
-            TagBadge(
-                label: location.category,
-                color: categoryColor(for: location.category)
-            )
-            .padding(.bottom, 10)
+            // Creator avatar — centered above title
+            creatorAvatar
+                .frame(width: 40, height: 40)
+                .overlay {
+                    Circle()
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [Color.indigo, Color.purple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 2.0
+                        )
+                }
+                .shadow(color: .black.opacity(0.3), radius: 6, y: 2)
+                .padding(.bottom, 10)
 
-            // Location name
+            // Creator name
+            Text(location.creatorDisplayName ?? location.creatorUsername ?? "Unbekannt")
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.7))
+                .lineLimit(1)
+                .padding(.bottom, 12)
+
+            // Location name — large, centered
             Text(location.name)
-                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .font(.system(size: 30, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
                 .shadow(color: .black.opacity(0.40), radius: 8, y: 3)
+                .multilineTextAlignment(.center)
                 .lineLimit(2)
 
-            // Address
+            // Address — centered
             HStack(spacing: 5) {
                 Image(systemName: "mappin.and.ellipse")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
                 Text(location.address)
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
                     .lineLimit(1)
             }
             .foregroundStyle(.white.opacity(0.85))
             .padding(.top, 8)
         }
+        .frame(maxWidth: .infinity)
         .padding(.horizontal, 22)
-        .padding(.bottom, 24)
+        .padding(.bottom, 26)
     }
 
     // MARK: - Hero Image
@@ -141,35 +152,6 @@ struct FeedCarouselCard: View {
         } else {
             imagePlaceholder
         }
-    }
-
-    // MARK: - Creator Badge
-
-    private var creatorBadge: some View {
-        HStack(spacing: 7) {
-            creatorAvatar
-                .frame(width: 26, height: 26)
-                .overlay {
-                    Circle()
-                        .strokeBorder(
-                            LinearGradient(
-                                colors: [Color.indigo, Color.purple],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1.5
-                        )
-                }
-
-            Text(location.creatorDisplayName ?? location.creatorUsername ?? "Unbekannt")
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-        }
-        .padding(.leading, 5)
-        .padding(.trailing, 12)
-        .padding(.vertical, 5)
-        .liquidGlassPill()
     }
 
     // MARK: - Creator Avatar

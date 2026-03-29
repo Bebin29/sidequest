@@ -41,8 +41,8 @@ struct Profile: View {
                             .padding(.top, 16)
                         
                  
-
-                   
+                        
+                        
 
                         Spacer(minLength: 32)
                     }

@@ -2,9 +2,10 @@
 //  Feed.swift
 //  Sidequest
 //
+//  Apple Invitations-style horizontal carousel feed.
+//
 
 import SwiftUI
-import CoreLocation
 
 struct Feed: View {
     var userId: UUID?
@@ -13,96 +14,203 @@ struct Feed: View {
 
     @State private var viewModel = FeedViewModel()
     @State private var selectedLocation: Location?
-    @StateObject private var locationManager = LocationManager()
+    @State private var scrolledId: UUID?
+    @State private var hasAppeared = false
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    // Adaptive background color — falls back to category color
+    private var dominantColor: Color {
+        if let color = viewModel.currentDominantColor {
+            return color
+        }
+        guard viewModel.currentIndex >= 0,
+              viewModel.currentIndex < viewModel.locations.count else {
+            return .indigo
+        }
+        return categoryColor(for: viewModel.locations[viewModel.currentIndex].category)
+    }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                // Custom header (wie InvitationSwiper)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Feed")
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                    if !viewModel.locations.isEmpty {
-                        Text("\(viewModel.locations.count) Spots")
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.48))
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 26)
-                .padding(.top, 8)
-                .padding(.bottom, 4)
-
-                if viewModel.isLoading && viewModel.locations.isEmpty {
-                    skeletonList
-                } else if let error = viewModel.errorMessage, viewModel.locations.isEmpty {
-                    errorState(message: error)
-                } else if viewModel.locations.isEmpty {
-                    emptyState
-                } else {
-                    LazyVStack(spacing: 24) {
-                        ForEach(viewModel.locations) { location in
-                            FeedCard(
-                                location: location,
-                                userLocation: locationManager.lastLocation,
-                                onShowOnMap: { onShowOnMap?(location) }
-                            ) {
-                                selectedLocation = location
-                            }
-                            .padding(.horizontal, 20)
-                            .onAppear {
-                                if location.id == viewModel.locations.last?.id {
-                                    guard let userId else { return }
-                                    Task { await viewModel.loadMore(userId: userId) }
-                                }
-                            }
-                        }
-
-                        if viewModel.isLoadingMore {
-                            ProgressView()
-                                .tint(.white.opacity(0.4))
-                                .padding()
-                        }
-                    }
-                    .padding(.top, 8)
-                }
-                Spacer(minLength: 32)
-            }
-            .background {
-                // Adaptiver dunkler Hintergrund mit Ambient-Gradient
-                ZStack {
-                    Color(red: 0.06, green: 0.05, blue: 0.12)
-
-                    RadialGradient(
-                        colors: [Color.indigo.opacity(0.15), .clear],
-                        center: .top,
-                        startRadius: 0,
-                        endRadius: 500
-                    )
-                }
+        ZStack {
+            // Adaptive background — fills entire screen
+            adaptiveBackground
                 .ignoresSafeArea()
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar(.hidden, for: .navigationBar)
-            .task {
-                guard let userId else { return }
-                await viewModel.loadFeed(userId: userId)
-            }
-            .refreshable {
-                guard let userId else { return }
-                await viewModel.loadFeed(userId: userId)
-            }
-            .sheet(item: $selectedLocation) { location in
-                NavigationStack {
-                    LocationDetailView(location: location, currentUserId: currentUserId)
-                        .toolbar {
-                            ToolbarItem(placement: .topBarLeading) {
-                                Button("Fertig") { selectedLocation = nil }
+
+            // Content
+            VStack(spacing: 0) {
+                // Header
+                header
+
+                // Main carousel area
+                if viewModel.isLoading && viewModel.locations.isEmpty {
+                    Spacer()
+                    skeletonView
+                    Spacer()
+                } else if let error = viewModel.errorMessage, viewModel.locations.isEmpty {
+                    Spacer()
+                    errorState(message: error)
+                    Spacer()
+                } else if viewModel.locations.isEmpty {
+                    Spacer()
+                    emptyState
+                    Spacer()
+                } else {
+                    // Carousel — centered vertically by Spacers
+                    Spacer()
+                    carousel
+                        .opacity(hasAppeared ? 1.0 : 0.0)
+                        .offset(y: hasAppeared ? 0 : 30)
+                        .onAppear {
+                            guard !hasAppeared else { return }
+                            withAnimation(reduceMotion ? nil : .spring(response: 0.6, dampingFraction: 0.8)) {
+                                hasAppeared = true
                             }
                         }
+                    Spacer()
                 }
             }
+        }
+        .task {
+            guard let userId else { return }
+            await viewModel.loadFeed(userId: userId)
+        }
+        .onChange(of: scrolledId) { _, newId in
+            guard let newId else { return }
+            if let index = viewModel.locations.firstIndex(where: { $0.id == newId }) {
+                if index != viewModel.currentIndex {
+                    viewModel.currentIndex = index
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                }
+                // Pagination: load more when near the end
+                if index >= viewModel.locations.count - 2 {
+                    guard let userId else { return }
+                    Task { await viewModel.loadMore(userId: userId) }
+                }
+            }
+        }
+        .sheet(item: $selectedLocation) { location in
+            NavigationStack {
+                LocationDetailView(location: location, currentUserId: currentUserId)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button("Fertig") { selectedLocation = nil }
+                        }
+                    }
+            }
+        }
+    }
+
+    // MARK: - Header
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text("Feed")
+                .font(.system(size: 30, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+            if !viewModel.locations.isEmpty {
+                Text("\(viewModel.locations.count) Spots")
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.48))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 28)
+        .padding(.top, 8)
+        .padding(.bottom, 4)
+    }
+
+    // MARK: - Carousel
+
+    /// Apple-Docs-Pattern: ScrollView + LazyHStack + scrollTargetLayout + viewAligned
+    /// Fixed 2:3 aspect ratio for cards (portrait, like Apple Invitations).
+    private var carousel: some View {
+        let cardWidth = UIScreen.main.bounds.width - 56
+        let cardHeight = cardWidth * 3.0 / 2.0  // 2:3 aspect ratio
+
+        return ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: 16) {
+                ForEach(viewModel.locations) { location in
+                    FeedCarouselCard(
+                        location: location,
+                        onTap: { selectedLocation = location },
+                        onImageLoaded: { image in
+                            handleImageLoaded(image, for: location)
+                        }
+                    )
+                    .frame(width: cardWidth, height: cardHeight)
+                    .scrollTransition(.animated(
+                        reduceMotion ? .linear(duration: 0) : .spring(response: 0.4, dampingFraction: 0.8)
+                    )) { content, phase in
+                        content
+                            .scaleEffect(phase.isIdentity ? 1.0 : (reduceMotion ? 0.95 : 0.88))
+                            .opacity(phase.isIdentity ? 1.0 : (reduceMotion ? 0.7 : 0.5))
+                    }
+                    .onAppear {
+                        if location.id == viewModel.locations.last?.id {
+                            guard let userId else { return }
+                            Task { await viewModel.loadMore(userId: userId) }
+                        }
+                    }
+                }
+
+                // Loading more indicator
+                if viewModel.isLoadingMore {
+                    loadingMoreCard
+                        .frame(width: cardWidth, height: cardHeight)
+                }
+            }
+            .scrollTargetLayout()
+        }
+        .scrollTargetBehavior(.viewAligned)
+        .scrollPosition(id: $scrolledId)
+        .padding(.horizontal, 28)
+    }
+
+    // MARK: - Adaptive Background
+
+    private var adaptiveBackground: some View {
+        ZStack {
+            Color(red: 0.06, green: 0.05, blue: 0.12)
+
+            RadialGradient(
+                colors: [dominantColor.opacity(0.25), .clear],
+                center: .top,
+                startRadius: 0,
+                endRadius: 600
+            )
+        }
+        .animation(.easeInOut(duration: 0.5), value: dominantColor.description)
+    }
+
+    // MARK: - Image Loaded Handler
+
+    private func handleImageLoaded(_ image: UIImage, for location: Location) {
+        guard let urlString = location.imageUrls.first else { return }
+        Task {
+            if let color = await DominantColorLoader.dominantColor(from: image, cacheKey: urlString) {
+                viewModel.setDominantColor(color, for: location.id)
+            }
+        }
+    }
+
+    // MARK: - Category Colors
+
+    private func categoryColor(for category: String) -> Color {
+        switch category {
+        case "Restaurant": return .orange
+        case "Café": return .brown
+        case "Bar": return .purple
+        case "Club": return .pink
+        case "Bäckerei": return .yellow
+        case "Fast Food": return .red
+        case "Eisdiele": return .cyan
+        case "Park": return .green
+        case "Museum": return .blue
+        case "Shopping": return .pink
+        case "Aussichtspunkt": return .teal
+        case "Strand": return .cyan
+        default: return .indigo
         }
     }
 
@@ -126,9 +234,10 @@ struct Feed: View {
                     .padding(.horizontal, 32)
             }
         }
-        .padding(.top, 100)
         .frame(maxWidth: .infinity)
     }
+
+    // MARK: - Error State
 
     private func errorState(message: String) -> some View {
         VStack(spacing: 20) {
@@ -160,372 +269,91 @@ struct Feed: View {
                     .liquidGlassPill()
             }
         }
-        .padding(.top, 100)
         .frame(maxWidth: .infinity)
     }
 
-    // MARK: - Skeleton Loading
+    // MARK: - Skeleton
 
-    private var skeletonList: some View {
-        LazyVStack(spacing: 24) {
-            ForEach(0..<3, id: \.self) { _ in
-                SkeletonCard()
-                    .padding(.horizontal, 20)
+    private var skeletonView: some View {
+        let cardWidth = UIScreen.main.bounds.width - 56
+        let cardHeight = cardWidth * 3.0 / 2.0
+
+        return ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: 16) {
+                ForEach(0..<3, id: \.self) { _ in
+                    SkeletonCarouselCard()
+                        .frame(width: cardWidth, height: cardHeight)
+                }
             }
+            .scrollTargetLayout()
         }
-        .padding(.top, 8)
+        .scrollTargetBehavior(.viewAligned)
+        .padding(.horizontal, 28)
+    }
+
+    // MARK: - Loading More Card
+
+    private var loadingMoreCard: some View {
+        RoundedRectangle(cornerRadius: 28, style: .continuous)
+            .fill(Color.white.opacity(0.04))
+            .overlay {
+                ProgressView()
+                    .tint(.white.opacity(0.4))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.8)
+            }
     }
 }
 
-// MARK: - Skeleton Card
+// MARK: - Skeleton Carousel Card
 
-struct SkeletonCard: View {
+struct SkeletonCarouselCard: View {
     @State private var shimmer = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Creator bar skeleton
-            HStack(spacing: 10) {
+        ZStack(alignment: .bottom) {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(Color.white.opacity(0.06))
+
+            VStack(alignment: .leading, spacing: 8) {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.white.opacity(0.08))
+                    .frame(width: 60, height: 24)
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.white.opacity(0.10))
+                    .frame(height: 22)
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.white.opacity(0.06))
+                    .frame(width: 160, height: 14)
+            }
+            .padding(24)
+        }
+        .overlay(alignment: .topLeading) {
+            HStack(spacing: 7) {
                 Circle()
                     .fill(Color.white.opacity(0.08))
-                    .frame(width: 40, height: 40)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.white.opacity(0.08))
-                        .frame(width: 120, height: 12)
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.white.opacity(0.05))
-                        .frame(width: 60, height: 10)
-                }
-
-                Spacer()
-            }
-            .padding(.horizontal, 6)
-            .padding(.bottom, 12)
-
-            // Image skeleton (4:5 Ratio)
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.white.opacity(0.08))
-                .aspectRatio(4.0 / 5.0, contentMode: .fit)
-
-            // Text skeleton
-            VStack(alignment: .leading, spacing: 6) {
+                    .frame(width: 26, height: 26)
                 RoundedRectangle(cornerRadius: 4)
                     .fill(Color.white.opacity(0.08))
-                    .frame(height: 14)
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.white.opacity(0.05))
-                    .frame(width: 180, height: 12)
+                    .frame(width: 80, height: 12)
             }
-            .padding(.horizontal, 6)
-            .padding(.top, 12)
+            .padding(.leading, 5)
+            .padding(.trailing, 12)
+            .padding(.vertical, 5)
+            .background(Capsule().fill(Color.white.opacity(0.04)))
+            .padding(16)
         }
-        .padding(14)
-        .background(Color.white.opacity(0.06))
-        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
-        .shadow(color: .black.opacity(0.32), radius: 24, y: 12)
-        .shadow(color: .black.opacity(0.10), radius: 6, y: 3)
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.8)
+        }
+        .shadow(color: .black.opacity(0.32), radius: 32, y: 18)
+        .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
         .opacity(shimmer ? 0.4 : 1.0)
         .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: shimmer)
         .onAppear { shimmer = true }
-    }
-}
-
-// MARK: - Feed Card
-
-struct FeedCard: View {
-    let location: Location
-    var userLocation: CLLocation?
-    var onShowOnMap: (() -> Void)?
-    var onTap: () -> Void
-
-    @State private var currentPage: Int? = 0
-    @State private var lastHapticPage: Int? = 0
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Creator Bar mit Avatar-Ring
-            HStack(spacing: 10) {
-                creatorAvatar
-                    .frame(width: 40, height: 40)
-                    .overlay {
-                        Circle()
-                            .strokeBorder(
-                                LinearGradient(
-                                    colors: [Color.indigo, Color.purple],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 2
-                            )
-                    }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(location.creatorDisplayName ?? location.creatorUsername ?? "Unbekannt")
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white)
-                    Text(formattedDate(location.createdAt))
-                        .font(.system(size: 11, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.4))
-                }
-
-                Spacer()
-            }
-            .padding(.horizontal, 6)
-            .padding(.bottom, 12)
-
-            // Bild-Bereich mit Bottom-Gradient (wie Apple Invitations)
-            ZStack(alignment: .bottom) {
-                // Bilder
-                if !location.imageUrls.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        LazyHStack(spacing: 0) {
-                            ForEach(Array(location.imageUrls.enumerated()), id: \.offset) { _, urlString in
-                                CachedAsyncImage(url: URL(string: urlString)) { image in
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                } placeholder: {
-                                    Color.white.opacity(0.05)
-                                        .overlay(ProgressView().tint(.white.opacity(0.3)))
-                                }
-                                .frame(minWidth: 0, maxWidth: .infinity)
-                                .aspectRatio(4.0 / 5.0, contentMode: .fill)
-                                .clipped()
-                                .containerRelativeFrame(.horizontal)
-                            }
-                        }
-                        .scrollTargetLayout()
-                    }
-                    .scrollTargetBehavior(.paging)
-                    .scrollPosition(id: $currentPage)
-                    .onChange(of: currentPage) { oldValue, newValue in
-                        guard let old = oldValue, let new = newValue, old != new else { return }
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        lastHapticPage = new
-                    }
-                } else {
-                    imagePlaceholder
-                }
-
-                // Bottom Gradient (wie InvitationCard)
-                LinearGradient(
-                    stops: [
-                        .init(color: .clear, location: 0.0),
-                        .init(color: .black.opacity(0.0), location: 0.25),
-                        .init(color: .black.opacity(0.45), location: 0.50),
-                        .init(color: .black.opacity(0.82), location: 0.78),
-                        .init(color: .black.opacity(0.92), location: 1.0),
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .allowsHitTesting(false)
-
-                // Info-Overlay unten im Bild
-                VStack(alignment: .leading, spacing: 0) {
-                    Spacer()
-
-                    // Location Name
-                    Text(location.name)
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .shadow(color: .black.opacity(0.30), radius: 6, y: 3)
-
-                    Spacer().frame(height: 8)
-
-                    // Category TagBadge + Adresse
-                    HStack(spacing: 8) {
-                        TagBadge(
-                            label: location.category,
-                            color: categoryColor(for: location.category)
-                        )
-
-                        HStack(spacing: 4) {
-                            Image(systemName: "mappin.and.ellipse")
-                                .font(.system(size: 10, weight: .semibold))
-                            Text(location.address)
-                                .font(.system(size: 12, weight: .medium, design: .rounded))
-                                .lineLimit(1)
-                        }
-                        .foregroundStyle(.white.opacity(0.85))
-                    }
-
-                    // Beschreibung (im Overlay, nicht außerhalb)
-                    if let description = location.description, !description.isEmpty {
-                        Spacer().frame(height: 8)
-                        Text(description)
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.70))
-                            .lineLimit(2)
-                    }
-
-                    Spacer().frame(height: 14)
-
-                    // Dots (DotIndicator wiederverwendet)
-                    if location.imageUrls.count > 1 {
-                        HStack {
-                            Spacer()
-                            DotIndicator(count: location.imageUrls.count, current: currentPage ?? 0)
-                            Spacer()
-                        }
-                        Spacer().frame(height: 10)
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 6)
-            }
-            .aspectRatio(4.0 / 5.0, contentMode: .fit)
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .onTapGesture { onTap() }
-
-            // Action Row mit Liquid Glass Pill
-            HStack(spacing: 12) {
-                Button { onShowOnMap?() } label: {
-                    HStack(spacing: 5) {
-                        Image(systemName: "map")
-                            .font(.system(size: 11, weight: .semibold))
-                        Text("Karte")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .liquidGlassPill()
-                }
-
-                Spacer()
-
-                if let distance = formattedDistance {
-                    HStack(spacing: 4) {
-                        Image(systemName: "location.fill")
-                            .font(.system(size: 10, weight: .semibold))
-                        Text(distance)
-                            .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    }
-                    .foregroundStyle(.white.opacity(0.50))
-                }
-            }
-            .padding(.horizontal, 6)
-            .padding(.top, 12)
-        }
-        .padding(14)
-        .background(Color.white.opacity(0.06))
-        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
-        // Subtle glass border
-        .overlay {
-            RoundedRectangle(cornerRadius: 32, style: .continuous)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.18),
-                            Color.white.opacity(0.04),
-                            Color.white.opacity(0.10),
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 0.8
-                )
-        }
-        // Double shadow (wie InvitationSwiper)
-        .shadow(color: .black.opacity(0.32), radius: 24, y: 12)
-        .shadow(color: .black.opacity(0.10), radius: 6, y: 3)
-    }
-
-    // MARK: - Subviews
-
-    @ViewBuilder
-    private var creatorAvatar: some View {
-        if let urlString = location.creatorProfileImageUrl,
-           let url = URL(string: urlString) {
-            CachedAsyncImage(url: url) { image in
-                image
-                    .resizable()
-                    .scaledToFill()
-                    .clipShape(Circle())
-            } placeholder: {
-                avatarPlaceholder
-            }
-        } else {
-            avatarPlaceholder
-        }
-    }
-
-    private var avatarPlaceholder: some View {
-        Circle()
-            .fill(Color.white.opacity(0.10))
-            .overlay(
-                Text(String((location.creatorUsername ?? "?").prefix(1)).uppercased())
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.6))
-            )
-    }
-
-    private var imagePlaceholder: some View {
-        Rectangle()
-            .fill(Color.white.opacity(0.05))
-            .aspectRatio(4.0 / 5.0, contentMode: .fill)
-            .overlay(
-                Image(systemName: "photo")
-                    .font(.system(size: 28, weight: .light))
-                    .foregroundStyle(.white.opacity(0.2))
-            )
-    }
-
-    // MARK: - Helpers
-
-    private var formattedDistance: String? {
-        guard let userLocation else { return nil }
-        let spotLocation = CLLocation(latitude: location.latitude, longitude: location.longitude)
-        let meters = userLocation.distance(from: spotLocation)
-
-        if meters < 1000 {
-            return "\(Int(meters)) m"
-        } else {
-            let km = meters / 1000
-            return String(format: "%.1f km", km)
-        }
-    }
-
-    private func categoryColor(for category: String) -> Color {
-        switch category {
-        case "Restaurant": return .orange
-        case "Café": return .brown
-        case "Bar": return .purple
-        case "Club": return .pink
-        case "Bäckerei": return .yellow
-        case "Fast Food": return .red
-        case "Eisdiele": return .cyan
-        case "Park": return .green
-        case "Museum": return .blue
-        case "Shopping": return .pink
-        case "Aussichtspunkt": return .teal
-        case "Strand": return .cyan
-        default: return .indigo
-        }
-    }
-
-    private static let isoFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-        formatter.locale = Locale(identifier: "de_DE")
-        return formatter
-    }()
-
-    private static let relativeFormatter: RelativeDateTimeFormatter = {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.locale = Locale(identifier: "de_DE")
-        formatter.unitsStyle = .short
-        return formatter
-    }()
-
-    private func formattedDate(_ dateString: String) -> String {
-        guard let date = Self.isoFormatter.date(from: String(dateString.prefix(19))) else {
-            return ""
-        }
-        return Self.relativeFormatter.localizedString(for: date, relativeTo: Date())
     }
 }

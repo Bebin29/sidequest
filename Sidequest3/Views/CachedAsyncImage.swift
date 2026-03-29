@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import ImageIO
 
 /// Globaler Image-Download-Throttler: begrenzt parallele Downloads.
 private actor ImageDownloadThrottle {
@@ -18,7 +19,6 @@ private actor ImageDownloadThrottle {
             activeCount += 1
             return
         }
-        // Warten bis ein Slot frei wird
         await withCheckedContinuation { continuation in
             waiters.append(continuation)
         }
@@ -45,10 +45,50 @@ private enum ImageCacheStore {
     static let session: URLSession = {
         let config = URLSessionConfiguration.default
         config.urlCache = cache
-        config.requestCachePolicy = .returnCacheDataElseLoad
+        // useProtocolCachePolicy statt returnCacheDataElseLoad —
+        // verhindert dass kaputte/unvollstaendige Responses ewig aus dem Cache serviert werden
+        config.requestCachePolicy = .useProtocolCachePolicy
         config.httpMaximumConnectionsPerHost = 6
         return URLSession(configuration: config)
     }()
+
+    /// Downsampled UIImage aus Data erzeugen — spart 90%+ RAM.
+    /// Fallback auf UIImage(data:) wenn CGImageSource fehlschlaegt.
+    static func decodeImage(from data: Data, maxPixelSize: Int = 800) -> UIImage? {
+        // Pruefen ob Daten ueberhaupt ein Bild sein koennten (min. JPEG/PNG Header)
+        guard data.count > 12 else { return nil }
+
+        // Versuch 1: CGImageSource Downsampling (speichereffizient)
+        if let source = CGImageSourceCreateWithData(data as CFData, nil) {
+            let options: [CFString: Any] = [
+                kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceShouldCacheImmediately: true,
+                kCGImageSourceCreateThumbnailWithTransform: true
+            ]
+            if let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) {
+                return UIImage(cgImage: cgImage)
+            }
+        }
+
+        // Versuch 2: Normales UIImage(data:) als Fallback
+        if let fullImage = UIImage(data: data) {
+            // Wenn moeglich verkleinern um RAM zu sparen
+            let maxDim = CGFloat(maxPixelSize)
+            let size = fullImage.size
+            if max(size.width, size.height) > maxDim {
+                let scale = maxDim / max(size.width, size.height)
+                let targetSize = CGSize(width: size.width * scale, height: size.height * scale)
+                let renderer = UIGraphicsImageRenderer(size: targetSize)
+                return renderer.image { _ in
+                    fullImage.draw(in: CGRect(origin: .zero, size: targetSize))
+                }
+            }
+            return fullImage
+        }
+
+        return nil
+    }
 }
 
 struct CachedAsyncImage<Content: View, Placeholder: View>: View {
@@ -89,19 +129,29 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
 
         // Check cache first (kein Throttle noetig)
         if let cached = ImageCacheStore.cache.cachedResponse(for: request),
-           let uiImage = UIImage(data: cached.data) {
+           let uiImage = ImageCacheStore.decodeImage(from: cached.data) {
             self.image = uiImage
             isLoading = false
             return
         }
 
-        // Throttle: max 4 gleichzeitige Downloads
+        // Throttle: max 6 gleichzeitige Downloads
         await ImageDownloadThrottle.shared.acquire()
         defer { Task { await ImageDownloadThrottle.shared.release() } }
 
         do {
             let (data, response) = try await ImageCacheStore.session.data(for: request)
-            if let uiImage = UIImage(data: data) {
+
+            // Nur cachen und decodieren wenn HTTP 200 und genuegend Daten
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200,
+                  data.count > 100 else {
+                failed = true
+                isLoading = false
+                return
+            }
+
+            if let uiImage = ImageCacheStore.decodeImage(from: data) {
                 let cachedResponse = CachedURLResponse(response: response, data: data)
                 ImageCacheStore.cache.storeCachedResponse(cachedResponse, for: request)
                 self.image = uiImage

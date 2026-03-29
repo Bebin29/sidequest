@@ -237,9 +237,7 @@ struct FeedCard: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(spacing: 0) {
                             ForEach(Array(location.imageUrls.enumerated()), id: \.offset) { index, urlString in
-                                // Nur sichtbare + nächste Bilder laden, Rest erst bei Scroll
-                                let shouldLoad = index <= (currentPage ?? 0) + 1
-                                CachedAsyncImage(url: shouldLoad ? URL(string: urlString) : nil) { image in
+                                CachedAsyncImage(url: URL(string: urlString)) { image in
                                     image
                                         .resizable()
                                         .scaledToFill()

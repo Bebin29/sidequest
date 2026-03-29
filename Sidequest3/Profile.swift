@@ -307,6 +307,23 @@ struct Profile: View {
 
     private var settingsSection: some View {
         VStack(spacing: 0) {
+            NavigationLink(destination: NotificationSettingsView(authViewModel: authViewModel)) {
+                HStack(spacing: 12) {
+                    Image(systemName: "bell")
+                        .frame(width: 20)
+                        .foregroundStyle(.primary)
+                        .fontWeight(.semibold)
+                    Text("Benachrichtigungen")
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+            }
+            Divider().padding(.leading, 44)
             settingsRow(icon: "shield", title: "Datenschutz")
             Divider().padding(.leading, 44)
             settingsRow(icon: "info.circle", title: "Impressum")

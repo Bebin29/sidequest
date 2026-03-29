@@ -45,7 +45,7 @@ struct SettingsView: View {
     @State private var selectedLocation: Location?
     @State private var pendingCount = 0
     @Environment(\.dismiss) var dismiss
-    
+
     var body: some View {
         if let user = authViewModel.currentUser {
             NavigationStack {
@@ -139,6 +139,10 @@ struct SettingsView: View {
                                 
                                 
                                 
+                                
+                                
+                                
+                                
                                 VStack(alignment: .leading, spacing: 8) {
                                     
                                     Text("Datenschutz & Informationen")
@@ -166,6 +170,62 @@ struct SettingsView: View {
                                     .padding(.horizontal)
                                     
                                 }
+                                
+                                
+                                
+                                
+                                
+                                
+                               
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Button {
+                                            showLogoutAlert = true
+                                        } label: {
+                                            VStack{
+                                                HStack {
+                                                    Image(systemName: "rectangle.portrait.and.arrow.right")
+                                                        .foregroundColor(.red)
+                                                        .font(.system(size: 14))
+                                                    Text("Abmelden")
+                                                        .foregroundColor(.red)
+                                                    
+                                                    Spacer()
+                                                    
+                                                    
+                                                    
+                                                    
+                                                }
+                                                .padding()
+                                                .background(Color(UIColor.systemGray).opacity(0.2))
+                                                .clipShape(RoundedRectangle(cornerRadius: 30))
+                                            }
+                                            .padding(.horizontal)
+                                        }
+                                    }
+                                    
+                                    .alert("Abmelden?", isPresented: $showLogoutAlert) {
+                                        Button("Abmelden", role: .destructive) {
+                                            authViewModel.signOut()
+                                        }
+                                        Button("Abbrechen", role: .cancel) {}
+                                    } message: {
+                                        Text("Moechtest du dich wirklich abmelden?")
+                                    }
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
                                 
                                 HStack(spacing: 4) {
                                     Image(systemName: "map.fill")

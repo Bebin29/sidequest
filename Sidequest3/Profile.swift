@@ -11,7 +11,7 @@ struct Profile: View {
     @Bindable var authViewModel: AuthViewModel
     @State private var friendsViewModel = FriendsViewModel()
     @State private var mapViewModel = MapViewModel()
-    @State private var showLogoutAlert = false
+    //@State private var showLogoutAlert = false
     @State private var showEditProfile = false
     @State private var showFriends = false
     @State private var showShareCard = false
@@ -40,14 +40,9 @@ struct Profile: View {
                             .padding(.horizontal)
                             .padding(.top, 16)
                         
-                        // Meine Orte
-                        myLocations
-                            .padding(.top, 24)
+                 
 
-                        // Settings Section
-                        settingsSection
-                            .padding(.top, 24)
-                            .padding(.horizontal)
+                   
 
                         Spacer(minLength: 32)
                     }
@@ -179,45 +174,7 @@ struct Profile: View {
 
     // MARK: - My Locations
 
-    private var myLocations: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Meine Orte")
-                .font(.headline)
-                .padding(.horizontal)
 
-            let ownLocations = mapViewModel.locations.filter { $0.createdBy == authViewModel.currentUser?.id }
-
-            if ownLocations.isEmpty {
-                HStack {
-                    Spacer()
-                    VStack(spacing: 8) {
-                        Image(systemName: "mappin.slash")
-                            .font(.title)
-                            .foregroundStyle(.tertiary)
-                        Text("Noch keine Orte hinzugefuegt")
-                            .font(.subheadline)
-                            .foregroundStyle(.tertiary)
-                    }
-                    .padding(.vertical, 24)
-                    Spacer()
-                }
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: 12) {
-                        ForEach(ownLocations) { location in
-                            Button {
-                                selectedLocation = location
-                            } label: {
-                                locationCard(location: location)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.horizontal)
-                }
-            }
-        }
-    }
 
     private func locationCard(location: Location) -> some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -262,60 +219,9 @@ struct Profile: View {
 
     // MARK: - Settings
 
-    private var settingsSection: some View {
-        VStack(spacing: 0) {
-            settingsRow(icon: "shield", title: "Datenschutz")
-            Divider().padding(.leading, 44)
-            settingsRow(icon: "info.circle", title: "Impressum")
-            Divider().padding(.leading, 44)
-            Button {
-                showLogoutAlert = true
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "rectangle.portrait.and.arrow.right")
-                        .frame(width: 20)
-                        .foregroundStyle(.red)
-                        .fontWeight(.semibold)
-                    Text("Abmelden")
-                        .foregroundStyle(.red)
-                    Spacer()
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
-            }
-        }
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .alert("Abmelden?", isPresented: $showLogoutAlert) {
-            Button("Abmelden", role: .destructive) {
-                authViewModel.signOut()
-            }
-            Button("Abbrechen", role: .cancel) {}
-        } message: {
-            Text("Moechtest du dich wirklich abmelden?")
-        }
-    }
+ 
 
-    private func settingsRow(icon: String, title: String) -> some View {
-        Button {
-            // Navigation
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .frame(width: 20)
-                    .foregroundStyle(.primary)
-                    .fontWeight(.semibold)
-                Text(title)
-                    .foregroundStyle(.primary)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-        }
-    }
+    
 
     
 }

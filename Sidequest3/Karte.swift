@@ -222,7 +222,15 @@ class SearchCompleter: NSObject, ObservableObject, MKLocalSearchCompleterDelegat
         completer.resultTypes = .pointOfInterest
     }
 
+    private var lastQuery = ""
+
     func update(query: String) {
+        guard query != lastQuery else { return }
+        lastQuery = query
+        if query.isEmpty {
+            results = []
+            return
+        }
         completer.queryFragment = query
     }
 
@@ -233,26 +241,45 @@ class SearchCompleter: NSObject, ObservableObject, MKLocalSearchCompleterDelegat
             return
         }
 
-        // Resolve distances
-        let group = DispatchGroup()
-        var searchResults: [SearchResult] = []
+        // Nur neue Completions auflösen, bereits bekannte behalten
+        let existingDistances = Dictionary(uniqueKeysWithValues:
+            results.compactMap { r -> (String, CLLocationDistance)? in
+                guard let d = r.distance else { return nil }
+                return (r.completion.title + r.completion.subtitle, d)
+            }
+        )
+
+        var pending: [(Int, MKLocalSearchCompletion)] = []
+        var newResults: [SearchResult] = []
 
         for completion in completions {
-            group.enter()
-            let request = MKLocalSearch.Request(completion: completion)
-            let search = MKLocalSearch(request: request)
-            search.start { response, _ in
-                var dist: CLLocationDistance?
-                if let coord = response?.mapItems.first?.placemark.location {
-                    dist = userLoc.distance(from: coord)
-                }
-                searchResults.append(SearchResult(completion: completion, distance: dist))
-                group.leave()
+            let key = completion.title + completion.subtitle
+            if let cached = existingDistances[key] {
+                newResults.append(SearchResult(completion: completion, distance: cached))
+            } else {
+                let idx = newResults.count
+                newResults.append(SearchResult(completion: completion, distance: nil))
+                pending.append((idx, completion))
             }
         }
 
-        group.notify(queue: .main) {
-            self.results = searchResults.sorted { ($0.distance ?? .greatestFiniteMagnitude) < ($1.distance ?? .greatestFiniteMagnitude) }
+        results = newResults.sorted { ($0.distance ?? .greatestFiniteMagnitude) < ($1.distance ?? .greatestFiniteMagnitude) }
+
+        // Neue Entfernungen im Hintergrund auflösen
+        for (_, completion) in pending {
+            let request = MKLocalSearch.Request(completion: completion)
+            let search = MKLocalSearch(request: request)
+            search.start { response, _ in
+                guard let coord = response?.mapItems.first?.placemark.location else { return }
+                let dist = userLoc.distance(from: coord)
+                let key = completion.title + completion.subtitle
+                DispatchQueue.main.async {
+                    if let idx = self.results.firstIndex(where: { $0.completion.title + $0.completion.subtitle == key }) {
+                        self.results[idx] = SearchResult(completion: completion, distance: dist)
+                        self.results.sort { ($0.distance ?? .greatestFiniteMagnitude) < ($1.distance ?? .greatestFiniteMagnitude) }
+                    }
+                }
+            }
         }
     }
 }
@@ -275,7 +302,7 @@ struct PlaceSearchView: View {
             if let item = selectedItem {
                 AddLocationFormView(
                     mapItem: item,
-                    category: selectedCategory,
+                    initialCategory: selectedCategory,
                     mapViewModel: mapViewModel,
                     userId: userId,
                     onDismiss: onDismiss,
@@ -289,7 +316,7 @@ struct PlaceSearchView: View {
                         .onChange(of: searchText) { _, newValue in
                             searchDebounceTask?.cancel()
                             searchDebounceTask = Task {
-                                try? await Task.sleep(for: .milliseconds(300))
+                                try? await Task.sleep(for: .milliseconds(500))
                                 guard !Task.isCancelled else { return }
                                 completer.userLocation = locationManager.lastLocation
                                 completer.update(query: newValue)
@@ -337,7 +364,7 @@ struct PlaceSearchView: View {
     }
 
     func mapCategory(from category: MKPointOfInterestCategory?) -> String {
-        guard let category else { return "Sonstiges" }
+        guard let category else { return "" }
         switch category {
         case .restaurant: return "Restaurant"
         case .cafe: return "Café"
@@ -346,19 +373,19 @@ struct PlaceSearchView: View {
         case .park: return "Park"
         case .museum: return "Museum"
         case .store: return "Shopping"
-        default: return "Sonstiges"
+        default: return ""
         }
     }
 }
 
 struct AddLocationFormView: View {
     let mapItem: MKMapItem
-    let category: String
     @Bindable var mapViewModel: MapViewModel
     var userId: UUID?
     var onDismiss: () -> Void
     var onBack: () -> Void
 
+    @State private var category: String
     @State private var description = ""
     @State private var selectedImages: [UIImage] = []
     @State private var showImagePicker = false
@@ -367,8 +394,25 @@ struct AddLocationFormView: View {
     @State private var cameraImage: UIImage?
     @State private var showPreview = false
     @State private var isUploading = false
+    @State private var customCategories: [String] = []
 
     private let imageUploadService = ImageUploadService()
+    private let locationService = LocationService()
+
+    private let maxImages = 5
+
+    init(mapItem: MKMapItem, initialCategory: String, mapViewModel: MapViewModel, userId: UUID?, onDismiss: @escaping () -> Void, onBack: @escaping () -> Void) {
+        self.mapItem = mapItem
+        self.mapViewModel = mapViewModel
+        self.userId = userId
+        self.onDismiss = onDismiss
+        self.onBack = onBack
+        _category = State(initialValue: initialCategory)
+    }
+
+    private var canSubmit: Bool {
+        !category.isEmpty && !selectedImages.isEmpty && !isUploading
+    }
 
     var body: some View {
         List {
@@ -380,13 +424,10 @@ struct AddLocationFormView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                Text(category)
-                    .font(.caption.weight(.medium))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(.blue.opacity(0.1))
-                    .foregroundStyle(.blue)
-                    .clipShape(Capsule())
+            }
+
+            Section("Kategorie") {
+                CategoryPickerField(category: $category, customCategories: customCategories)
             }
 
             Section("Beschreibung") {
@@ -394,7 +435,13 @@ struct AddLocationFormView: View {
                     .lineLimit(3...6)
             }
 
-            Section("Fotos (\(selectedImages.count))") {
+            Section("Fotos (\(selectedImages.count)/\(maxImages))") {
+                if selectedImages.isEmpty {
+                    Text("Mindestens ein Foto erforderlich")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+
                 if !selectedImages.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
@@ -420,10 +467,12 @@ struct AddLocationFormView: View {
                     }
                 }
 
-                Button {
-                    showImageSourceDialog = true
-                } label: {
-                    Label("Foto hinzufügen", systemImage: "camera")
+                if selectedImages.count < maxImages {
+                    Button {
+                        showImageSourceDialog = true
+                    } label: {
+                        Label("Foto hinzufügen", systemImage: "camera")
+                    }
                 }
             }
 
@@ -452,7 +501,14 @@ struct AddLocationFormView: View {
                             .bold()
                     }
                 }
-                .disabled(isUploading)
+                .disabled(!canSubmit)
+            }
+        }
+        .task {
+            do {
+                customCategories = try await locationService.fetchCategories()
+            } catch {
+                print("Failed to load categories:", error)
             }
         }
         .scrollDismissesKeyboard(.immediately)
@@ -494,7 +550,9 @@ struct AddLocationFormView: View {
                 .ignoresSafeArea()
         }
         .onChange(of: cameraImage) { _, newImage in
-            if let newImage { selectedImages.append(newImage) }
+            if let newImage, selectedImages.count < maxImages {
+                selectedImages.append(newImage)
+            }
         }
     }
 

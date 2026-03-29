@@ -12,12 +12,21 @@ struct LocationFilterView: View {
     var onApply: () -> Void
     @Environment(\.dismiss) private var dismiss
 
-    @State private var selectedCategory: LocationCategory?
+    @State private var selectedCategory: String?
     @State private var searchText: String = ""
     @State private var radiusKm: Double = 0
     @State private var useRadius: Bool = false
+    @State private var customCategories: [String] = []
 
     private let radiusOptions: [Double] = [1, 2, 5, 10, 25, 50]
+    private let locationService = LocationService()
+
+    private var allCategories: [String] {
+        let custom = customCategories.filter { name in
+            !CategoryHelper.predefinedNames.contains(name)
+        }
+        return CategoryHelper.predefinedNames + custom
+    }
 
     var body: some View {
         NavigationStack {
@@ -33,7 +42,7 @@ struct LocationFilterView: View {
                 Section("Kategorie") {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
-                            ForEach(LocationCategory.allCases, id: \.self) { category in
+                            ForEach(allCategories, id: \.self) { category in
                                 Button {
                                     if selectedCategory == category {
                                         selectedCategory = nil
@@ -41,13 +50,17 @@ struct LocationFilterView: View {
                                         selectedCategory = category
                                     }
                                 } label: {
-                                    Text(category.rawValue)
-                                        .font(.subheadline)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 6)
-                                        .background(selectedCategory == category ? Color.indigo : Color(.systemGray5))
-                                        .foregroundStyle(selectedCategory == category ? .white : .primary)
-                                        .clipShape(Capsule())
+                                    HStack(spacing: 4) {
+                                        Image(systemName: CategoryHelper.icon(for: category))
+                                            .font(.caption2)
+                                        Text(category)
+                                            .font(.subheadline)
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(selectedCategory == category ? Color.indigo : Color(.systemGray5))
+                                    .foregroundStyle(selectedCategory == category ? .white : .primary)
+                                    .clipShape(Capsule())
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -81,6 +94,13 @@ struct LocationFilterView: View {
                     Button("Filter zurücksetzen", role: .destructive) {
                         resetFilters()
                     }
+                }
+            }
+            .task {
+                do {
+                    customCategories = try await locationService.fetchCategories()
+                } catch {
+                    print("Failed to load categories:", error)
                 }
             }
             .navigationTitle("Filter")

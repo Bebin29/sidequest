@@ -96,30 +96,54 @@ async function notifyNewComment(commenterId, locationId) {
 }
 
 async function notifyFriendNewSpot(creatorId, locationName) {
+    // 1. Alle Freunde + deren Preferences in einem Query holen (statt N einzelne)
     const friends = await pool.query(
-        `SELECT CASE
-            WHEN requester_id = $1 THEN receiver_id
-            ELSE requester_id
-         END AS friend_id
-         FROM friendships
-         WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'`,
+        `SELECT u.id AS friend_id, u.fcm_token, u.preferences
+         FROM friendships f
+         JOIN users u ON u.id = CASE WHEN f.requester_id = $1 THEN f.receiver_id ELSE f.requester_id END
+         WHERE (f.requester_id = $1 OR f.receiver_id = $1) AND f.status = 'accepted'`,
         [creatorId]
     );
 
     if (friends.rowCount === 0) return;
 
-    const promises = friends.rows.map((row) =>
-        createAndSend({
-            recipientId: row.friend_id,
-            senderId: creatorId,
-            type: 'friend_new_spot',
-            title: 'Neuer Spot von einem Freund',
-            body: 'Jemand aus deiner Freundesliste hat einen neuen Ort entdeckt.',
-            data: { creator_id: creatorId },
-        }).catch((err) => console.error('notifyFriendNewSpot error:', err.message))
+    const type = 'friend_new_spot';
+    const title = 'Neuer Spot von einem Freund';
+    const body = 'Jemand aus deiner Freundesliste hat einen neuen Ort entdeckt.';
+    const data = { creator_id: creatorId };
+    const dataJson = JSON.stringify(data);
+
+    // 2. Filtern: nur Freunde mit aktiviertem Notification-Typ
+    const enabledFriends = friends.rows.filter(f => isEnabled(f.preferences, type));
+
+    if (enabledFriends.length === 0) return;
+
+    // 3. Batch-INSERT statt N einzelne INSERTs
+    const values = [];
+    const placeholders = [];
+    let idx = 1;
+
+    for (const friend of enabledFriends) {
+        placeholders.push(`($${idx}, $${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4}, $${idx + 5})`);
+        values.push(friend.friend_id, creatorId, type, title, body, dataJson);
+        idx += 6;
+    }
+
+    await pool.query(
+        `INSERT INTO notifications (recipient_id, sender_id, type, title, body, data)
+         VALUES ${placeholders.join(', ')}`,
+        values
     );
 
-    await Promise.all(promises);
+    // 4. Push-Notifications parallel senden (nur an Freunde mit Token)
+    const pushPromises = enabledFriends
+        .filter(f => f.fcm_token)
+        .map(f =>
+            apns.sendPush(f.fcm_token, { title, body, data, type })
+                .catch(err => console.error('notifyFriendNewSpot push error:', err.message))
+        );
+
+    await Promise.all(pushPromises);
 }
 
 module.exports = {

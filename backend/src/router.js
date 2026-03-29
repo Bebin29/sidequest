@@ -1,5 +1,6 @@
 const url = require('url');
 const { sendJSON, sendError } = require('./helpers');
+const { checkRateLimit } = require('./middleware/rateLimit');
 const userController = require('./controllers/userController');
 const authController = require('./controllers/authController');
 const friendshipController = require('./controllers/friendshipController');
@@ -15,12 +16,22 @@ function route(req, res) {
 
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, If-None-Match');
 
     if (method === 'OPTIONS') {
         res.writeHead(204);
         return res.end();
+    }
+
+    // Rate Limiting
+    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress;
+    const { allowed, remaining, resetAt } = checkRateLimit(ip, method, pathname);
+    res.setHeader('X-RateLimit-Remaining', remaining);
+    res.setHeader('X-RateLimit-Reset', Math.ceil(resetAt / 1000));
+
+    if (!allowed) {
+        return sendError(res, 429, 'Too many requests');
     }
 
     // Health Check

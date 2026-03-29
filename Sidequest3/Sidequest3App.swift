@@ -6,11 +6,14 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 @main
 struct Sidequest3App: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var container = DependencyContainer()
     @State private var authViewModel = AuthViewModel()
+    @State private var pushService = PushNotificationService()
     @State private var deepLinkFriendUsername: String?
 
     var body: some Scene {
@@ -18,6 +21,9 @@ struct Sidequest3App: App {
             if authViewModel.isAuthenticated {
                 Home(authViewModel: authViewModel)
                     .environmentObject(container)
+                    .task {
+                        await setupPushNotifications()
+                    }
                     .onOpenURL { url in
                         handleDeepLink(url)
                     }
@@ -47,6 +53,31 @@ struct Sidequest3App: App {
                         await authViewModel.checkExistingSession()
                     }
             }
+        }
+    }
+
+    private func setupPushNotifications() async {
+        // Delegate setzen fuer Foreground-Notifications
+        UNUserNotificationCenter.current().delegate = pushService
+
+        // Berechtigung anfragen und registrieren
+        let granted = await pushService.requestAuthorization()
+        guard granted else { return }
+
+        // Callback fuer Device Token setzen
+        appDelegate.onTokenReceived = { token in
+            pushService.deviceToken = token
+            if let userId = authViewModel.currentUser?.id {
+                Task {
+                    await pushService.uploadToken(userId: userId, token: token)
+                }
+            }
+        }
+
+        // Falls Token bereits vorhanden (App-Neustart)
+        if let existingToken = pushService.deviceToken,
+           let userId = authViewModel.currentUser?.id {
+            await pushService.uploadToken(userId: userId, token: existingToken)
         }
     }
 

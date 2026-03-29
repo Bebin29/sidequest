@@ -445,6 +445,5 @@ struct FeedCard: View {
 }
 
 #Preview {
-    let authVM = AuthViewModel()
-    Home(authViewModel: authVM)
+    Home(authViewModel: AuthViewModel())
 }

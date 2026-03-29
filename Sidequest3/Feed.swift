@@ -89,14 +89,9 @@ struct Feed: View {
                 }
             }
         }
-        .sheet(item: $selectedLocation) { location in
+        .fullScreenCover(item: $selectedLocation) { location in
             NavigationStack {
                 LocationDetailView(location: location, currentUserId: currentUserId)
-                    .toolbar {
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button("Fertig") { selectedLocation = nil }
-                        }
-                    }
             }
         }
     }

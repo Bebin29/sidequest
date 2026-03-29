@@ -23,14 +23,12 @@ struct FeedCarouselCard: View {
                     heroImage
                 }
                 .clipped()
+                .backgroundExtensionIfAvailable()
 
             // Warm gradient + glass transition at bottom
-            // Layered: warm color gradient → glass blur → content
             VStack(spacing: 0) {
                 Spacer()
 
-                // Warm color gradient that blends image into glass
-                // (like the orange/warm glow in Apple Invitations)
                 LinearGradient(
                     stops: [
                         .init(color: .clear, location: 0.0),
@@ -43,7 +41,6 @@ struct FeedCarouselCard: View {
                 )
                 .frame(height: 120)
 
-                // Solid warm base for glass panel
                 Rectangle()
                     .fill(borderColor.opacity(0.7))
                     .frame(height: 140)

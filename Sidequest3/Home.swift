@@ -8,16 +8,21 @@
 import SwiftUI
 
 enum AppTab: Hashable {
-    case home, map, friends, profile, admin
+    case home, map, friends, profile, admin, test
 }
 
 struct Home: View {
     @Bindable var authViewModel: AuthViewModel
-    @State private var selectedTab: AppTab = .home
+    //@State private var selectedTab: AppTab = .home
+    @State private var selectedTab: AppTab = .test
     @State private var focusLocation: Location?
 
     var body: some View {
         TabView(selection: $selectedTab) {
+            Tab("Profile", systemImage: "person.fill", value: .test) {
+                MainView(authViewModel: authViewModel)
+                    
+            }
             Tab("Feed", systemImage: "house.fill", value: .home) {
                 Feed(
                     userId: authViewModel.currentUser?.id,
@@ -39,6 +44,7 @@ struct Home: View {
             Tab("Profile", systemImage: "person.fill", value: .profile) {
                 Profile(authViewModel: authViewModel)
             }
+            
             if let user = authViewModel.currentUser {
                 if(user.isModerator) {
                     Tab("Admin", systemImage: "gearshape.fill", value: .admin) {
@@ -46,7 +52,9 @@ struct Home: View {
                     }
                 }
             }
-        }.tint(Color(.systemIndigo))
+        }
+        .tint(Color(.systemIndigo))
+        .preferredColorScheme(.dark)
     }
 }
 

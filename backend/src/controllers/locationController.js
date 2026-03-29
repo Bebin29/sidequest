@@ -1,5 +1,6 @@
 const pool = require('../db/pool');
 const { parseBody, sendJSON, sendError } = require('../helpers');
+const notificationService = require('../services/notificationService');
 
 async function getAll(req, res, query) {
     try {
@@ -118,6 +119,10 @@ async function create(req, res) {
         );
 
         sendJSON(res, 201, { data: result.rows[0] });
+
+        // Freunde ueber neuen Spot benachrichtigen (fire-and-forget)
+        notificationService.notifyFriendNewSpot(created_by, name)
+            .catch(err => console.error('notify friend_new_spot error:', err.message));
     } catch (err) {
         console.error('create location error:', err);
         sendError(res, 500, 'Internal server error');

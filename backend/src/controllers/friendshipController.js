@@ -1,5 +1,6 @@
 const pool = require('../db/pool');
 const { parseBody, sendJSON, sendError } = require('../helpers');
+const notificationService = require('../services/notificationService');
 
 // Freundschaftsanfrage senden
 async function sendRequest(req, res) {
@@ -39,6 +40,10 @@ async function sendRequest(req, res) {
         );
 
         sendJSON(res, 201, { data: result.rows[0] });
+
+        // Push-Benachrichtigung (fire-and-forget)
+        notificationService.notifyFriendRequest(requester_id, receiver_id)
+            .catch(err => console.error('notify friend_request error:', err.message));
     } catch (err) {
         if (err.code === '23505') {
             return sendError(res, 409, 'Friend request already exists');
@@ -103,6 +108,13 @@ async function updateStatus(req, res, id) {
             return sendError(res, 404, 'Friendship not found');
         }
         sendJSON(res, 200, { data: result.rows[0] });
+
+        // Push-Benachrichtigung bei Akzeptierung (fire-and-forget)
+        if (status === 'accepted') {
+            const friendship = result.rows[0];
+            notificationService.notifyFriendAccepted(friendship.receiver_id, friendship.requester_id)
+                .catch(err => console.error('notify friend_accepted error:', err.message));
+        }
     } catch (err) {
         console.error('updateStatus error:', err);
         sendError(res, 500, 'Internal server error');

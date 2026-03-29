@@ -96,6 +96,7 @@ function sendPush(deviceToken, { title, body, data, type }) {
                 sound: 'default',
                 'thread-id': type || 'general',
             },
+            type: type || 'general',
             data: data || {},
         });
 

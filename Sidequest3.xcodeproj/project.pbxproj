@@ -407,6 +407,7 @@
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Sidequest;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Sidequest benötigt Zugriff auf die Kamera, um Fotos aufzunehmen.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Wir benötigen deinen Standort um dir Sidequests in deiner Nähe anzuzeigen.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -450,6 +451,7 @@
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Sidequest;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Sidequest benötigt Zugriff auf die Kamera, um Fotos aufzunehmen.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Wir benötigen deinen Standort um dir Sidequests in deiner Nähe anzuzeigen.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

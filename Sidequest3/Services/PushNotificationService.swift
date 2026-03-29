@@ -11,6 +11,7 @@ import UIKit
 final class PushNotificationService: NSObject, UNUserNotificationCenterDelegate {
     var isAuthorized = false
     var deviceToken: String?
+    var router = DeepLinkRouter()
 
     private let profileService = ProfileService()
 
@@ -67,6 +68,6 @@ final class PushNotificationService: NSObject, UNUserNotificationCenterDelegate 
     ) async {
         let userInfo = response.notification.request.content.userInfo
         print("Notification tapped: \(userInfo)")
-        // Deep-Linking kann hier spaeter ergaenzt werden
+        await router.handleNotification(userInfo: userInfo)
     }
 }

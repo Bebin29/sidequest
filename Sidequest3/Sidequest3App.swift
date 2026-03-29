@@ -19,7 +19,7 @@ struct Sidequest3App: App {
     var body: some Scene {
         WindowGroup {
             if authViewModel.isAuthenticated {
-                Home(authViewModel: authViewModel)
+                Home(authViewModel: authViewModel, deepLinkRouter: pushService.router)
                     .environmentObject(container)
                     .task {
                         await setupPushNotifications()

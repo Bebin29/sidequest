@@ -208,6 +208,7 @@ struct FeedCard: View {
     var onTap: () -> Void
 
     @State private var currentPage: Int? = 0
+    @State private var lastHapticPage: Int? = 0
    
     
     var body: some View {
@@ -256,6 +257,12 @@ struct FeedCard: View {
                     }
                     .scrollTargetBehavior(.paging)
                     .scrollPosition(id: $currentPage)
+                    .onChange(of: currentPage) { oldValue, newValue in
+                        guard let old = oldValue, let new = newValue, old != new else { return }
+                        let generator = UIImpactFeedbackGenerator(style: .light)
+                        generator.impactOccurred()
+                        lastHapticPage = new
+                    }
                     
                 } else {
                     imagePlaceholder
@@ -463,3 +470,4 @@ struct FeedCard: View {
         return Self.relativeFormatter.localizedString(for: date, relativeTo: Date())
     }
 }
+

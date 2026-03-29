@@ -15,7 +15,7 @@ struct Home: View {
     @Bindable var authViewModel: AuthViewModel
     var deepLinkRouter = DeepLinkRouter()
     //@State private var selectedTab: AppTab = .home
-    @State private var selectedTab: AppTab = .test
+    @State private var selectedTab: AppTab = .friends
     @State private var focusLocation: Location?
     @State private var deepLinkLocation: Location?
     @State private var showFriendsFromNotification = false

@@ -18,6 +18,22 @@ struct Feed: View {
     var body: some View {
         NavigationStack {
             ScrollView {
+                // Custom header (wie InvitationSwiper)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Feed")
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                    if !viewModel.locations.isEmpty {
+                        Text("\(viewModel.locations.count) Spots")
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.48))
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 26)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
+
                 if viewModel.isLoading && viewModel.locations.isEmpty {
                     skeletonList
                 } else if let error = viewModel.errorMessage, viewModel.locations.isEmpty {
@@ -25,7 +41,7 @@ struct Feed: View {
                 } else if viewModel.locations.isEmpty {
                     emptyState
                 } else {
-                    LazyVStack(spacing: 20) {
+                    LazyVStack(spacing: 24) {
                         ForEach(viewModel.locations) { location in
                             FeedCard(
                                 location: location,
@@ -34,7 +50,7 @@ struct Feed: View {
                             ) {
                                 selectedLocation = location
                             }
-                            .padding(.horizontal)
+                            .padding(.horizontal, 20)
                             .onAppear {
                                 if location.id == viewModel.locations.last?.id {
                                     guard let userId else { return }
@@ -45,17 +61,30 @@ struct Feed: View {
 
                         if viewModel.isLoadingMore {
                             ProgressView()
+                                .tint(.white.opacity(0.4))
                                 .padding()
                         }
                     }
-                    .padding(.top)
+                    .padding(.top, 8)
                 }
                 Spacer(minLength: 32)
             }
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle("Feed")
+            .background {
+                // Adaptiver dunkler Hintergrund mit Ambient-Gradient
+                ZStack {
+                    Color(red: 0.06, green: 0.05, blue: 0.12)
+
+                    RadialGradient(
+                        colors: [Color.indigo.opacity(0.15), .clear],
+                        center: .top,
+                        startRadius: 0,
+                        endRadius: 500
+                    )
+                }
+                .ignoresSafeArea()
+            }
             .navigationBarTitleDisplayMode(.inline)
-            //.navigationTitle("Feed")
+            .toolbar(.hidden, for: .navigationBar)
             .task {
                 guard let userId else { return }
                 await viewModel.loadFeed(userId: userId)
@@ -80,68 +109,71 @@ struct Feed: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             Image(systemName: "person.2.slash")
-                .font(.system(size: 48))
-                .foregroundStyle(.tertiary)
+                .font(.system(size: 44, weight: .light, design: .rounded))
+                .foregroundStyle(.white.opacity(0.3))
 
-            Text("Noch nichts im Feed")
-                .font(.title3.bold())
+            VStack(spacing: 8) {
+                Text("Noch nichts im Feed")
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
 
-            Text("Füge Freunde hinzu, um ihre Spots zu sehen.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                Text("Füge Freunde hinzu, um ihre Spots zu sehen.")
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
         }
-        .padding(.top, 80)
-        .frame(maxWidth: .infinity, maxHeight: .infinity) // füllt den gesamten View
-        .background(Color(.systemGroupedBackground))
+        .padding(.top, 100)
+        .frame(maxWidth: .infinity)
     }
 
     private func errorState(message: String) -> some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             Image(systemName: "wifi.slash")
-                .font(.system(size: 48))
-                .foregroundStyle(.tertiary)
+                .font(.system(size: 44, weight: .light, design: .rounded))
+                .foregroundStyle(.white.opacity(0.3))
 
-            Text("Laden fehlgeschlagen")
-                .font(.title3.bold())
+            VStack(spacing: 8) {
+                Text("Laden fehlgeschlagen")
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
 
-            Text(message)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                Text(message)
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
 
             Button {
                 guard let userId else { return }
                 Task { await viewModel.loadFeed(userId: userId) }
             } label: {
-                Label("Erneut versuchen", systemImage: "arrow.clockwise")
-                    .font(.subheadline.weight(.medium))
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 10)
-                    .background(.indigo)
+                Text("Erneut versuchen")
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)
-                    .clipShape(Capsule())
+                    .padding(.horizontal, 26)
+                    .padding(.vertical, 11)
+                    .liquidGlassPill()
             }
         }
-        .padding(.top, 80)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
+        .padding(.top, 100)
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Skeleton Loading
 
     private var skeletonList: some View {
-        LazyVStack(spacing: 20) {
+        LazyVStack(spacing: 24) {
             ForEach(0..<3, id: \.self) { _ in
                 SkeletonCard()
-                    .padding(.horizontal)
+                    .padding(.horizontal, 20)
             }
         }
-        .padding(.top)
+        .padding(.top, 8)
     }
 }
 
@@ -155,44 +187,45 @@ struct SkeletonCard: View {
             // Creator bar skeleton
             HStack(spacing: 10) {
                 Circle()
-                    .fill(Color(.systemGray5))
+                    .fill(Color.white.opacity(0.08))
                     .frame(width: 40, height: 40)
 
                 VStack(alignment: .leading, spacing: 4) {
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(Color(.systemGray5))
+                        .fill(Color.white.opacity(0.08))
                         .frame(width: 120, height: 12)
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(Color(.systemGray6))
+                        .fill(Color.white.opacity(0.05))
                         .frame(width: 60, height: 10)
                 }
 
                 Spacer()
             }
-            .padding(.horizontal, 4)
-            .padding(.bottom, 10)
+            .padding(.horizontal, 6)
+            .padding(.bottom, 12)
 
-            // Image skeleton
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemGray5))
-                .aspectRatio(1, contentMode: .fit)
+            // Image skeleton (4:5 Ratio)
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.white.opacity(0.08))
+                .aspectRatio(4.0 / 5.0, contentMode: .fit)
 
             // Text skeleton
             VStack(alignment: .leading, spacing: 6) {
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(Color(.systemGray5))
+                    .fill(Color.white.opacity(0.08))
                     .frame(height: 14)
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(Color(.systemGray6))
+                    .fill(Color.white.opacity(0.05))
                     .frame(width: 180, height: 12)
             }
-            .padding(.horizontal, 4)
-            .padding(.top, 10)
+            .padding(.horizontal, 6)
+            .padding(.top, 12)
         }
-        .padding(12)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
+        .padding(14)
+        .background(Color.white.opacity(0.06))
+        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+        .shadow(color: .black.opacity(0.32), radius: 24, y: 12)
+        .shadow(color: .black.opacity(0.10), radius: 6, y: 3)
         .opacity(shimmer ? 0.4 : 1.0)
         .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: shimmer)
         .onAppear { shimmer = true }
@@ -209,46 +242,56 @@ struct FeedCard: View {
 
     @State private var currentPage: Int? = 0
     @State private var lastHapticPage: Int? = 0
-   
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Creator Bar
+            // Creator Bar mit Avatar-Ring
             HStack(spacing: 10) {
                 creatorAvatar
                     .frame(width: 40, height: 40)
+                    .overlay {
+                        Circle()
+                            .strokeBorder(
+                                LinearGradient(
+                                    colors: [Color.indigo, Color.purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 2
+                            )
+                    }
 
-                VStack(alignment: .leading, spacing: 1) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(location.creatorDisplayName ?? location.creatorUsername ?? "Unbekannt")
-                        .font(.subheadline.bold())
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
                     Text(formattedDate(location.createdAt))
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.4))
                 }
 
                 Spacer()
             }
-            .padding(.horizontal, 4)
-            .padding(.bottom, 10)
+            .padding(.horizontal, 6)
+            .padding(.bottom, 12)
 
-            // Image carousel with gradient overlay
-            ZStack(alignment: .topLeading) {
-
-                // Images
+            // Bild-Bereich mit Bottom-Gradient (wie Apple Invitations)
+            ZStack(alignment: .bottom) {
+                // Bilder
                 if !location.imageUrls.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(spacing: 0) {
-                            ForEach(Array(location.imageUrls.enumerated()), id: \.offset) { index, urlString in
+                            ForEach(Array(location.imageUrls.enumerated()), id: \.offset) { _, urlString in
                                 CachedAsyncImage(url: URL(string: urlString)) { image in
                                     image
                                         .resizable()
                                         .scaledToFill()
                                 } placeholder: {
-                                    Color(.systemGray6)
-                                        .overlay(ProgressView())
+                                    Color.white.opacity(0.05)
+                                        .overlay(ProgressView().tint(.white.opacity(0.3)))
                                 }
                                 .frame(minWidth: 0, maxWidth: .infinity)
-                                .aspectRatio(1, contentMode: .fill)
+                                .aspectRatio(4.0 / 5.0, contentMode: .fill)
                                 .clipped()
                                 .containerRelativeFrame(.horizontal)
                             }
@@ -259,121 +302,137 @@ struct FeedCard: View {
                     .scrollPosition(id: $currentPage)
                     .onChange(of: currentPage) { oldValue, newValue in
                         guard let old = oldValue, let new = newValue, old != new else { return }
-                        let generator = UIImpactFeedbackGenerator(style: .light)
-                        generator.impactOccurred()
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         lastHapticPage = new
                     }
-                    
                 } else {
                     imagePlaceholder
                 }
 
-                // Top Gradient
+                // Bottom Gradient (wie InvitationCard)
                 LinearGradient(
-                    colors: [.black.opacity(0.7), .clear],
+                    stops: [
+                        .init(color: .clear, location: 0.0),
+                        .init(color: .black.opacity(0.0), location: 0.25),
+                        .init(color: .black.opacity(0.45), location: 0.50),
+                        .init(color: .black.opacity(0.82), location: 0.78),
+                        .init(color: .black.opacity(0.92), location: 1.0),
+                    ],
                     startPoint: .top,
-                    endPoint: .center
+                    endPoint: .bottom
                 )
                 .allowsHitTesting(false)
 
-                // Name + Category (oben im Bild)
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(location.name)
-                        .font(.title3.bold())
-                        .foregroundStyle(.white)
+                // Info-Overlay unten im Bild
+                VStack(alignment: .leading, spacing: 0) {
+                    Spacer()
 
+                    // Location Name
+                    Text(location.name)
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.30), radius: 6, y: 3)
+
+                    Spacer().frame(height: 8)
+
+                    // Category TagBadge + Adresse
                     HStack(spacing: 8) {
+                        TagBadge(
+                            label: location.category,
+                            color: categoryColor(for: location.category)
+                        )
 
                         HStack(spacing: 4) {
-                            Image(systemName: categoryIcon(for: location.category))
-                                .font(.caption2)
-
-                            Text(location.category)
-                                .font(.caption.weight(.semibold))
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(.white.opacity(0.2))
-                        .clipShape(Capsule())
-
-                        HStack(spacing: 3) {
-                            Image(systemName: "mappin")
-                                .font(.caption2)
-
+                            Image(systemName: "mappin.and.ellipse")
+                                .font(.system(size: 10, weight: .semibold))
                             Text(location.address)
-                                .font(.caption)
+                                .font(.system(size: 12, weight: .medium, design: .rounded))
                                 .lineLimit(1)
                         }
-                        .opacity(0.85)
+                        .foregroundStyle(.white.opacity(0.85))
                     }
-                    .foregroundStyle(.white)
-                }
-                .padding()
 
-                // Dots ganz unten
-                if location.imageUrls.count > 1 {
-                    VStack {
-                        Spacer()
+                    // Beschreibung (im Overlay, nicht außerhalb)
+                    if let description = location.description, !description.isEmpty {
+                        Spacer().frame(height: 8)
+                        Text(description)
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.70))
+                            .lineLimit(2)
+                    }
 
-                        HStack(spacing: 6) {
-                            ForEach(0..<location.imageUrls.count, id: \.self) { index in
-                                Circle()
-                                    .fill(index == (currentPage ?? 0) ? .white : .white.opacity(0.4))
-                                    .frame(width: 7, height: 7)
-                            }
+                    Spacer().frame(height: 14)
+
+                    // Dots (DotIndicator wiederverwendet)
+                    if location.imageUrls.count > 1 {
+                        HStack {
+                            Spacer()
+                            DotIndicator(count: location.imageUrls.count, current: currentPage ?? 0)
+                            Spacer()
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(.black.opacity(0.35))
-                        .clipShape(Capsule())
-                        .padding(.bottom, 10)
+                        Spacer().frame(height: 10)
                     }
-                    .frame(maxWidth: .infinity)
                 }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 6)
             }
-            .aspectRatio(1, contentMode: .fit)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .contentShape(RoundedRectangle(cornerRadius: 16))
+            .aspectRatio(4.0 / 5.0, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .onTapGesture { onTap() }
-            // Description
-            if let description = location.description, !description.isEmpty {
-                Text(description)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .padding(.horizontal, 4)
-                    .padding(.top, 10)
-            }
 
-            // Action row
+            // Action Row mit Liquid Glass Pill
             HStack(spacing: 12) {
                 Button { onShowOnMap?() } label: {
-                    Label("Karte", systemImage: "map")
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(.indigo)
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 4)
+                    HStack(spacing: 5) {
+                        Image(systemName: "map")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text("Karte")
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .liquidGlassPill()
                 }
 
                 Spacer()
 
                 if let distance = formattedDistance {
-                    HStack(spacing: 3) {
-                        Image(systemName: "location")
-                            .font(.caption2)
+                    HStack(spacing: 4) {
+                        Image(systemName: "location.fill")
+                            .font(.system(size: 10, weight: .semibold))
                         Text(distance)
-                            .font(.caption2.weight(.medium))
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
                     }
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.white.opacity(0.50))
                 }
             }
-            .padding(.horizontal, 4)
-            .padding(.top, 4)
+            .padding(.horizontal, 6)
+            .padding(.top, 12)
         }
-        .padding(12)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
+        .padding(14)
+        .background(Color.white.opacity(0.06))
+        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+        // Subtle glass border
+        .overlay {
+            RoundedRectangle(cornerRadius: 32, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.18),
+                            Color.white.opacity(0.04),
+                            Color.white.opacity(0.10),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 0.8
+                )
+        }
+        // Double shadow (wie InvitationSwiper)
+        .shadow(color: .black.opacity(0.32), radius: 24, y: 12)
+        .shadow(color: .black.opacity(0.10), radius: 6, y: 3)
     }
 
     // MARK: - Subviews
@@ -397,22 +456,22 @@ struct FeedCard: View {
 
     private var avatarPlaceholder: some View {
         Circle()
-            .fill(Color(.systemGray4))
+            .fill(Color.white.opacity(0.10))
             .overlay(
                 Text(String((location.creatorUsername ?? "?").prefix(1)).uppercased())
-                    .font(.caption.bold())
-                    .foregroundStyle(.white)
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.6))
             )
     }
 
     private var imagePlaceholder: some View {
         Rectangle()
-            .fill(Color(.systemGray5))
-            .aspectRatio(1, contentMode: .fill)
+            .fill(Color.white.opacity(0.05))
+            .aspectRatio(4.0 / 5.0, contentMode: .fill)
             .overlay(
                 Image(systemName: "photo")
-                    .font(.title)
-                    .foregroundStyle(.tertiary)
+                    .font(.system(size: 28, weight: .light))
+                    .foregroundStyle(.white.opacity(0.2))
             )
     }
 
@@ -431,21 +490,21 @@ struct FeedCard: View {
         }
     }
 
-    private func categoryIcon(for category: String) -> String {
+    private func categoryColor(for category: String) -> Color {
         switch category {
-        case "Restaurant": return "fork.knife"
-        case "Café": return "cup.and.saucer.fill"
-        case "Bar": return "wineglass.fill"
-        case "Club": return "music.note.house.fill"
-        case "Bäckerei": return "birthday.cake.fill"
-        case "Fast Food": return "takeoutbag.and.cup.and.straw.fill"
-        case "Eisdiele": return "snowflake"
-        case "Park": return "leaf.fill"
-        case "Museum": return "building.columns.fill"
-        case "Shopping": return "bag.fill"
-        case "Aussichtspunkt": return "binoculars.fill"
-        case "Strand": return "beach.umbrella.fill"
-        default: return "mappin.circle.fill"
+        case "Restaurant": return .orange
+        case "Café": return .brown
+        case "Bar": return .purple
+        case "Club": return .pink
+        case "Bäckerei": return .yellow
+        case "Fast Food": return .red
+        case "Eisdiele": return .cyan
+        case "Park": return .green
+        case "Museum": return .blue
+        case "Shopping": return .pink
+        case "Aussichtspunkt": return .teal
+        case "Strand": return .cyan
+        default: return .indigo
         }
     }
 
@@ -470,7 +529,3 @@ struct FeedCard: View {
         return Self.relativeFormatter.localizedString(for: date, relativeTo: Date())
     }
 }
-
-
-
-

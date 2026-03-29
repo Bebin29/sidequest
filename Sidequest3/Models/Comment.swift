@@ -12,13 +12,6 @@ struct Comment: Codable, Identifiable {
     let username: String
     let text: String
     let createdAt: String
-
-    enum CodingKeys: String, CodingKey {
-        case id, username, text
-        case locationId = "location_id"
-        case userId = "user_id"
-        case createdAt = "created_at"
-    }
 }
 
 struct CommentsResponse: Codable {

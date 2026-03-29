@@ -28,7 +28,7 @@ final class ProfileService {
         }
 
         struct SingleResponse: Codable { let data: User }
-        return try JSONDecoder().decode(SingleResponse.self, from: data).data
+        return try JSONDecoder.api.decode(SingleResponse.self, from: data).data
     }
 
     func checkUsername(username: String) async throws -> Bool {
@@ -47,7 +47,7 @@ final class ProfileService {
         }
 
         struct CheckResponse: Codable { let available: Bool }
-        return try JSONDecoder().decode(CheckResponse.self, from: data).available
+        return try JSONDecoder.api.decode(CheckResponse.self, from: data).available
     }
 
     func updateProfile(userId: UUID, body: [String: Any]) async throws -> User {
@@ -69,6 +69,6 @@ final class ProfileService {
         }
 
         struct SingleResponse: Codable { let data: User }
-        return try JSONDecoder().decode(SingleResponse.self, from: data).data
+        return try JSONDecoder.api.decode(SingleResponse.self, from: data).data
     }
 }

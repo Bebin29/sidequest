@@ -41,7 +41,7 @@ final class AuthService {
             let isNewUser: Bool
         }
 
-        let decoded = try JSONDecoder().decode(AuthResponse.self, from: data)
+        let decoded = try JSONDecoder.api.decode(AuthResponse.self, from: data)
         return (decoded.data, decoded.isNewUser)
     }
 }

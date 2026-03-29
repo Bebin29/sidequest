@@ -24,7 +24,7 @@ final class FriendshipService {
             throw AppError.server(statusCode: (response as? HTTPURLResponse)?.statusCode ?? 0, message: nil)
         }
 
-        let decoded = try JSONDecoder().decode(UsersResponse.self, from: data)
+        let decoded = try JSONDecoder.api.decode(UsersResponse.self, from: data)
         return decoded.data
     }
 
@@ -51,7 +51,7 @@ final class FriendshipService {
         }
 
         struct SingleResponse: Codable { let data: Friendship }
-        return try JSONDecoder().decode(SingleResponse.self, from: data).data
+        return try JSONDecoder.api.decode(SingleResponse.self, from: data).data
     }
 
     func getFriends(userId: UUID) async throws -> [Friendship] {
@@ -66,7 +66,7 @@ final class FriendshipService {
             throw AppError.server(statusCode: (response as? HTTPURLResponse)?.statusCode ?? 0, message: nil)
         }
 
-        let decoded = try JSONDecoder().decode(FriendshipsResponse.self, from: data)
+        let decoded = try JSONDecoder.api.decode(FriendshipsResponse.self, from: data)
         return decoded.data
     }
 
@@ -82,7 +82,7 @@ final class FriendshipService {
             throw AppError.server(statusCode: (response as? HTTPURLResponse)?.statusCode ?? 0, message: nil)
         }
 
-        let decoded = try JSONDecoder().decode(FriendshipsResponse.self, from: data)
+        let decoded = try JSONDecoder.api.decode(FriendshipsResponse.self, from: data)
         return decoded.data
     }
 
@@ -104,7 +104,7 @@ final class FriendshipService {
         }
 
         struct SingleResponse: Codable { let data: Friendship }
-        return try JSONDecoder().decode(SingleResponse.self, from: data).data
+        return try JSONDecoder.api.decode(SingleResponse.self, from: data).data
     }
 
     func findUserByRingCode(code: String) async throws -> User {
@@ -120,7 +120,7 @@ final class FriendshipService {
         }
 
         struct SingleResponse: Codable { let data: User }
-        return try JSONDecoder().decode(SingleResponse.self, from: data).data
+        return try JSONDecoder.api.decode(SingleResponse.self, from: data).data
     }
 
     func removeFriend(friendshipId: UUID) async throws {

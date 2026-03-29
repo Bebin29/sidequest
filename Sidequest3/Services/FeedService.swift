@@ -40,6 +40,6 @@ final class FeedService {
             throw AppError.server(statusCode: (response as? HTTPURLResponse)?.statusCode ?? 0, message: nil)
         }
 
-        return try JSONDecoder().decode(FeedResponse.self, from: data)
+        return try JSONDecoder.api.decode(FeedResponse.self, from: data)
     }
 }

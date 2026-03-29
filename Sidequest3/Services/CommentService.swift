@@ -24,7 +24,7 @@ final class CommentService {
             throw AppError.server(statusCode: (response as? HTTPURLResponse)?.statusCode ?? 0, message: nil)
         }
 
-        let decoded = try JSONDecoder().decode(CommentsResponse.self, from: data)
+        let decoded = try JSONDecoder.api.decode(CommentsResponse.self, from: data)
         return decoded.data
     }
 
@@ -52,6 +52,6 @@ final class CommentService {
         }
 
         struct SingleResponse: Codable { let data: Comment }
-        return try JSONDecoder().decode(SingleResponse.self, from: data).data
+        return try JSONDecoder.api.decode(SingleResponse.self, from: data).data
     }
 }

@@ -24,7 +24,7 @@ final class UserService {
             throw AppError.server(statusCode: (response as? HTTPURLResponse)?.statusCode ?? 0, message: nil)
         }
 
-        let decoded = try JSONDecoder().decode(UsersResponse.self, from: data)
+        let decoded = try JSONDecoder.api.decode(UsersResponse.self, from: data)
         return decoded.data
     }
 }

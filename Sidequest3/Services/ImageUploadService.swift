@@ -59,7 +59,7 @@ final class ImageUploadService {
         }
 
         struct UploadResponse: Codable { let url: String }
-        let decoded = try JSONDecoder().decode(UploadResponse.self, from: responseData)
+        let decoded = try JSONDecoder.api.decode(UploadResponse.self, from: responseData)
         return decoded.url
     }
 

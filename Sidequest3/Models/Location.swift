@@ -49,12 +49,6 @@ struct DayHours: Codable {
     let openTime: String
     let closeTime: String
     let isClosed: Bool
-
-    enum CodingKeys: String, CodingKey {
-        case openTime = "open_time"
-        case closeTime = "close_time"
-        case isClosed = "is_closed"
-    }
 }
 
 struct ParkingInfo: Codable {
@@ -62,25 +56,12 @@ struct ParkingInfo: Codable {
     let parkingType: String?
     let isFree: Bool?
     let notes: String?
-
-    enum CodingKeys: String, CodingKey {
-        case hasParking = "has_parking"
-        case parkingType = "parking_type"
-        case isFree = "is_free"
-        case notes
-    }
 }
 
 struct AccessibilityInfo: Codable {
     let wheelchairAccessible: Bool
     let hasElevator: Bool
     let hasAccessibleRestroom: Bool
-
-    enum CodingKeys: String, CodingKey {
-        case wheelchairAccessible = "wheelchair_accessible"
-        case hasElevator = "has_elevator"
-        case hasAccessibleRestroom = "has_accessible_restroom"
-    }
 }
 
 struct Location: Codable, Identifiable, Hashable {
@@ -129,33 +110,6 @@ struct Location: Codable, Identifiable, Hashable {
     let creatorUsername: String?
     let creatorDisplayName: String?
     let creatorProfileImageUrl: String?
-
-    enum CodingKeys: String, CodingKey {
-        case id, name, address, latitude, longitude, geohash, category, tags, website, description
-        case averageRating = "average_rating"
-        case totalRatings = "total_ratings"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-        case createdBy = "created_by"
-        case imageUrls = "image_urls"
-        case thumbnailUrl = "thumbnail_url"
-        case priceRange = "price_range"
-        case openingHours = "opening_hours"
-        case parkingInfo = "parking_info"
-        case accessibility
-        case noiseLevel = "noise_level"
-        case wifiAvailable = "wifi_available"
-        case isDogFriendly = "is_dog_friendly"
-        case isFamilyFriendly = "is_family_friendly"
-        case phoneNumber = "phone_number"
-        case instagramHandle = "instagram_handle"
-        case isVerified = "is_verified"
-        case reportCount = "report_count"
-        case trendingScore = "trending_score"
-        case creatorUsername = "creator_username"
-        case creatorDisplayName = "creator_display_name"
-        case creatorProfileImageUrl = "creator_profile_image_url"
-    }
 }
 
 struct LocationsResponse: Codable {

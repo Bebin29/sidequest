@@ -1,4 +1,5 @@
 const zlib = require('zlib');
+const crypto = require('crypto');
 
 const MAX_BODY_SIZE = 1 * 1024 * 1024; // 1 MB default
 const MAX_UPLOAD_BODY_SIZE = 10 * 1024 * 1024; // 10 MB for uploads
@@ -30,24 +31,45 @@ function parseBody(req, { maxSize = MAX_BODY_SIZE } = {}) {
 function sendJSON(res, statusCode, data) {
     const json = JSON.stringify(data);
 
-    // Gzip wenn Client es unterstützt (Flag wird in server.js gesetzt)
+    // ETag: Hash der Response fuer Conditional Requests (nur bei 200 GET)
+    if (statusCode === 200 && res._req) {
+        const etag = '"' + crypto.createHash('md5').update(json).digest('hex').slice(0, 16) + '"';
+        const ifNoneMatch = res._req.headers['if-none-match'];
+
+        if (ifNoneMatch === etag) {
+            res.writeHead(304);
+            res.end();
+            return;
+        }
+
+        // ETag-Header setzen (wird unten in writeHead uebernommen)
+        res._etag = etag;
+    }
+
+    // Gzip wenn Client es unterstuetzt (Flag wird in server.js gesetzt)
     if (res._acceptsGzip && json.length > 1024) {
         zlib.gzip(json, (err, compressed) => {
             if (err) {
                 // Fallback: unkomprimiert senden
-                res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+                const headers = { 'Content-Type': 'application/json' };
+                if (res._etag) headers['ETag'] = res._etag;
+                res.writeHead(statusCode, headers);
                 res.end(json);
                 return;
             }
-            res.writeHead(statusCode, {
+            const headers = {
                 'Content-Type': 'application/json',
                 'Content-Encoding': 'gzip',
                 'Content-Length': compressed.length,
-            });
+            };
+            if (res._etag) headers['ETag'] = res._etag;
+            res.writeHead(statusCode, headers);
             res.end(compressed);
         });
     } else {
-        res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+        const headers = { 'Content-Type': 'application/json' };
+        if (res._etag) headers['ETag'] = res._etag;
+        res.writeHead(statusCode, headers);
         res.end(json);
     }
 }

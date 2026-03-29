@@ -23,16 +23,6 @@ struct Friendship: Codable, Identifiable {
 
     let requesterUsername: String
     let receiverUsername: String
-
-    enum CodingKeys: String, CodingKey {
-        case id, status
-        case requesterId = "requester_id"
-        case receiverId = "receiver_id"
-        case createdAt = "created_at"
-        case acceptedAt = "accepted_at"
-        case requesterUsername = "requester_username"
-        case receiverUsername = "receiver_username"
-    }
 }
 
 struct FriendshipsResponse: Codable {

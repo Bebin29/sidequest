@@ -35,29 +35,6 @@ struct Rating: Codable, Identifiable {
     let visitDate: String?
     let priceSpent: Double?
     let wouldRecommend: Bool?
-
-    enum CodingKeys: String, CodingKey {
-        case id, rating, comment, username
-        case locationId = "location_id"
-        case locationName = "location_name"
-        case userId = "user_id"
-        case userProfileImageUrl = "user_profile_image_url"
-        case imageUrls = "image_urls"
-        case thumbnailUrls = "thumbnail_urls"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-        case tripId = "trip_id"
-        case isVerified = "is_verified"
-        case verifiedAt = "verified_at"
-        case reportCount = "report_count"
-        case isHidden = "is_hidden"
-        case reactionCount = "reaction_count"
-        case commentCount = "comment_count"
-        case helpfulCount = "helpful_count"
-        case visitDate = "visit_date"
-        case priceSpent = "price_spent"
-        case wouldRecommend = "would_recommend"
-    }
 }
 
 struct RatingsResponse: Codable {

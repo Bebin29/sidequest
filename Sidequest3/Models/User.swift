@@ -23,21 +23,6 @@ struct User: Codable, Identifiable {
     let fcmToken: String?
     let stats: [String: Int]?
     let ringCode: String?
-
-    enum CodingKeys: String, CodingKey {
-        case id, email, username, bio, preferences, stats
-        case ringCode = "ring_code"
-        case displayName = "display_name"
-        case profileImageUrl = "profile_image_url"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-        case lastSeenAt = "last_seen_at"
-        case favoriteCategories = "favorite_categories"
-        case isVerified = "is_verified"
-        case isModerator = "is_moderator"
-        case isPrivate = "is_private"
-        case fcmToken = "fcm_token"
-    }
 }
 
 struct UsersResponse: Codable {

@@ -40,7 +40,7 @@ final class LocationService {
         }
 
         struct SingleResponse: Codable { let data: Location }
-        return try JSONDecoder().decode(SingleResponse.self, from: data).data
+        return try JSONDecoder.api.decode(SingleResponse.self, from: data).data
     }
 
     func fetchLocations(userId: UUID, filter: LocationFilter = LocationFilter()) async throws -> [Location] {
@@ -75,7 +75,7 @@ final class LocationService {
             throw AppError.server(statusCode: (response as? HTTPURLResponse)?.statusCode ?? 0, message: nil)
         }
 
-        let decoded = try JSONDecoder().decode(LocationsResponse.self, from: data)
+        let decoded = try JSONDecoder.api.decode(LocationsResponse.self, from: data)
         return decoded.data
     }
 
@@ -100,7 +100,7 @@ final class LocationService {
             let data: Location
         }
 
-        let decoded = try JSONDecoder().decode(SingleResponse.self, from: data)
+        let decoded = try JSONDecoder.api.decode(SingleResponse.self, from: data)
         return decoded.data
     }
 
@@ -123,7 +123,7 @@ final class LocationService {
         }
 
         struct SingleResponse: Codable { let data: Location }
-        return try JSONDecoder().decode(SingleResponse.self, from: data).data
+        return try JSONDecoder.api.decode(SingleResponse.self, from: data).data
     }
 
     func deleteLocation(id: UUID) async throws {

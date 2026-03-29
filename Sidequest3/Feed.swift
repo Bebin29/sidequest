@@ -132,10 +132,12 @@ struct Feed: View {
     /// Fixed 2:3 aspect ratio for cards (portrait, like Apple Invitations).
     private var carousel: some View {
         let cardWidth = UIScreen.main.bounds.width - 56
-        let cardHeight = cardWidth * 3.0 / 2.0  // 2:3 aspect ratio
+        let imageHeight = cardWidth * 4.0 / 3.0  // 3:4 aspect ratio for image
+        let glassHeight: CGFloat = 140            // warm glass panel below image
+        let cardHeight = imageHeight + glassHeight
 
         return ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 16) {
+            LazyHStack(spacing: 14) {
                 ForEach(viewModel.locations) { location in
                     FeedCarouselCard(
                         location: location,
@@ -146,13 +148,6 @@ struct Feed: View {
                         }
                     )
                     .frame(width: cardWidth, height: cardHeight)
-                    .scrollTransition(.animated(
-                        reduceMotion ? .linear(duration: 0) : .spring(response: 0.4, dampingFraction: 0.8)
-                    )) { content, phase in
-                        content
-                            .scaleEffect(phase.isIdentity ? 1.0 : (reduceMotion ? 0.95 : 0.88))
-                            .opacity(phase.isIdentity ? 1.0 : (reduceMotion ? 0.7 : 0.5))
-                    }
                     .onAppear {
                         if location.id == viewModel.locations.last?.id {
                             guard let userId else { return }
@@ -171,7 +166,7 @@ struct Feed: View {
         }
         .scrollTargetBehavior(.viewAligned)
         .scrollPosition(id: $scrolledId)
-        .padding(.horizontal, 28)
+        .contentMargins(.horizontal, 28, for: .scrollContent)
     }
 
     // MARK: - Adaptive Background
@@ -283,10 +278,11 @@ struct Feed: View {
 
     private var skeletonView: some View {
         let cardWidth = UIScreen.main.bounds.width - 56
-        let cardHeight = cardWidth * 3.0 / 2.0
+        let imageHeight = cardWidth * 4.0 / 3.0
+        let cardHeight = imageHeight + 140
 
         return ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 16) {
+            LazyHStack(spacing: 14) {
                 ForEach(0..<3, id: \.self) { _ in
                     SkeletonCarouselCard()
                         .frame(width: cardWidth, height: cardHeight)
@@ -295,7 +291,7 @@ struct Feed: View {
             .scrollTargetLayout()
         }
         .scrollTargetBehavior(.viewAligned)
-        .padding(.horizontal, 28)
+        .contentMargins(.horizontal, 28, for: .scrollContent)
     }
 
     // MARK: - Loading More Card

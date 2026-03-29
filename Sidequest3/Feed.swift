@@ -277,7 +277,7 @@ struct FeedCard: View {
                     HStack(spacing: 8) {
 
                         HStack(spacing: 4) {
-                            Image(systemName: categoryIcon(for: location.category))
+                            Image(systemName: CategoryHelper.icon(for: location.category))
                                 .font(.caption2)
 
                             Text(location.category)
@@ -423,23 +423,6 @@ struct FeedCard: View {
         }
     }
 
-    private func categoryIcon(for category: String) -> String {
-        switch category {
-        case "Restaurant": return "fork.knife"
-        case "Café": return "cup.and.saucer.fill"
-        case "Bar": return "wineglass.fill"
-        case "Club": return "music.note.house.fill"
-        case "Bäckerei": return "birthday.cake.fill"
-        case "Fast Food": return "takeoutbag.and.cup.and.straw.fill"
-        case "Eisdiele": return "snowflake"
-        case "Park": return "leaf.fill"
-        case "Museum": return "building.columns.fill"
-        case "Shopping": return "bag.fill"
-        case "Aussichtspunkt": return "binoculars.fill"
-        case "Strand": return "beach.umbrella.fill"
-        default: return "mappin.circle.fill"
-        }
-    }
 
     private static let isoFormatter: DateFormatter = {
         let formatter = DateFormatter()

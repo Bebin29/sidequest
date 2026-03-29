@@ -118,7 +118,7 @@ struct SettingsView: View {
                               
                                 VStack(spacing: 12) {
                                     NavigationLink {
-                                        NotificationsSettingsView()
+                                        NotificationSettingsView(authViewModel: authViewModel)
                                     } label: {
                                         SettingsRow(title: "Mitteilungen", value: "Aus")
                                     }
@@ -259,13 +259,7 @@ struct SettingsView: View {
         }
     }
 }
-struct NotificationsSettingsView: View {
-    
-    var body: some View {
-        Text("Mitteilungen Einstellungen")
-            .navigationTitle("Mitteilungen")
-    }
-}
+// NotificationsSettingsView ersetzt durch NotificationSettingsView in Views/NotificationSettingsView.swift
 
 struct LocationSettingsView: View {
     

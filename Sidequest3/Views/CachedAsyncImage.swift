@@ -5,6 +5,35 @@
 
 import SwiftUI
 
+/// Globaler Image-Download-Throttler: begrenzt parallele Downloads.
+private actor ImageDownloadThrottle {
+    static let shared = ImageDownloadThrottle()
+
+    private var activeCount = 0
+    private let maxConcurrent = 6
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+
+    func acquire() async {
+        if activeCount < maxConcurrent {
+            activeCount += 1
+            return
+        }
+        // Warten bis ein Slot frei wird
+        await withCheckedContinuation { continuation in
+            waiters.append(continuation)
+        }
+    }
+
+    func release() {
+        activeCount -= 1
+        if let next = waiters.first {
+            waiters.removeFirst()
+            activeCount += 1
+            next.resume()
+        }
+    }
+}
+
 private enum ImageCacheStore {
     static let cache: URLCache = {
         URLCache(
@@ -17,6 +46,7 @@ private enum ImageCacheStore {
         let config = URLSessionConfiguration.default
         config.urlCache = cache
         config.requestCachePolicy = .returnCacheDataElseLoad
+        config.httpMaximumConnectionsPerHost = 6
         return URLSession(configuration: config)
     }()
 }
@@ -57,7 +87,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
 
         let request = URLRequest(url: url)
 
-        // Check cache first
+        // Check cache first (kein Throttle noetig)
         if let cached = ImageCacheStore.cache.cachedResponse(for: request),
            let uiImage = UIImage(data: cached.data) {
             self.image = uiImage
@@ -65,10 +95,13 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
             return
         }
 
+        // Throttle: max 4 gleichzeitige Downloads
+        await ImageDownloadThrottle.shared.acquire()
+        defer { Task { await ImageDownloadThrottle.shared.release() } }
+
         do {
             let (data, response) = try await ImageCacheStore.session.data(for: request)
             if let uiImage = UIImage(data: data) {
-                // Store in cache
                 let cachedResponse = CachedURLResponse(response: response, data: data)
                 ImageCacheStore.cache.storeCachedResponse(cachedResponse, for: request)
                 self.image = uiImage

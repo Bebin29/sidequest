@@ -15,9 +15,14 @@ final class FeedViewModel {
     var errorMessage: String?
 
     private let feedService = FeedService()
-    private let pageSize = 20
+    private let pageSize = 10
 
-    func loadFeed(userId: UUID) async {
+    /// Lädt den Feed nur wenn nötig (erster Aufruf oder force refresh).
+    /// Tab-Wechsel triggert KEINEN erneuten Netzwerk-Request.
+    func loadFeed(userId: UUID, forceRefresh: Bool = false) async {
+        // Bereits geladene Daten bei Tab-Wechsel beibehalten
+        guard forceRefresh || locations.isEmpty else { return }
+
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }

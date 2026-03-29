@@ -62,7 +62,7 @@ struct Feed: View {
             }
             .refreshable {
                 guard let userId else { return }
-                await viewModel.loadFeed(userId: userId)
+                await viewModel.loadFeed(userId: userId, forceRefresh: true)
             }
             .sheet(item: $selectedLocation) { location in
                 NavigationStack {
@@ -237,7 +237,9 @@ struct FeedCard: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(spacing: 0) {
                             ForEach(Array(location.imageUrls.enumerated()), id: \.offset) { index, urlString in
-                                CachedAsyncImage(url: URL(string: urlString)) { image in
+                                // Nur sichtbare + nächste Bilder laden, Rest erst bei Scroll
+                                let shouldLoad = index <= (currentPage ?? 0) + 1
+                                CachedAsyncImage(url: shouldLoad ? URL(string: urlString) : nil) { image in
                                     image
                                         .resizable()
                                         .scaledToFill()

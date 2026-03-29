@@ -5,6 +5,7 @@
 
 import Foundation
 import UIKit
+import os
 
 final class ImageUploadService {
     private let session: URLSession

@@ -31,7 +31,7 @@ final class FeedService {
         }
 
         var request = URLRequest(url: url)
-        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.cachePolicy = .returnCacheDataElseLoad
 
         let (data, response) = try await session.data(for: request)
 

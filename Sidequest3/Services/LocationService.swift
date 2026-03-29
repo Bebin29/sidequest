@@ -44,6 +44,7 @@ final class LocationService {
     }
 
     func fetchLocations(userId: UUID, filter: LocationFilter = LocationFilter()) async throws -> [Location] {
+        // swiftlint:disable:next force_unwrapping
         var components = URLComponents(string: "\(Constants.API.baseURL)/api/locations")!
         var queryItems = [URLQueryItem(name: "user_id", value: userId.uuidString)]
 

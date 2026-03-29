@@ -373,14 +373,15 @@ struct Profile: View {
 
 #Preview {
     Profile(authViewModel: {
-        let vm = AuthViewModel()
-        vm.currentUser = .preview
-        return vm
+        let authVM = AuthViewModel()
+        authVM.currentUser = .preview
+        return authVM
     }())
 }
 
 extension User {
     static let preview = User(
+        // swiftlint:disable:next force_unwrapping
         id: UUID(uuidString: "e5f9bcaa-20f7-4296-a7f1-f2caf539d474")!,
         email: "oleboehm4321@icloud.com",
         username: "oleboehm4321",

@@ -30,10 +30,9 @@ struct Feed: View {
                             FeedCard(
                                 location: location,
                                 userLocation: locationManager.lastLocation,
-                                onShowOnMap: { onShowOnMap?(location) }
-                            ) {
-                                selectedLocation = location
-                            }
+                                onShowOnMap: { onShowOnMap?(location) },
+                                onTap: { selectedLocation = location }
+                            )
                             .padding(.horizontal)
                             .onAppear {
                                 if location.id == viewModel.locations.last?.id {
@@ -55,7 +54,7 @@ struct Feed: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Feed")
             .navigationBarTitleDisplayMode(.inline)
-            //.navigationTitle("Feed")
+            // .navigationTitle("Feed")
             .task {
                 guard let userId else { return }
                 await viewModel.loadFeed(userId: userId)
@@ -236,7 +235,7 @@ struct FeedCard: View {
                 if !location.imageUrls.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(spacing: 0) {
-                            ForEach(Array(location.imageUrls.enumerated()), id: \.offset) { index, urlString in
+                            ForEach(Array(location.imageUrls.enumerated()), id: \.offset) { _, urlString in
                                 CachedAsyncImage(url: URL(string: urlString)) { image in
                                     image
                                         .resizable()
@@ -418,11 +417,10 @@ struct FeedCard: View {
         if meters < 1000 {
             return "\(Int(meters)) m"
         } else {
-            let km = meters / 1000
-            return String(format: "%.1f km", km)
+            let kilometers = meters / 1000
+            return String(format: "%.1f km", kilometers)
         }
     }
-
 
     private static let isoFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -447,6 +445,6 @@ struct FeedCard: View {
 }
 
 #Preview {
-    let vm = AuthViewModel()
-    Home(authViewModel: vm)
+    let authVM = AuthViewModel()
+    Home(authViewModel: authVM)
 }

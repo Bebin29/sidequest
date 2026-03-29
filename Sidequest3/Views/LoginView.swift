@@ -91,11 +91,15 @@ struct LoginView: View {
                           if authViewModel.isLoading {
                               ProgressView()
                           } else {
-                              SignInWithAppleButton(.signIn) { request in
-                                  request.requestedScopes = [.fullName, .email]
-                              } onCompletion: { result in
-                                  authViewModel.handleAppleSignIn(result: result)
-                              }
+                              SignInWithAppleButton(
+                                  .signIn,
+                                  onRequest: { request in
+                                      request.requestedScopes = [.fullName, .email]
+                                  },
+                                  onCompletion: { result in
+                                      authViewModel.handleAppleSignIn(result: result)
+                                  }
+                              )
                               .signInWithAppleButtonStyle(.whiteOutline)
                               .frame(height: 50)
                               .padding(.horizontal)

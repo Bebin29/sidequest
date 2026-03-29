@@ -303,7 +303,7 @@ enum RingCodeDecoder {
                 let sampleY = CGFloat(centerY) + sin(angle) * radius
 
                 let brightness = readBrightness(
-                    pointer: pointer, x: Int(sampleX), y: Int(sampleY),
+                    pointer: pointer, pixelX: Int(sampleX), pixelY: Int(sampleY),
                     width: width, height: height, bytesPerRow: bytesPerRow
                 )
                 brightnesses.append(brightness)
@@ -334,7 +334,7 @@ enum RingCodeDecoder {
 
     /// Scan radially outward to find the approximate size of the ring pattern.
     /// Returns the outer radius of the pattern, or nil if no pattern detected.
-    private static func findPatternRadius(
+    private static func findPatternRadius( // swiftlint:disable:this function_parameter_count
         pointer: UnsafePointer<UInt8>,
         centerX: Int, centerY: Int,
         maxRadius: CGFloat, bytesPerRow: Int,
@@ -363,13 +363,8 @@ enum RingCodeDecoder {
 
         // Find the outermost ring: look for last significant brightness peak
         let avg = radialProfile.reduce(0, +) / CGFloat(numSteps)
-        var lastBrightStep = 0
-        for step in stride(from: numSteps - 1, through: 0, by: -1) {
-            if radialProfile[step] > avg * 1.2 {
-                lastBrightStep = step
-                break
-            }
-        }
+        let lastBrightStep = stride(from: numSteps - 1, through: 0, by: -1)
+            .first { radialProfile[$0] > avg * 1.2 } ?? 0
 
         guard lastBrightStep > 5 else { return nil } // Too small or not found
 
@@ -417,18 +412,18 @@ enum RingCodeDecoder {
     }
 
     /// Read brightness at a pixel position (BGRA format), averaged over 3×3 area.
-    private static func readBrightness(
+    private static func readBrightness( // swiftlint:disable:this function_parameter_count
         pointer: UnsafePointer<UInt8>,
-        x: Int, y: Int,
+        pixelX: Int, pixelY: Int,
         width: Int, height: Int,
         bytesPerRow: Int
     ) -> CGFloat {
-        let cx = max(1, min(width - 2, x))
-        let cy = max(1, min(height - 2, y))
+        let clampedX = max(1, min(width - 2, pixelX))
+        let clampedY = max(1, min(height - 2, pixelY))
         var total: CGFloat = 0
-        for dy in -1...1 {
-            for dx in -1...1 {
-                let offset = (cy + dy) * bytesPerRow + (cx + dx) * 4
+        for offsetY in -1...1 {
+            for offsetX in -1...1 {
+                let offset = (clampedY + offsetY) * bytesPerRow + (clampedX + offsetX) * 4
                 let blue = CGFloat(pointer[offset]) / 255.0
                 let green = CGFloat(pointer[offset + 1]) / 255.0
                 let red = CGFloat(pointer[offset + 2]) / 255.0

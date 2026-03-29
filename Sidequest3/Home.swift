@@ -40,7 +40,7 @@ struct Home: View {
                 Profile(authViewModel: authViewModel)
             }
             if let user = authViewModel.currentUser {
-                if(user.isModerator) {
+                if user.isModerator {
                     Tab("Admin", systemImage: "gearshape.fill", value: .admin) {
                         AdminView()
                     }

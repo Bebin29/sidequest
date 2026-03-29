@@ -353,7 +353,7 @@ enum RingCodeDecoder {
 
                 let brightness = readBrightness(
                     pointer: pointer,
-                    x: Int(sampleX), y: Int(sampleY),
+                    pixelX: Int(sampleX), pixelY: Int(sampleY),
                     width: width, height: height,
                     bytesPerRow: bytesPerRow
                 )

@@ -177,18 +177,20 @@ struct Karte: View {
                 Task { await mapViewModel.loadLocations(userId: userId) }
             },
             content: {
-            if let location = mapViewModel.locations.first(where: { $0.id == selectedLocationId }) {
-                NavigationStack {
-                    LocationDetailView(location: location, currentUserId: userId, onDelete: {
-                        mapViewModel.locations.removeAll { $0.id == location.id }
-                        showDetail = false
-                    }, onUpdate: { updated in
-                        if let index = mapViewModel.locations.firstIndex(where: { $0.id == updated.id }) {
-                            mapViewModel.locations[index] = updated
-                        }
-                    })
+                if let location = mapViewModel.locations.first(where: { $0.id == selectedLocationId }) {
+                    NavigationStack {
+                        LocationDetailView(location: location, currentUserId: userId, onDelete: {
+                            mapViewModel.locations.removeAll { $0.id == location.id }
+                            showDetail = false
+                        }, onUpdate: { updated in
+                            if let index = mapViewModel.locations.firstIndex(where: { $0.id == updated.id }) {
+                                mapViewModel.locations[index] = updated
+                            }
+                        })
+                    }
                 }
-            })
+            }
+        )
     }
 }
 
@@ -598,9 +600,11 @@ struct AddLocationFormView: View {
 }
 
 #Preview {
-    let authVM = AuthViewModel()
-    authVM.currentUser = .preview2
-    return Home(authViewModel: authVM)
+    Home(authViewModel: {
+        let authVM = AuthViewModel()
+        authVM.currentUser = .preview2
+        return authVM
+    }())
 }
 
 extension User {

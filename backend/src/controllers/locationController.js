@@ -10,23 +10,10 @@ async function getAll(req, res, query) {
             return sendError(res, 400, 'user_id is required');
         }
 
-        // Eigene + Freunde IDs sammeln
-        const friendsResult = await pool.query(
-            `SELECT CASE
-                WHEN requester_id = $1 THEN receiver_id
-                ELSE requester_id
-             END AS friend_id
-             FROM friendships
-             WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'`,
-            [userId]
-        );
-
-        const allowedIds = [userId, ...friendsResult.rows.map(r => r.friend_id)];
-        const placeholders = allowedIds.map((_, i) => `$${i + 1}`).join(', ');
-
-        let paramIdx = allowedIds.length + 1;
+        // Einzelner Query mit Subquery statt 2 separate Queries
+        let paramIdx = 2;
         const filters = [];
-        const params = [...allowedIds];
+        const params = [userId];
 
         if (query.category) {
             filters.push(`category = $${paramIdx}`);
@@ -50,8 +37,14 @@ async function getAll(req, res, query) {
             paramIdx += 3;
         }
 
-        const whereClause = `created_by IN (${placeholders})` +
-            (filters.length > 0 ? ' AND ' + filters.join(' AND ') : '');
+        const friendSubquery = `(
+            SELECT CASE WHEN requester_id = $1 THEN receiver_id ELSE requester_id END
+            FROM friendships
+            WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'
+        )`;
+
+        const whereClause = `created_by IN (${friendSubquery}) OR created_by = $1` +
+            (filters.length > 0 ? ' AND (' + filters.join(' AND ') + ')' : '');
 
         const result = await pool.query(
             `SELECT locations.*,
@@ -60,7 +53,7 @@ async function getAll(req, res, query) {
                     users.profile_image_url AS creator_profile_image_url
              FROM locations
              LEFT JOIN users ON locations.created_by = users.id
-             WHERE ${whereClause}
+             WHERE (${whereClause})
              ORDER BY locations.created_at DESC`,
             params
         );
@@ -194,25 +187,7 @@ async function getFeed(req, res, query) {
         const limit = parseInt(query.limit) || 20;
         const offset = parseInt(query.offset) || 0;
 
-        // Freunde IDs sammeln (ohne eigene)
-        const friendsResult = await pool.query(
-            `SELECT CASE
-                WHEN requester_id = $1 THEN receiver_id
-                ELSE requester_id
-             END AS friend_id
-             FROM friendships
-             WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'`,
-            [userId]
-        );
-
-        const friendIds = friendsResult.rows.map(r => r.friend_id);
-
-        if (friendIds.length === 0) {
-            return sendJSON(res, 200, { data: [], count: 0, hasMore: false });
-        }
-
-        const placeholders = friendIds.map((_, i) => `$${i + 1}`).join(', ');
-
+        // Einzelner Query mit Subquery statt 2 separate Queries
         const result = await pool.query(
             `SELECT locations.*,
                     users.username AS creator_username,
@@ -220,10 +195,14 @@ async function getFeed(req, res, query) {
                     users.profile_image_url AS creator_profile_image_url
              FROM locations
              LEFT JOIN users ON locations.created_by = users.id
-             WHERE locations.created_by IN (${placeholders})
+             WHERE locations.created_by IN (
+                 SELECT CASE WHEN requester_id = $1 THEN receiver_id ELSE requester_id END
+                 FROM friendships
+                 WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'
+             )
              ORDER BY locations.created_at DESC
-             LIMIT $${friendIds.length + 1} OFFSET $${friendIds.length + 2}`,
-            [...friendIds, limit, offset]
+             LIMIT $2 OFFSET $3`,
+            [userId, limit, offset]
         );
 
         const hasMore = result.rowCount === limit;

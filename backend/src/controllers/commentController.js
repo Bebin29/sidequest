@@ -26,18 +26,17 @@ async function create(req, res) {
             return sendError(res, 400, 'location_id, user_id and text are required');
         }
 
-        // Username holen
-        const user = await pool.query('SELECT username FROM users WHERE id = $1', [user_id]);
-        if (user.rowCount === 0) {
-            return sendError(res, 404, 'User not found');
-        }
-
+        // Insert mit Subquery fuer Username (statt separatem Query)
         const result = await pool.query(
             `INSERT INTO comments (location_id, user_id, username, text)
-             VALUES ($1, $2, $3, $4)
+             SELECT $1, $2, username, $3 FROM users WHERE id = $2
              RETURNING *`,
-            [location_id, user_id, user.rows[0].username, text]
+            [location_id, user_id, text]
         );
+
+        if (result.rowCount === 0) {
+            return sendError(res, 404, 'User not found');
+        }
 
         sendJSON(res, 201, { data: result.rows[0] });
 

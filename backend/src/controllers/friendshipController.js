@@ -14,29 +14,33 @@ async function sendRequest(req, res) {
             return sendError(res, 400, 'requester_id and receiver_username are required');
         }
 
-        // Receiver finden
-        const receiver = await pool.query('SELECT id, username FROM users WHERE username = $1', [receiver_username]);
-        if (receiver.rowCount === 0) {
+        // Beide User in einem Query holen (statt 2 separate)
+        const usersResult = await pool.query(
+            'SELECT id, username FROM users WHERE username = $1 OR id = $2',
+            [receiver_username, requester_id]
+        );
+
+        const receiverRow = usersResult.rows.find(u => u.username === receiver_username);
+        const requesterRow = usersResult.rows.find(u => u.id === requester_id);
+
+        if (!receiverRow) {
             return sendError(res, 404, 'User not found');
         }
+        if (!requesterRow) {
+            return sendError(res, 404, 'Requester not found');
+        }
 
-        const receiver_id = receiver.rows[0].id;
+        const receiver_id = receiverRow.id;
 
         if (requester_id === receiver_id) {
             return sendError(res, 400, 'Cannot send friend request to yourself');
-        }
-
-        // Requester Username holen
-        const requester = await pool.query('SELECT username FROM users WHERE id = $1', [requester_id]);
-        if (requester.rowCount === 0) {
-            return sendError(res, 404, 'Requester not found');
         }
 
         const result = await pool.query(
             `INSERT INTO friendships (requester_id, receiver_id, requester_username, receiver_username)
              VALUES ($1, $2, $3, $4)
              RETURNING *`,
-            [requester_id, receiver_id, requester.rows[0].username, receiver.rows[0].username]
+            [requester_id, receiver_id, requesterRow.username, receiverRow.username]
         );
 
         sendJSON(res, 201, { data: result.rows[0] });

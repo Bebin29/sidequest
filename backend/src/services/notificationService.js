@@ -22,14 +22,7 @@ function isEnabled(preferences, type) {
  * @param {object} [options.data] - Zusaetzliche Daten (location_id etc.)
  */
 async function createAndSend({ recipientId, senderId, type, title, body, data }) {
-    // Notification in DB speichern
-    await pool.query(
-        `INSERT INTO notifications (recipient_id, sender_id, type, title, body, data)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [recipientId, senderId, type, title, body, data ? JSON.stringify(data) : null]
-    );
-
-    // Empfaenger-Daten holen fuer Push
+    // Preferences ZUERST pruefen (spart Insert wenn deaktiviert)
     const result = await pool.query(
         'SELECT fcm_token, preferences FROM users WHERE id = $1',
         [recipientId]
@@ -39,8 +32,15 @@ async function createAndSend({ recipientId, senderId, type, title, body, data })
 
     const user = result.rows[0];
 
-    // Preference pruefen
+    // Wenn Notification-Typ deaktiviert, weder speichern noch senden
     if (!isEnabled(user.preferences, type)) return;
+
+    // Notification in DB speichern
+    await pool.query(
+        `INSERT INTO notifications (recipient_id, sender_id, type, title, body, data)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [recipientId, senderId, type, title, body, data ? JSON.stringify(data) : null]
+    );
 
     // Push senden wenn Token vorhanden
     if (user.fcm_token) {

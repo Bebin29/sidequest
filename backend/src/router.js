@@ -6,6 +6,7 @@ const friendshipController = require('./controllers/friendshipController');
 const locationController = require('./controllers/locationController');
 const commentController = require('./controllers/commentController');
 const uploadController = require('./controllers/uploadController');
+const notificationController = require('./controllers/notificationController');
 
 function route(req, res) {
     const parsed = url.parse(req.url, true);
@@ -128,6 +129,24 @@ function route(req, res) {
         const id = friendshipIdMatch[1];
         if (method === 'PATCH') return friendshipController.updateStatus(req, res, id);
         if (method === 'DELETE') return friendshipController.remove(req, res, id);
+    }
+
+    // Notifications routes (spezifische vor generischen)
+    const notifUnreadMatch = pathname.match(/^\/api\/notifications\/([^/]+)\/unread-count$/);
+    if (notifUnreadMatch && method === 'GET') {
+        return notificationController.getUnreadCount(req, res, notifUnreadMatch[1]);
+    }
+
+    const notifReadAllMatch = pathname.match(/^\/api\/notifications\/([^/]+)\/read-all$/);
+    if (notifReadAllMatch && method === 'POST') {
+        return notificationController.markAllRead(req, res, notifReadAllMatch[1]);
+    }
+
+    const notifUserMatch = pathname.match(/^\/api\/notifications\/([^/]+)$/);
+    if (notifUserMatch) {
+        const id = notifUserMatch[1];
+        if (method === 'GET') return notificationController.getByUser(req, res, id, parsed.query);
+        if (method === 'PATCH') return notificationController.markRead(req, res, id);
     }
 
     // Upload

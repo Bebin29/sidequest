@@ -48,37 +48,44 @@ struct EditProfileView: View {
         NavigationStack {
             List {
                 // Profilbild
-                Section {
+                Section ("Profilbild") {
                     HStack {
                         Spacer()
-                        ZStack(alignment: .bottomTrailing) {
+                        ZStack {
+                            
+                            // Profilbild
                             if let image = selectedImage {
                                 Image(uiImage: image)
                                     .resizable()
                                     .scaledToFill()
-                                    .frame(width: 100, height: 100)
-                                    .clipShape(Circle())
                             } else if let urlString = authViewModel.currentUser?.profileImageUrl,
                                       let url = URL(string: urlString) {
                                 AsyncImage(url: url) { image in
                                     image
                                         .resizable()
                                         .scaledToFill()
-                                        .frame(width: 100, height: 100)
-                                        .clipShape(Circle())
                                 } placeholder: {
                                     profilePlaceholder
                                 }
                             } else {
                                 profilePlaceholder
                             }
+                        }
+                        .frame(width: 100, height: 100)
+                        .clipShape(Circle())
 
+                        .overlay {
                             Button {
                                 showImageSourceDialog = true
                             } label: {
-                                Image(systemName: "camera.circle.fill")
-                                    .font(.title2)
-                                    .foregroundStyle(.blue, .white)
+                                ZStack {
+                                    Circle()
+                                        .fill(.black.opacity(0.35))   // leichter dunkler Overlay
+                                    
+                                    Image(systemName: "camera.fill")
+                                        .font(.title2)
+                                        .foregroundStyle(.white)
+                                }
                             }
                         }
                         Spacer()
@@ -152,10 +159,18 @@ struct EditProfileView: View {
             .scrollDismissesKeyboard(.immediately)
             .navigationTitle("Profil bearbeiten")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden()
+            
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Abbrechen") { dismiss() }
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "chevron.left")
+
+                    }
                 }
+                
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Speichern") {
                         Task { await save() }
@@ -170,6 +185,21 @@ struct EditProfileView: View {
                     }
                 }
             }
+            .alert("Foto auswählen", isPresented: $showImageSourceDialog) {
+                
+                if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                    Button("Foto aufnehmen") {
+                        showCamera = true
+                    }
+                }
+                
+                Button("Aus Galerie wählen") {
+                    showImagePicker = true
+                }
+                
+                Button("Abbrechen", role: .cancel) { }
+            }
+            /*
             .confirmationDialog("Foto auswählen", isPresented: $showImageSourceDialog) {
                 if UIImagePickerController.isSourceTypeAvailable(.camera) {
                     Button("Foto aufnehmen") { showCamera = true }
@@ -177,6 +207,7 @@ struct EditProfileView: View {
                 Button("Aus Galerie wählen") { showImagePicker = true }
                 Button("Abbrechen", role: .cancel) {}
             }
+             */
             .sheet(isPresented: $showImagePicker) {
                 ImagePicker(image: $selectedImage)
             }

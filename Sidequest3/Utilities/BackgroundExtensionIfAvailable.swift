@@ -15,10 +15,10 @@ extension View {
         if #available(iOS 26, *) {
             self.backgroundExtensionEffect()
         } else {
-            self
+            self.ignoresSafeArea(.container, edges: .top)
         }
         #else
-        self
+        self.ignoresSafeArea(.container, edges: .top)
         #endif
     }
 }

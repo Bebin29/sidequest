@@ -42,7 +42,7 @@ struct Home: View {
             }
             
             Tab("Friends", systemImage: "person.2.fill", value: .friends) {
-                InvitationSwiper()
+                FriendsView(currentUser: authViewModel.currentUser)
             }
              
             Tab("Profile", systemImage: "person.fill", value: .profile) {

@@ -22,7 +22,7 @@ async function sendRequest(req, res) {
 
         const receiver_id = receiver.rows[0].id;
 
-        if (requester_id === receiver_id) {
+        if (requester_id.toLowerCase() === receiver_id.toLowerCase()) {
             return sendError(res, 400, 'Cannot send friend request to yourself');
         }
 
@@ -53,6 +53,53 @@ async function sendRequest(req, res) {
     }
 }
 
+// Freunde-Vorschläge (Freunde von Freunden)
+async function getSuggestions(req, res, userId) {
+    try {
+        const result = await pool.query(
+            `WITH my_friends AS (
+                SELECT CASE
+                    WHEN requester_id = $1 THEN receiver_id
+                    ELSE requester_id
+                END AS friend_id
+                FROM friendships
+                WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'
+            ),
+            friend_of_friends AS (
+                SELECT CASE
+                    WHEN f.requester_id = mf.friend_id THEN f.receiver_id
+                    ELSE f.requester_id
+                END AS suggested_id,
+                mf.friend_id AS via_friend_id
+                FROM friendships f
+                JOIN my_friends mf ON (f.requester_id = mf.friend_id OR f.receiver_id = mf.friend_id)
+                WHERE f.status = 'accepted'
+                  AND CASE WHEN f.requester_id = mf.friend_id THEN f.receiver_id ELSE f.requester_id END != $1
+            )
+            SELECT
+                u.id, u.username, u.display_name, u.profile_image_url,
+                COUNT(DISTINCT fof.via_friend_id)::int AS mutual_count,
+                ARRAY_AGG(DISTINCT vu.username) AS mutual_usernames
+            FROM friend_of_friends fof
+            JOIN users u ON u.id = fof.suggested_id
+            JOIN users vu ON vu.id = fof.via_friend_id
+            WHERE fof.suggested_id NOT IN (SELECT friend_id FROM my_friends)
+              AND fof.suggested_id NOT IN (
+                  SELECT CASE WHEN requester_id = $1 THEN receiver_id ELSE requester_id END
+                  FROM friendships WHERE (requester_id = $1 OR receiver_id = $1) AND status IN ('pending', 'declined', 'blocked')
+              )
+            GROUP BY u.id, u.username, u.display_name, u.profile_image_url
+            ORDER BY mutual_count DESC
+            LIMIT 10`,
+            [userId]
+        );
+        sendJSON(res, 200, { data: result.rows });
+    } catch (err) {
+        console.error('getSuggestions error:', err);
+        sendError(res, 500, 'Internal server error');
+    }
+}
+
 // Freundesliste (akzeptierte Freundschaften)
 async function getFriends(req, res, userId) {
     try {
@@ -69,13 +116,27 @@ async function getFriends(req, res, userId) {
     }
 }
 
-// Eingehende Anfragen
+// Eingehende Anfragen (mit Mutual Count und Profil-Info)
 async function getPendingRequests(req, res, userId) {
     try {
         const result = await pool.query(
-            `SELECT * FROM friendships
-             WHERE receiver_id = $1 AND status = 'pending'
-             ORDER BY created_at DESC`,
+            `SELECT f.*,
+                u.display_name AS requester_display_name,
+                u.profile_image_url AS requester_profile_image_url,
+                COALESCE(mc.mutual_count, 0)::int AS mutual_count
+            FROM friendships f
+            JOIN users u ON u.id = f.requester_id
+            LEFT JOIN LATERAL (
+                SELECT COUNT(*)::int AS mutual_count FROM (
+                    SELECT CASE WHEN requester_id = f.requester_id THEN receiver_id ELSE requester_id END AS fid
+                    FROM friendships WHERE (requester_id = f.requester_id OR receiver_id = f.requester_id) AND status = 'accepted'
+                    INTERSECT
+                    SELECT CASE WHEN requester_id = $1 THEN receiver_id ELSE requester_id END AS fid
+                    FROM friendships WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'
+                ) shared
+            ) mc ON true
+            WHERE f.receiver_id = $1 AND f.status = 'pending'
+            ORDER BY f.created_at DESC`,
             [userId]
         );
         sendJSON(res, 200, { data: result.rows, count: result.rowCount });
@@ -154,4 +215,4 @@ async function searchUsers(req, res, query) {
     }
 }
 
-module.exports = { sendRequest, getFriends, getPendingRequests, updateStatus, remove, searchUsers };
+module.exports = { sendRequest, getFriends, getSuggestions, getPendingRequests, updateStatus, remove, searchUsers };

@@ -14,8 +14,8 @@ enum AppTab: Hashable {
 struct Home: View {
     @Bindable var authViewModel: AuthViewModel
     var deepLinkRouter = DeepLinkRouter()
-    //@State private var selectedTab: AppTab = .home
-    @State private var selectedTab: AppTab = .friends
+    @State private var mapViewModel = MapViewModel()
+    @State private var selectedTab: AppTab = .home
     @State private var focusLocation: Location?
     @State private var deepLinkLocation: Location?
     @State private var showFriendsFromNotification = false
@@ -25,6 +25,7 @@ struct Home: View {
             Tab("Home", systemImage: "house.fill", value: .test) {
                 MainView(authViewModel: authViewModel, userId: authViewModel.currentUser?.id,
                          currentUserId: authViewModel.currentUser?.id,
+                         mapViewModel: mapViewModel,
                          onShowOnMap: { location in
                              focusLocation = location
                              selectedTab = .map
@@ -35,7 +36,7 @@ struct Home: View {
             
             
             Tab("Map", systemImage: "map.fill", value: .map) {
-                Karte(userId: authViewModel.currentUser?.id, focusLocation: $focusLocation)
+                Karte(mapViewModel: mapViewModel, userId: authViewModel.currentUser?.id, focusLocation: $focusLocation)
             }
             
             Tab("Friends", systemImage: "person.2.fill", value: .friends) {
@@ -43,7 +44,7 @@ struct Home: View {
             }
 
             Tab("Profile", systemImage: "person.fill", value: .profile) {
-                Profile(authViewModel: authViewModel)
+                Profile(authViewModel: authViewModel, mapViewModel: mapViewModel)
             }
             
             if let user = authViewModel.currentUser {

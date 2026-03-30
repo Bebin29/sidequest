@@ -35,7 +35,7 @@ struct LoginView: View {
                                                 .scaledToFill()
                                                 .frame(width: size, height: size)
                                                 .clipped()
-                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                                .cornerRadius(25)
                                         }
                                         .frame(width: size, height: size)
                                         .cornerRadius(25)
@@ -48,7 +48,7 @@ struct LoginView: View {
                                                 .scaledToFill()
                                                 .frame(width: size, height: size)
                                                 .clipped()
-                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                                .cornerRadius(25)
                                         }
                                         .frame(width: size, height: size)
                                         .cornerRadius(25)
@@ -61,7 +61,7 @@ struct LoginView: View {
                                                 .scaledToFill()
                                                 .frame(width: size, height: size)
                                                 .clipped()
-                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                                .cornerRadius(25)
                                         }
                                         .frame(width: size, height: size)
                                         .cornerRadius(25)
@@ -84,7 +84,7 @@ struct LoginView: View {
                                                 .scaledToFill()
                                                 .frame(width: size, height: size)
                                                 .clipped()
-                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                                .cornerRadius(25)
                                         }
                                         .frame(width: size, height: size)
                                         .cornerRadius(25)
@@ -97,7 +97,7 @@ struct LoginView: View {
                                                 .scaledToFill()
                                                 .frame(width: size, height: size)
                                                 .clipped()
-                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                                .cornerRadius(25)
                                         }
                                         .frame(width: size, height: size)
                                         .cornerRadius(25)
@@ -110,7 +110,7 @@ struct LoginView: View {
                                                 .scaledToFill()
                                                 .frame(width: size, height: size)
                                                 .clipped()
-                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                                .cornerRadius(25)
                                         }
                                         .frame(width: size, height: size)
                                         .cornerRadius(25)
@@ -127,7 +127,7 @@ struct LoginView: View {
                                                 .scaledToFill()
                                                 .frame(width: size, height: size)
                                                 .clipped()
-                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                                .cornerRadius(25)
                                         }
                                         .frame(width: size, height: size)
                                         .cornerRadius(25)
@@ -140,7 +140,7 @@ struct LoginView: View {
                                                 .scaledToFill()
                                                 .frame(width: size, height: size)
                                                 .clipped()
-                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                                .cornerRadius(25)
                                         }
                                         .frame(width: size, height: size)
                                         .cornerRadius(25)
@@ -153,7 +153,7 @@ struct LoginView: View {
                                                 .scaledToFill()
                                                 .frame(width: size, height: size)
                                                 .clipped()
-                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                                .cornerRadius(25)
                                         }
                                         .frame(width: size, height: size)
                                         .cornerRadius(25)

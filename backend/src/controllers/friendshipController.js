@@ -22,7 +22,7 @@ async function sendRequest(req, res) {
 
         const receiver_id = receiver.rows[0].id;
 
-        if (requester_id === receiver_id) {
+        if (requester_id.toLowerCase() === receiver_id.toLowerCase()) {
             return sendError(res, 400, 'Cannot send friend request to yourself');
         }
 

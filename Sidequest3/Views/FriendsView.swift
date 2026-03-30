@@ -5,93 +5,75 @@
 
 import SwiftUI
 
+// MARK: - FriendsView (Main Container)
+
 struct FriendsView: View {
     @State private var viewModel = FriendsViewModel()
-    @State private var searchText = ""
     @State private var showSearch = false
-
     @State private var friendToRemove: Friendship?
     @State private var showRemoveConfirmation = false
-    @State private var showScanner = false
-    @State private var scannedUser: User?
-    @State private var showScannedUserAlert = false
+    @State private var myLocationCount: Int = 0
 
     var currentUser: User?
 
+    private let locationService = LocationService()
+
     var body: some View {
         NavigationStack {
-            List {
-                // Pending Requests (verbessert)
-                if !viewModel.pendingRequests.isEmpty {
-                    Section {
-                        ForEach(viewModel.pendingRequests) { request in
-                            pendingRequestRow(request)
-                        }
-                    } header: {
-                        Text("Anfragen (\(viewModel.pendingRequests.count))")
+            ScrollView {
+                VStack(spacing: 18) {
+                    if let user = currentUser {
+                        MyProfileCard(
+                            user: user,
+                            locationCount: myLocationCount,
+                            friendCount: viewModel.friends.count
+                        )
                     }
-                }
 
-                // Freunde-Vorschläge
-                if !viewModel.suggestions.isEmpty {
-                    Section {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            LazyHStack(spacing: 12) {
-                                ForEach(viewModel.suggestions) { suggestion in
-                                    suggestionCard(suggestion)
-                                }
+                    if !viewModel.pendingRequests.isEmpty {
+                        PendingRequestsSection(
+                            requests: viewModel.pendingRequests,
+                            onAccept: { id in
+                                guard let userId = currentUser?.id else { return }
+                                await viewModel.acceptRequest(friendshipId: id, userId: userId)
+                            },
+                            onDecline: { id in
+                                guard let userId = currentUser?.id else { return }
+                                await viewModel.declineRequest(friendshipId: id, userId: userId)
                             }
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 8)
-                        }
-                        .listRowInsets(EdgeInsets(top: 0, leading: 12, bottom: 0, trailing: 12))
-                    } header: {
-                        Text("Vorschläge")
+                        )
                     }
-                }
 
-                // Friends List
-                Section("Freunde (\(viewModel.friends.count))") {
-                    if viewModel.friends.isEmpty {
-                        Text("Noch keine Freunde")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(viewModel.friends) { friendship in
-                            HStack {
-                                let friendName = friendship.requesterId == currentUser?.id
-                                    ? friendship.receiverUsername
-                                    : friendship.requesterUsername
-
-                                Text("@\(friendName)")
-                                    .font(.headline)
-
-                                Spacer()
-
-                                Button("Entfernen", role: .destructive) {
-                                    friendToRemove = friendship
-                                    showRemoveConfirmation = true
-                                }
-                                .controlSize(.small)
+                    if !viewModel.suggestions.isEmpty {
+                        FriendSuggestionsSection(
+                            suggestions: viewModel.suggestions,
+                            onAdd: { username in
+                                guard let requesterId = currentUser?.id else { return }
+                                await viewModel.sendRequest(requesterId: requesterId, receiverUsername: username)
                             }
-                        }
+                        )
                     }
+
+                    FriendsListSection(
+                        friends: viewModel.friends,
+                        currentUserId: currentUser?.id,
+                        onRemove: { friendship in
+                            friendToRemove = friendship
+                            showRemoveConfirmation = true
+                        }
+                    )
                 }
+                .padding(.horizontal)
+                .padding(.top, 8)
             }
+            .background(Color(UIColor.systemGray6).ignoresSafeArea())
             .navigationTitle("Freunde")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 16) {
-                        Button {
-                            showScanner = true
-                        } label: {
-                            Image(systemName: "camera")
-                        }
-
-                        Button {
-                            showSearch = true
-                        } label: {
-                            Image(systemName: "person.badge.plus")
-                        }
+                    Button {
+                        showSearch = true
+                    } label: {
+                        Image(systemName: "person.badge.plus")
                     }
                 }
             }
@@ -100,52 +82,22 @@ struct FriendsView: View {
                     showSearch = false
                 }
             }
-            .fullScreenCover(isPresented: $showScanner) {
-                RingCodeScannerView(currentUserId: currentUser?.id) { user in
-                    scannedUser = user
-                    showScanner = false
-                    showScannedUserAlert = true
-                }
-            }
-            .alert("Freund hinzufügen?", isPresented: $showScannedUserAlert) {
-                Button("Anfrage senden") {
-                    guard let requesterId = currentUser?.id,
-                          let receiver = scannedUser else { return }
-                    Task {
-                        await viewModel.sendRequest(
-                            requesterId: requesterId,
-                            receiverUsername: receiver.username
-                        )
-                    }
-                }
-                Button("Abbrechen", role: .cancel) {}
-            } message: {
-                if let user = scannedUser {
-                    Text("\(user.displayName) (@\(user.username)) gefunden. Freundschaftsanfrage senden?")
-                }
-            }
-            .task { await loadAll() }
-            .refreshable { await loadAll() }
-
-            // Bestätigungsdialog
             .confirmationDialog(
                 "Freund wirklich entfernen?",
                 isPresented: $showRemoveConfirmation,
                 titleVisibility: .visible
             ) {
                 Button("Freund entfernen", role: .destructive) {
-                    guard
-                        let friendship = friendToRemove,
-                        let userId = currentUser?.id
-                    else { return }
-
+                    guard let friendship = friendToRemove,
+                          let userId = currentUser?.id else { return }
                     Task {
                         await viewModel.removeFriend(friendshipId: friendship.id, userId: userId)
                     }
                 }
-
-                Button("Abbrechen", role: .cancel) { }
+                Button("Abbrechen", role: .cancel) {}
             }
+            .task { await loadAll() }
+            .refreshable { await loadAll() }
         }
     }
 
@@ -155,26 +107,101 @@ struct FriendsView: View {
         async let p: () = viewModel.loadPendingRequests(userId: userId)
         async let s: () = viewModel.loadSuggestions(userId: userId)
         _ = await (f, p, s)
+
+        if let locations = try? await locationService.fetchLocations(userId: userId) {
+            myLocationCount = locations.filter { $0.createdBy == userId }.count
+        }
+    }
+}
+
+// MARK: - MyProfileCard
+
+private struct MyProfileCard: View {
+    let user: User
+    let locationCount: Int
+    let friendCount: Int
+
+    var body: some View {
+        NavigationLink {
+            MyProfileView(user: user, friendCount: friendCount)
+        } label: {
+            HStack(spacing: 16) {
+                Group {
+                    if let urlString = user.profileImageUrl,
+                       let url = URL(string: urlString) {
+                        CachedAsyncImage(url: url) { image in
+                            image.resizable().scaledToFill()
+                        } placeholder: {
+                            Image(systemName: "person.crop.circle.fill")
+                                .resizable()
+                                .foregroundColor(.indigo)
+                        }
+                    } else {
+                        Image(systemName: "person.crop.circle.fill")
+                            .resizable()
+                            .foregroundColor(.indigo)
+                    }
+                }
+                .frame(width: 50, height: 50)
+                .clipShape(Circle())
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(user.displayName)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    Text("@\(user.username) · \(locationCount) Orte")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.gray)
+                    .font(.system(size: 14))
+            }
+            .padding()
+            .background(Color(UIColor.systemGray).opacity(0.2))
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - PendingRequestsSection
+
+private struct PendingRequestsSection: View {
+    let requests: [Friendship]
+    let onAccept: (UUID) async -> Void
+    let onDecline: (UUID) async -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Anfragen (\(requests.count))")
+                .font(.footnote)
+                .foregroundStyle(.gray)
+                .padding(.horizontal, 4)
+
+            ForEach(requests) { request in
+                requestCard(request)
+            }
+        }
     }
 
-    // MARK: - Pending Request Row
-
-    private func pendingRequestRow(_ request: Friendship) -> some View {
+    private func requestCard(_ request: Friendship) -> some View {
         HStack(spacing: 12) {
-            // Avatar
             if let urlString = request.requesterProfileImageUrl,
                let url = URL(string: urlString) {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 44, height: 44)
-                        .clipShape(Circle())
+                CachedAsyncImage(url: url) { image in
+                    image.resizable().scaledToFill()
                 } placeholder: {
-                    initialCircle(request.requesterUsername, size: 44)
+                    initialCircle(request.requesterUsername)
                 }
+                .frame(width: 44, height: 44)
+                .clipShape(Circle())
             } else {
-                initialCircle(request.requesterUsername, size: 44)
+                initialCircle(request.requesterUsername)
+                    .frame(width: 44, height: 44)
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -185,7 +212,6 @@ struct FriendsView: View {
                 Text("@\(request.requesterUsername)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-
                 if let count = request.mutualCount, count > 0 {
                     Text("\(count) gemeinsame Freunde")
                         .font(.caption2)
@@ -196,8 +222,7 @@ struct FriendsView: View {
             Spacer()
 
             Button {
-                guard let userId = currentUser?.id else { return }
-                Task { await viewModel.acceptRequest(friendshipId: request.id, userId: userId) }
+                Task { await onAccept(request.id) }
             } label: {
                 Text("Annehmen")
                     .font(.subheadline.bold())
@@ -207,8 +232,7 @@ struct FriendsView: View {
             .controlSize(.small)
 
             Button {
-                guard let userId = currentUser?.id else { return }
-                Task { await viewModel.declineRequest(friendshipId: request.id, userId: userId) }
+                Task { await onDecline(request.id) }
             } label: {
                 Image(systemName: "xmark")
                     .font(.caption.bold())
@@ -216,86 +240,215 @@ struct FriendsView: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
         }
+        .padding()
+        .background(Color(UIColor.systemGray).opacity(0.2))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 
-    // MARK: - Suggestion Card
-
-    private func suggestionCard(_ suggestion: FriendSuggestion) -> some View {
-        VStack(spacing: 8) {
-            // Avatar
-            if let urlString = suggestion.profileImageUrl,
-               let url = URL(string: urlString) {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 56, height: 56)
-                        .clipShape(Circle())
-                } placeholder: {
-                    initialCircle(suggestion.username, size: 56)
-                }
-            } else {
-                initialCircle(suggestion.username, size: 56)
-            }
-
-            VStack(spacing: 2) {
-                if let name = suggestion.displayName {
-                    Text(name)
-                        .font(.caption.bold())
-                        .lineLimit(1)
-                }
-                Text("@\(suggestion.username)")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-
-                Text("\(suggestion.mutualCount) gemeinsame")
-                    .font(.caption2)
-                    .foregroundStyle(.blue)
-            }
-
-            Button {
-                guard let requesterId = currentUser?.id else { return }
-                Task {
-                    await viewModel.sendRequest(
-                        requesterId: requesterId,
-                        receiverUsername: suggestion.username
-                    )
-                }
-            } label: {
-                Text("Hinzufügen")
-                    .font(.caption2.bold())
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
-        }
-        .frame(width: 110)
-        .padding(.vertical, 12)
-        .padding(.horizontal, 8)
-        .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-    }
-
-    // MARK: - Helpers
-
-    private func initialCircle(_ username: String, size: CGFloat) -> some View {
+    private func initialCircle(_ username: String) -> some View {
         Circle()
             .fill(Color(.systemGray4))
-            .frame(width: size, height: size)
             .overlay(
                 Text(String(username.prefix(1)).uppercased())
-                    .font(size > 44 ? .title3.bold() : .caption.bold())
+                    .font(.caption.bold())
                     .foregroundStyle(.white)
             )
     }
 }
+
+// MARK: - FriendSuggestionsSection
+
+private struct FriendSuggestionsSection: View {
+    let suggestions: [FriendSuggestion]
+    let onAdd: (String) async -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Vorschläge")
+                .font(.footnote)
+                .foregroundStyle(.gray)
+                .padding(.horizontal, 4)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(suggestions) { suggestion in
+                        suggestionChip(suggestion)
+                    }
+                }
+            }
+        }
+    }
+
+    private func suggestionChip(_ suggestion: FriendSuggestion) -> some View {
+        HStack(spacing: 8) {
+            if let urlString = suggestion.profileImageUrl,
+               let url = URL(string: urlString) {
+                CachedAsyncImage(url: url) { image in
+                    image.resizable().scaledToFill()
+                } placeholder: {
+                    Circle().fill(Color(.systemGray4))
+                        .overlay(
+                            Text(String(suggestion.username.prefix(1)).uppercased())
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(.white)
+                        )
+                }
+                .frame(width: 36, height: 36)
+                .clipShape(Circle())
+            } else {
+                Circle().fill(Color(.systemGray4))
+                    .frame(width: 36, height: 36)
+                    .overlay(
+                        Text(String(suggestion.username.prefix(1)).uppercased())
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.white)
+                    )
+            }
+
+            VStack(alignment: .leading, spacing: 0) {
+                Text(suggestion.displayName ?? suggestion.username)
+                    .font(.caption.bold())
+                    .lineLimit(1)
+                Text("\(suggestion.mutualCount) gem.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+
+            Button {
+                Task { await onAdd(suggestion.username) }
+            } label: {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title3)
+                    .foregroundStyle(.indigo)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Color(UIColor.systemGray).opacity(0.2))
+        .clipShape(Capsule())
+    }
+}
+
+// MARK: - FriendsListSection
+
+private struct FriendsListSection: View {
+    let friends: [Friendship]
+    let currentUserId: UUID?
+    let onRemove: (Friendship) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Freunde (\(friends.count))")
+                .font(.footnote)
+                .foregroundStyle(.gray)
+                .padding(.horizontal, 4)
+
+            if friends.isEmpty {
+                HStack {
+                    Spacer()
+                    Text("Noch keine Freunde")
+                        .foregroundStyle(.secondary)
+                        .padding(.vertical, 24)
+                    Spacer()
+                }
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(friends.enumerated()), id: \.element.id) { index, friendship in
+                        friendRow(friendship)
+
+                        if index < friends.count - 1 {
+                            Divider()
+                                .padding(.leading, 72)
+                        }
+                    }
+                }
+                .background(Color(UIColor.systemGray).opacity(0.2))
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+            }
+        }
+    }
+
+    private func friendRow(_ friendship: Friendship) -> some View {
+        let isRequester = friendship.requesterId == currentUserId
+        let friendUsername = isRequester ? friendship.receiverUsername : friendship.requesterUsername
+        let friendDisplayName = isRequester ? friendship.receiverDisplayName : friendship.requesterDisplayName
+        let friendImageUrl = isRequester ? friendship.receiverProfileImageUrl : friendship.requesterProfileImageUrl
+        let friendId = isRequester ? friendship.receiverId : friendship.requesterId
+        let spotCount = isRequester ? friendship.receiverSpotCount : friendship.requesterSpotCount
+
+        return NavigationLink {
+            UserProfileView(userId: friendId, currentUserId: currentUserId)
+        } label: {
+            HStack(spacing: 12) {
+                if let urlString = friendImageUrl,
+                   let url = URL(string: urlString) {
+                    CachedAsyncImage(url: url) { image in
+                        image.resizable().scaledToFill()
+                    } placeholder: {
+                        Circle().fill(Color(.systemGray4))
+                            .overlay(
+                                Text(String(friendUsername.prefix(1)).uppercased())
+                                    .font(.caption.bold())
+                                    .foregroundStyle(.white)
+                            )
+                    }
+                    .frame(width: 44, height: 44)
+                    .clipShape(Circle())
+                } else {
+                    Circle().fill(Color(.systemGray4))
+                        .frame(width: 44, height: 44)
+                        .overlay(
+                            Text(String(friendUsername.prefix(1)).uppercased())
+                                .font(.caption.bold())
+                                .foregroundStyle(.white)
+                        )
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(friendDisplayName ?? friendUsername)
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.primary)
+                    if let count = spotCount {
+                        Text("@\(friendUsername) · \(count) Orte")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("@\(friendUsername)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.gray)
+                    .font(.system(size: 14))
+            }
+            .padding()
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            Button(role: .destructive) {
+                onRemove(friendship)
+            } label: {
+                Label("Freund entfernen", systemImage: "person.badge.minus")
+            }
+        }
+    }
+}
+
+// MARK: - FriendSearchView
 
 struct FriendSearchView: View {
     @Bindable var viewModel: FriendsViewModel
     var currentUser: User?
     var onDismiss: () -> Void
     @State private var searchText = ""
+    @State private var showScanner = false
+    @State private var scannedUser: User?
+    @State private var showScannedUserAlert = false
 
     var body: some View {
         NavigationStack {
@@ -344,11 +497,46 @@ struct FriendSearchView: View {
                         }
                     }
                 }
+
+                Spacer()
+
+                Button {
+                    showScanner = true
+                } label: {
+                    Label("Ring-Code scannen", systemImage: "camera")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.bottom, 20)
             }
             .navigationTitle("Freund hinzufügen")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Fertig") { onDismiss() }
+                }
+            }
+            .fullScreenCover(isPresented: $showScanner) {
+                RingCodeScannerView(currentUserId: currentUser?.id) { user in
+                    scannedUser = user
+                    showScanner = false
+                    showScannedUserAlert = true
+                }
+            }
+            .alert("Freund hinzufügen?", isPresented: $showScannedUserAlert) {
+                Button("Anfrage senden") {
+                    guard let requesterId = currentUser?.id,
+                          let receiver = scannedUser else { return }
+                    Task {
+                        await viewModel.sendRequest(
+                            requesterId: requesterId,
+                            receiverUsername: receiver.username
+                        )
+                    }
+                }
+                Button("Abbrechen", role: .cancel) {}
+            } message: {
+                if let user = scannedUser {
+                    Text("\(user.displayName) (@\(user.username)) gefunden. Freundschaftsanfrage senden?")
                 }
             }
         }

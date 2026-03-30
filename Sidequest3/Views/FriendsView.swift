@@ -46,7 +46,7 @@ struct FriendsView: View {
                         }
                         .listRowInsets(EdgeInsets(top: 0, leading: 12, bottom: 0, trailing: 12))
                     } header: {
-                        Text("Kennst du vielleicht...")
+                        Text("Vorschläge")
                     }
                 }
 

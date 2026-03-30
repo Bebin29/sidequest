@@ -192,6 +192,54 @@ struct LocationDetailView: View {
         .padding(.top, 8)
     }
 
+    // MARK: - Hero Section (image + warm gradient + glass + title)
+
+    private var heroSection: some View {
+        ZStack(alignment: .bottom) {
+            // Image carousel as background
+            imageCarousel
+                .frame(height: UIScreen.main.bounds.width * 1.0)
+                .clipped()
+
+            // Warm gradient overlay to improve text contrast
+            LinearGradient(
+                colors: [
+                    accentColor.opacity(0.0),
+                    accentColor.opacity(0.15),
+                    accentColor.opacity(0.35),
+                    Color.black.opacity(0.45)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .allowsHitTesting(false)
+
+            // Glass background with title content sitting on top
+            VStack(spacing: 0) {
+                // A subtle glass strip blending into content below
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .frame(height: 12)
+                    .opacity(0.8)
+                    .overlay {
+                        LinearGradient(colors: [Color.white.opacity(0.12), Color.clear], startPoint: .top, endPoint: .bottom)
+                    }
+
+                titleSection
+                    .background(
+                        ZStack {
+                            accentColor.opacity(0.45)
+                            Rectangle().fill(.ultraThinMaterial)
+                        }
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 14)
+            }
+            .frame(maxWidth: .infinity, alignment: .bottom)
+        }
+    }
+
     // MARK: - Image Carousel (with glass blur at bottom edge)
 
     private var imageCarousel: some View {
@@ -730,3 +778,4 @@ struct LocationDetailView: View {
         }
     }
 }
+

@@ -13,12 +13,12 @@ struct MainView: View {
     var userId: UUID?
     var currentUserId: UUID?
     var onShowOnMap: ((Location) -> Void)?
-
+    @State private var mapViewModel = MapViewModel()
     @State private var viewModel = FeedViewModel()
     @State private var selectedLocation: Location?
     @State private var scrolledId: UUID?
     @State private var hasAppeared = false
-
+    @State private var showSearchSheet = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Adaptive background color — falls back to category color
@@ -106,18 +106,61 @@ struct MainView: View {
         
             HStack {
                 
-            Text("Feed")
+            Text("Home")
                 .font(.system(size: 34, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
             
             Spacer()
             
             // Placeholder for future action buttons (profile, etc.)
-            
+                VStack {
+                    Button {
+                        showSearchSheet = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.title2.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 50, height: 50)
+                            .background(
+                                Circle()
+                                    .fill(.ultraThinMaterial)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(.white.opacity(0.25), lineWidth: 1)
+                                    )
+                            )
+                            .overlay(
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [
+                                                .white.opacity(0.35),
+                                                .clear
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .blendMode(.overlay)
+                            )
+                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                    }
+                }
+                .sheet(isPresented: $showSearchSheet) {
+                    PlaceSearchView(mapViewModel: mapViewModel, userId: userId) {
+                        showSearchSheet = false
+                    }
+                }
+                
+                
+                
+               
+                
+                
+                
+                
+                
             VStack {
-                
-                
-                
                 Button {
                     showSettings = true
                 } label: {
@@ -211,10 +254,14 @@ struct MainView: View {
             Color(red: 0.06, green: 0.05, blue: 0.12)
 
             RadialGradient(
-                colors: [dominantColor.opacity(0.25), .clear],
+                colors: [
+                    dominantColor.opacity(0.65),
+                    dominantColor.opacity(0.35),
+                    .clear
+                ],
                 center: .top,
                 startRadius: 0,
-                endRadius: 600
+                endRadius: 800
             )
         }
         .animation(.easeInOut(duration: 0.5), value: dominantColor.description)

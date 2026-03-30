@@ -10,7 +10,7 @@ import SwiftUI
 struct Profile: View {
     @Bindable var authViewModel: AuthViewModel
     @State private var friendsViewModel = FriendsViewModel()
-    @State private var mapViewModel = MapViewModel()
+    var mapViewModel: MapViewModel
     @State private var showFriends = false
     @State private var showShareCard = false
     @State private var selectedLocation: Location?
@@ -100,11 +100,10 @@ struct Profile: View {
     
     
     func loadPendingRequests() async {
-            guard let userId = authViewModel.currentUser?.id else { return }
-            let viewModel = FriendsViewModel()
-            await viewModel.loadPendingRequests(userId: userId)
-            pendingCount = viewModel.pendingRequests.count
-        }
+        guard let userId = authViewModel.currentUser?.id else { return }
+        await friendsViewModel.loadPendingRequests(userId: userId)
+        pendingCount = friendsViewModel.pendingRequests.count
+    }
 
     // MARK: - Profile Header
 

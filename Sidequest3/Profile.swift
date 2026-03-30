@@ -224,33 +224,8 @@ struct Profile: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
-    // MARK: - Settings
-
 }
 
     
 
     
-
-
-
-struct UpcomingView: View {
-    var body: some View {
-        Text("Bevorstehende Events")
-            .font(.largeTitle)
-    }
-}
-
-struct PastView: View {
-    var body: some View {
-        Text("Vergangene Events")
-            .font(.largeTitle)
-    }
-}
-
-struct InvitesView: View {
-    var body: some View {
-        Text("Einladungen")
-            .font(.largeTitle)
-    }
-}

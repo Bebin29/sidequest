@@ -41,9 +41,7 @@ struct Home: View {
                 Karte(userId: authViewModel.currentUser?.id, focusLocation: $focusLocation)
             }
             
-            Tab("Friends", systemImage: "person.2.fill", value: .friends) {
-                InvitationSwiper()
-            }
+        
              
             Tab("Profile", systemImage: "person.fill", value: .profile) {
                 Profile(authViewModel: authViewModel)

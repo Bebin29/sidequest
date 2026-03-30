@@ -263,7 +263,7 @@ struct Feed: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 26)
                     .padding(.vertical, 11)
-                    .liquidGlassPill()
+                    //.liquidGlassPill()
             }
         }
         .frame(maxWidth: .infinity)

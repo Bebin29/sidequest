@@ -6,9 +6,11 @@ struct TagBadge: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Circle()
-                .fill(color.opacity(0.9))
-                .frame(width: 6, height: 6)
+            /*
+             Circle()
+                 .fill(color.opacity(0.9))
+                 .frame(width: 6, height: 6)
+             */
             Text(label)
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                 .textCase(.uppercase)

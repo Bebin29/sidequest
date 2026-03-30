@@ -39,40 +39,74 @@ struct LocationDetailView: View {
     
     
     
+    private var imageHeight: CGFloat {
+        UIScreen.main.bounds.width * 1.15
+    }
+
     var body: some View {
         ZStack {
-            // Dark background
-            Color(red: 0.06, green: 0.05, blue: 0.12)
+            // Warm base — material picks up this color
+            dominantColor.opacity(0.85)
                 .ignoresSafeArea()
+                .animation(.easeInOut(duration: 0.5), value: dominantColor.description)
 
-            // Scrollable content
             ScrollView {
-                VStack(spacing: 0) {
-                    heroSection
-                    contentSections
-                }
-                .background(alignment: .bottom) {
-                    // Warm tinted glass behind content, bleeding up into the hero
+                ZStack(alignment: .top) {
+                    // Layer 1: Image at top
+                    VStack(spacing: 0) {
+                        imageCarousel
+                            .frame(height: imageHeight)
+                        Spacer().frame(height: 0)
+                    }
+
+                    // Layer 2: Gradient over image → fades into warm color
                     VStack(spacing: 0) {
                         LinearGradient(
                             stops: [
                                 .init(color: .clear, location: 0.0),
-                                .init(color: dominantColor.opacity(0.6), location: 1.0)
+                                .init(color: .clear, location: 0.25),
+                                .init(color: dominantColor.opacity(0.3), location: 0.5),
+                                .init(color: dominantColor.opacity(0.75), location: 0.8),
+                                .init(color: dominantColor.opacity(0.95), location: 1.0)
                             ],
                             startPoint: .top,
                             endPoint: .bottom
                         )
-                        .frame(height: 120)
+                        .frame(height: imageHeight)
+                        .allowsHitTesting(false)
 
-                        Rectangle().fill(dominantColor.opacity(0.55))
+                        Spacer().frame(height: 0)
                     }
-                    .overlay { Rectangle().fill(.ultraThinMaterial) }
-                    .frame(maxHeight: .infinity, alignment: .bottom)
+
+                    // Layer 3: Material fades in smoothly at the transition zone
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: imageHeight - 100)
+                        Rectangle()
+                            .fill(.ultraThinMaterial)
+                            .mask {
+                                VStack(spacing: 0) {
+                                    LinearGradient(
+                                        colors: [.clear, .black],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                    .frame(height: 120)
+                                    Color.black
+                                }
+                            }
+                    }
+
+                    // Layer 4: Content on top
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: imageHeight - 100)
+                        titleSection
+                        contentSections
+                        Spacer().frame(height: 40)
+                    }
                 }
             }
             .scrollDismissesKeyboard(.immediately)
 
-            // Floating top bar (X button + actions)
             VStack {
                 floatingTopBar
                 Spacer()
@@ -179,45 +213,7 @@ struct LocationDetailView: View {
         .padding(.top, 8)
     }
 
-    // MARK: - Hero Section (image + warm gradient + glass + title)
-
-    private var heroSection: some View {
-        ZStack(alignment: .bottom) {
-            imageCarousel
-                .frame(height: UIScreen.main.bounds.width * 1.15)
-                .clipped()
-
-            // Multi-layer gradient for smooth blending into content
-            LinearGradient(
-                stops: [
-                    .init(color: .clear, location: 0.0),
-                    .init(color: .clear, location: 0.3),
-                    .init(color: dominantColor.opacity(0.25), location: 0.5),
-                    .init(color: dominantColor.opacity(0.6), location: 0.75),
-                    .init(color: dominantColor.opacity(0.9), location: 1.0)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .allowsHitTesting(false)
-
-            // Additional dark scrim for text readability
-            LinearGradient(
-                stops: [
-                    .init(color: .clear, location: 0.0),
-                    .init(color: .black.opacity(0.15), location: 0.6),
-                    .init(color: .black.opacity(0.35), location: 1.0)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .allowsHitTesting(false)
-
-            titleSection
-        }
-    }
-
-    // MARK: - Image Carousel (with glass blur at bottom edge)
+    // MARK: - Image Carousel
 
     private var imageCarousel: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -252,6 +248,7 @@ struct LocationDetailView: View {
             .scrollTargetLayout()
         }
         .scrollTargetBehavior(.paging)
+        .scrollDisabled(location.imageUrls.count <= 1)
         .scrollPosition(id: Binding(
             get: { currentImageIndex },
             set: { if let idx = $0 { currentImageIndex = idx } }
@@ -267,7 +264,7 @@ struct LocationDetailView: View {
                 }
             }
         }
-        .frame(height: UIScreen.main.bounds.width * 1.0)
+        .frame(height: imageHeight)
         .backgroundExtensionIfAvailable()
     }
 

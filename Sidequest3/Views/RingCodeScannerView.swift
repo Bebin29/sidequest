@@ -25,6 +25,26 @@ struct RingCodeScannerView: View {
     var body: some View {
         NavigationStack {
             ZStack {
+                if scanner.cameraAccessDenied {
+                    VStack(spacing: 16) {
+                        Image(systemName: "camera.fill")
+                            .font(.largeTitle)
+                            .foregroundStyle(.secondary)
+                        Text("Kamerazugriff benoetigt")
+                            .font(.headline)
+                        Text("Erlaube Sidequest den Kamerazugriff in den Einstellungen, um Ring-Codes zu scannen.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                        Button("Einstellungen oeffnen") {
+                            if let url = URL(string: UIApplication.openSettingsURLString) {
+                                UIApplication.shared.open(url)
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                } else {
                 ScannerCameraPreview(scanner: scanner)
                     .ignoresSafeArea()
 
@@ -81,6 +101,7 @@ struct RingCodeScannerView: View {
                     .clipShape(Capsule())
                     .padding(.bottom, 60)
                 }
+                } // else (camera available)
             }
             .navigationTitle("Code scannen")
             .navigationBarTitleDisplayMode(.inline)
@@ -140,6 +161,7 @@ struct RingCodeScannerView: View {
 final class RingCodeScanner: NSObject, ObservableObject {
     @Published var confirmedCode: String?
     @Published var hasCandidate = false
+    @Published var cameraAccessDenied = false
 
     let captureSession = AVCaptureSession()
     private let videoOutput = AVCaptureVideoDataOutput()
@@ -155,7 +177,24 @@ final class RingCodeScanner: NSObject, ObservableObject {
         guard !isSetup else { return }
         isSetup = true
 
-        captureSession.sessionPreset = .medium // Lower res = faster processing
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            configureSession()
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                if granted {
+                    self?.configureSession()
+                } else {
+                    DispatchQueue.main.async { self?.cameraAccessDenied = true }
+                }
+            }
+        default:
+            DispatchQueue.main.async { self.cameraAccessDenied = true }
+        }
+    }
+
+    private func configureSession() {
+        captureSession.sessionPreset = .medium
 
         guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
               let input = try? AVCaptureDeviceInput(device: camera),

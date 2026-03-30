@@ -106,6 +106,12 @@ function route(req, res) {
         return friendshipController.sendRequest(req, res);
     }
 
+    // Friend suggestions: GET /api/friends/:userId/suggestions (muss vor friendsMatch stehen)
+    const suggestionsMatch = pathname.match(/^\/api\/friends\/([^/]+)\/suggestions$/);
+    if (suggestionsMatch && method === 'GET') {
+        return friendshipController.getSuggestions(req, res, suggestionsMatch[1]);
+    }
+
     // Friends list: GET /api/friends/:userId
     const friendsMatch = pathname.match(/^\/api\/friends\/([^/]+)$/);
     if (friendsMatch && method === 'GET') {

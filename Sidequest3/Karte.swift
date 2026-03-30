@@ -146,7 +146,7 @@ struct Karte: View {
                         } label: {
                             Image(systemName: "location.fill")
                                 .font(.title2.weight(.semibold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(.indigo)
                                 .frame(width: 50, height: 50)
                                 .background(
                                     Circle()

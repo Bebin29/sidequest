@@ -55,7 +55,6 @@ struct Karte: View {
 
     @StateObject private var locationManager = LocationManager()
     @State private var mapViewModel = MapViewModel()
-    @State private var showSearchSheet = false
     @State private var showFilterSheet = false
     @State private var selectedLocationId: UUID?
     @State private var showDetail = false
@@ -105,55 +104,124 @@ struct Karte: View {
                   
                     VStack(spacing: 12) {
 
-                        Button(action: {
+                        
+                        
+                        
+                        
+                        
+                        Button {
                             showFilterSheet = true
-                        }) {
+                        } label: {
                             Image(systemName: mapViewModel.filter.isEmpty ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
-                                .font(.title2)
-                                .foregroundColor(mapViewModel.filter.isEmpty ? Color.indigo : .white)
+                                .font(.title2.weight(.semibold))
+                                .foregroundStyle(.white)
                                 .frame(width: 50, height: 50)
-                                .background(mapViewModel.filter.isEmpty ? Color.white : Color.indigo)
-                                .clipShape(Circle())
-                                .shadow(radius: 5)
-                                .fontWeight(.semibold)
+                                .background(
+                                    Circle()
+                                        .fill(.ultraThinMaterial)
+                                        .overlay(
+                                            Circle()
+                                                .stroke(.white.opacity(0.25), lineWidth: 1)
+                                        )
+                                )
+                                .overlay(
+                                    Circle()
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [
+                                                    .white.opacity(0.35),
+                                                    .clear
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .blendMode(.overlay)
+                                )
+                                .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
                         }
-
-                        Button(action: {
+                        
+                        Button {
                             locationManager.centerOnUser()
-                        }) {
+                        } label: {
                             Image(systemName: "location.fill")
-                                .font(.title2)
-                                .foregroundColor(Color.indigo)
+                                .font(.title2.weight(.semibold))
+                                .foregroundStyle(.white)
                                 .frame(width: 50, height: 50)
-                                .background(Color.white)
-                                .clipShape(Circle())
-                                .shadow(radius: 5)
-                                .fontWeight(.semibold)
+                                .background(
+                                    Circle()
+                                        .fill(.ultraThinMaterial)
+                                        .overlay(
+                                            Circle()
+                                                .stroke(.white.opacity(0.25), lineWidth: 1)
+                                        )
+                                )
+                                .overlay(
+                                    Circle()
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [
+                                                    .white.opacity(0.35),
+                                                    .clear
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .blendMode(.overlay)
+                                )
+                                .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
                         }
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        /*
+                         Button(action: {
+                             
+                         }) {
+                             Image(systemName: mapViewModel.filter.isEmpty ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+                                 .font(.title2)
+                                 .foregroundColor(mapViewModel.filter.isEmpty ? Color.indigo : .white)
+                                 .frame(width: 50, height: 50)
+                                 .background(mapViewModel.filter.isEmpty ? Color.white : Color.indigo)
+                                 .clipShape(Circle())
+                                 .shadow(radius: 5)
+                                 .fontWeight(.semibold)
+                         }
 
-                        Button(action: {
-                            showSearchSheet = true
-                        }) {
-                            Image(systemName: "plus")
-                                .font(.title2)
-                                .foregroundColor(.white)
-                                .frame(width: 50, height: 50)
-                                .background(Color.indigo)
-                                .clipShape(Circle())
-                                .shadow(radius: 5)
-                                .fontWeight(.semibold)
-                        }
+                         Button(action: {
+                             
+                         }) {
+                             Image(systemName: "location.fill")
+                                 .font(.title2)
+                                 .foregroundColor(Color.indigo)
+                                 .frame(width: 50, height: 50)
+                                 .background(Color.white)
+                                 .clipShape(Circle())
+                                 .shadow(radius: 5)
+                                 .fontWeight(.semibold)
+                         }
+                         */
 
+                        
                     }.padding()
                     
                 }
             }
         }
-        .sheet(isPresented: $showSearchSheet) {
-            PlaceSearchView(mapViewModel: mapViewModel, userId: userId) {
-                showSearchSheet = false
-            }
-        }
+     
         .sheet(isPresented: $showFilterSheet) {
             LocationFilterView(
                 mapViewModel: mapViewModel,

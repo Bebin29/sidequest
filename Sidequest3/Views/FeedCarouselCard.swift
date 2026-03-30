@@ -209,20 +209,6 @@ struct FeedCarouselCard: View {
     // MARK: - Helpers
 
     private func categoryColor(for category: String) -> Color {
-        switch category {
-        case "Restaurant": return .orange
-        case "Café": return .brown
-        case "Bar": return .purple
-        case "Club": return .pink
-        case "Bäckerei": return .yellow
-        case "Fast Food": return .red
-        case "Eisdiele": return .cyan
-        case "Park": return .green
-        case "Museum": return .blue
-        case "Shopping": return .pink
-        case "Aussichtspunkt": return .teal
-        case "Strand": return .cyan
-        default: return .indigo
-        }
+        LocationCategory.color(for: category)
     }
 }

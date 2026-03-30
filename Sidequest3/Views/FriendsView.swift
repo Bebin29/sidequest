@@ -124,20 +124,8 @@ struct FriendsView: View {
                     Text("\(user.displayName) (@\(user.username)) gefunden. Freundschaftsanfrage senden?")
                 }
             }
-            .task {
-                guard let userId = currentUser?.id else { return }
-                async let f: () = viewModel.loadFriends(userId: userId)
-                async let p: () = viewModel.loadPendingRequests(userId: userId)
-                async let s: () = viewModel.loadSuggestions(userId: userId)
-                _ = await (f, p, s)
-            }
-            .refreshable {
-                guard let userId = currentUser?.id else { return }
-                async let f: () = viewModel.loadFriends(userId: userId)
-                async let p: () = viewModel.loadPendingRequests(userId: userId)
-                async let s: () = viewModel.loadSuggestions(userId: userId)
-                _ = await (f, p, s)
-            }
+            .task { await loadAll() }
+            .refreshable { await loadAll() }
 
             // Bestätigungsdialog
             .confirmationDialog(
@@ -161,7 +149,15 @@ struct FriendsView: View {
         }
     }
 
-    // MARK: - Pending Request Row (verbessert)
+    private func loadAll() async {
+        guard let userId = currentUser?.id else { return }
+        async let f: () = viewModel.loadFriends(userId: userId)
+        async let p: () = viewModel.loadPendingRequests(userId: userId)
+        async let s: () = viewModel.loadSuggestions(userId: userId)
+        _ = await (f, p, s)
+    }
+
+    // MARK: - Pending Request Row
 
     private func pendingRequestRow(_ request: Friendship) -> some View {
         HStack(spacing: 12) {

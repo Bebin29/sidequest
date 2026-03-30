@@ -11,15 +11,7 @@ struct LocationPin: View {
     var body: some View {
         VStack(spacing: 0) {
             if let urlString = imageUrl, let url = URL(string: urlString) {
-                /*
-                 Image(systemName: "triangle.fill")
-                     .font(.system(size: 10))
-                     .foregroundStyle(.white)
-                     .rotationEffect(.degrees(180))
-                     .offset(y: 54)
-                     .shadow(radius: 3)
-                 */
-                AsyncImage(url: url) { image in
+                CachedAsyncImage(url: url) { image in
                     image
                         .resizable()
                         .scaledToFill()

@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 enum LocationCategory: String, Codable, CaseIterable {
     case restaurant = "Restaurant"
@@ -19,6 +20,28 @@ enum LocationCategory: String, Codable, CaseIterable {
     case viewpoint = "Aussichtspunkt"
     case beach = "Strand"
     case other = "Sonstiges"
+
+    var color: Color {
+        switch self {
+        case .restaurant: return .orange
+        case .cafe: return .brown
+        case .bar: return .purple
+        case .club: return .pink
+        case .bakery: return .yellow
+        case .fastFood: return .red
+        case .iceCream: return .cyan
+        case .park: return .green
+        case .museum: return .blue
+        case .shopping: return .pink
+        case .viewpoint: return .teal
+        case .beach: return .cyan
+        case .other: return .indigo
+        }
+    }
+
+    static func color(for categoryString: String) -> Color {
+        (LocationCategory(rawValue: categoryString) ?? .other).color
+    }
 }
 
 enum PriceRange: String, Codable, CaseIterable {

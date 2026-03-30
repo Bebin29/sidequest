@@ -108,35 +108,37 @@ struct SettingsView: View {
 
 
 
+                               
+                                    VStack(alignment: .leading, spacing: 8) {
 
+                                        Text("Datenschutz & Informationen")
+                                            .foregroundColor(.gray)
+                                            .font(.footnote)
+                                            .padding(.horizontal)
 
-                                VStack(alignment: .leading, spacing: 8) {
+                                        VStack(spacing: 0) {
 
-                                    Text("Datenschutz & Informationen")
-                                        .foregroundColor(.gray)
-                                        .font(.footnote)
+                                            LinkRow(title: "Datenschutz")
+
+                                            Divider()
+                                                .background(Color.gray.opacity(0.3))
+
+                                            LinkRow(title: "Impressum")
+
+                                            Divider()
+                                                .background(Color.gray.opacity(0.3))
+
+                                            LinkRow(title: "Hilfe")
+
+                                        }
+                                        .background(Color(UIColor.systemGray).opacity(0.2))
+                                        .clipShape(RoundedRectangle(cornerRadius: 30))
                                         .padding(.horizontal)
 
-                                    VStack(spacing: 0) {
-
-                                        LinkRow(title: "Datenschutz")
-
-                                        Divider()
-                                            .background(Color.gray.opacity(0.3))
-
-                                        LinkRow(title: "Impressum")
-
-                                        Divider()
-                                            .background(Color.gray.opacity(0.3))
-
-                                        LinkRow(title: "Hilfe")
-
                                     }
-                                    .background(Color(UIColor.systemGray).opacity(0.2))
-                                    .clipShape(RoundedRectangle(cornerRadius: 30))
-                                    .padding(.horizontal)
+                                
 
-                                }
+
 
 
 
@@ -199,11 +201,11 @@ struct SettingsView: View {
                         .navigationTitle("Einstellungen")
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbar {
-                            ToolbarItem(placement: .topBarTrailing) {
+                            ToolbarItem(placement: .topBarLeading) {
                                 Button {
                                     dismiss()
                                 } label: {
-                                    Image(systemName: "checkmark")
+                                    Image(systemName: "xmark")
 
                                 }
                             }

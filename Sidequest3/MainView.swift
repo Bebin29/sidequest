@@ -19,6 +19,7 @@ struct MainView: View {
     @State private var scrolledId: UUID?
     @State private var hasAppeared = false
     @State private var showSearchSheet = false
+    @State private var showCardDetailViewSheet = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Adaptive background color — falls back to category color
@@ -93,6 +94,16 @@ struct MainView: View {
                 }
             }
         }
+        /*
+         .sheet(item: $selectedLocation) { location in
+             NavigationStack {
+                 CardDetailView(location: location, currentUserId: currentUserId, providedDominantColor: viewModel.dominantColors[location.id], onTap: {})
+             }
+         }
+         */
+        
+        
+        
         .fullScreenCover(item: $selectedLocation) { location in
             NavigationStack {
                 LocationDetailView(location: location, currentUserId: currentUserId)
@@ -352,3 +363,4 @@ struct MainView: View {
             }
     }
 }
+

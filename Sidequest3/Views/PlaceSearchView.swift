@@ -49,7 +49,6 @@ struct PlaceSearchView: View {
                             searchDebounceTask = Task {
                                 try? await Task.sleep(for: .milliseconds(300))
                                 guard !Task.isCancelled else { return }
-                                completer.userLocation = locationManager.lastLocation
                                 completer.update(query: newValue)
                             }
                         }
@@ -69,11 +68,6 @@ struct PlaceSearchView: View {
                                         .foregroundColor(.gray)
                                 }
                                 Spacer()
-                                if let distance = result.formattedDistance {
-                                    Text(distance)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
                             }
                         }
                         .padding(.vertical, 5)

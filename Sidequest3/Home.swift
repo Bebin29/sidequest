@@ -22,7 +22,7 @@ struct Home: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("Profile", systemImage: "house.fill", value: .test) {
+            Tab("Home", systemImage: "house.fill", value: .test) {
                 MainView(authViewModel: authViewModel, userId: authViewModel.currentUser?.id,
                          currentUserId: authViewModel.currentUser?.id,
                          onShowOnMap: { location in
@@ -34,13 +34,13 @@ struct Home: View {
             }
             
             
-            Tab("Map", systemImage: "map.fill", value: .map) {
+            Tab("Karte", systemImage: "map.fill", value: .map) {
                 Karte(userId: authViewModel.currentUser?.id, focusLocation: $focusLocation)
             }
             
         
              
-            Tab("Profile", systemImage: "person.fill", value: .profile) {
+            Tab("Freunde", systemImage: "person.2.fill", value: .profile) {
                 Profile(authViewModel: authViewModel)
             }
             

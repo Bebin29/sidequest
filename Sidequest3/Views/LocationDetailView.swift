@@ -716,6 +716,7 @@ struct LocationDetailView: View {
                 }
                 .scrollTargetLayout()
             }
+            
             .scrollTargetBehavior(.paging)
 
             Button {

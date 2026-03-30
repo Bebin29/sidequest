@@ -34,13 +34,13 @@ struct Home: View {
             }
             
             
-            Tab("Karte", systemImage: "map.fill", value: .map) {
+            Tab("Map", systemImage: "map.fill", value: .map) {
                 Karte(userId: authViewModel.currentUser?.id, focusLocation: $focusLocation)
             }
             
         
              
-            Tab("Freunde", systemImage: "person.2.fill", value: .profile) {
+            Tab("Friends", systemImage: "person.2.fill", value: .profile) {
                 Profile(authViewModel: authViewModel)
             }
             

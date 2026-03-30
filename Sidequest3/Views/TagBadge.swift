@@ -31,14 +31,3 @@ struct TagBadge: View {
         .accessibilityLabel("Kategorie: \(label)")
     }
 }
-
-#Preview {
-    VStack(spacing: 16) {
-        TagBadge(label: "Café", color: .brown)
-        TagBadge(label: "Restaurant", color: .orange)
-        TagBadge(label: "Museum", color: .blue)
-    }
-    .padding()
-    .background(Color.black)
-    .preferredColorScheme(.dark)
-}

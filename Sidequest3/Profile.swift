@@ -11,8 +11,6 @@ struct Profile: View {
     @Bindable var authViewModel: AuthViewModel
     @State private var friendsViewModel = FriendsViewModel()
     @State private var mapViewModel = MapViewModel()
-    //@State private var showLogoutAlert = false
-    @State private var showEditProfile = false
     @State private var showFriends = false
     @State private var showShareCard = false
     @State private var selectedLocation: Location?
@@ -57,9 +55,7 @@ struct Profile: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Profil")
             .navigationBarTitleDisplayMode(.inline)
-            .sheet(isPresented: $showEditProfile) {
-                EditProfileView(authViewModel: authViewModel)
-            }
+
             .sheet(isPresented: $showFriends) {
                 FriendsView(currentUser: authViewModel.currentUser)
             }
@@ -154,17 +150,7 @@ struct Profile: View {
 
     private var actionButtons: some View {
         HStack(spacing: 8) {
-            Button {
-                showEditProfile = true
-            } label: {
-                Text("Profil bearbeiten")
-                    .font(.subheadline.weight(.semibold))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 36)
-                    .background(Color(.systemGray5))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-            }
-            .buttonStyle(.plain)
+            
 
             Button {
                 showShareCard = true

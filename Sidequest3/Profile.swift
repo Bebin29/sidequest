@@ -19,14 +19,20 @@ struct Profile: View {
 
     @State private var pendingCount = 0
     
+    
+
+    
     var body: some View {
+        
         NavigationStack {
+            
+            
             ScrollView {
                 if let user = authViewModel.currentUser {
                     VStack(spacing: 0) {
                         // Profile Header
-                       
-
+                        
+                        
                         // Stats Bar
                         statsBar(user: user)
                             .padding(.top, 4)
@@ -40,10 +46,10 @@ struct Profile: View {
                             .padding(.horizontal)
                             .padding(.top, 16)
                         
-                 
                         
                         
-
+                        
+                        
                         Spacer(minLength: 32)
                     }
                 }
@@ -94,7 +100,8 @@ struct Profile: View {
                 await loadPendingRequests()
             }
         }
-    }
+        }
+    
     
     func loadPendingRequests() async {
             guard let userId = authViewModel.currentUser?.id else { return }
@@ -219,39 +226,31 @@ struct Profile: View {
 
     // MARK: - Settings
 
- 
+}
 
     
 
     
+
+
+
+struct UpcomingView: View {
+    var body: some View {
+        Text("Bevorstehende Events")
+            .font(.largeTitle)
+    }
 }
 
-#Preview {
-    Profile(authViewModel: {
-        let vm = AuthViewModel()
-        vm.currentUser = .preview
-        return vm
-    }())
+struct PastView: View {
+    var body: some View {
+        Text("Vergangene Events")
+            .font(.largeTitle)
+    }
 }
 
-extension User {
-    static let preview = User(
-        id: UUID(uuidString: "e5f9bcaa-20f7-4296-a7f1-f2caf539d474")!,
-        email: "oleboehm4321@icloud.com",
-        username: "oleboehm4321",
-        displayName: "Ole Boehm",
-        profileImageUrl: nil,
-        createdAt: "2026-01-01T12:00:00Z",
-        updatedAt: nil,
-        lastSeenAt: nil,
-        bio: "This is a preview user",
-        preferences: ["theme": "dark"],
-        favoriteCategories: ["gaming", "sports"],
-        isVerified: true,
-        isModerator: false,
-        isPrivate: false,
-        fcmToken: nil,
-        stats: ["quests": 12, "friends": 5],
-        ringCode: nil
-    )
+struct InvitesView: View {
+    var body: some View {
+        Text("Einladungen")
+            .font(.largeTitle)
+    }
 }

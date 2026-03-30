@@ -22,17 +22,10 @@ struct Home: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("Profile", systemImage: "person.fill", value: .test) {
-                MainView(authViewModel: authViewModel, userId: authViewModel.currentUser?.id,
-                         currentUserId: authViewModel.currentUser?.id,
-                         onShowOnMap: { location in
-                             focusLocation = location
-                             selectedTab = .map
-                         }
-                )
+            Tab("Profile", systemImage: "house.fill", value: .test) {
+                MainView(authViewModel: authViewModel)
                     
             }
-      
             
             
             Tab("Map", systemImage: "map.fill", value: .map) {

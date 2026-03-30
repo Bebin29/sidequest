@@ -8,6 +8,7 @@ struct Karte: View {
     @State private var showFilterSheet = false
     @State private var selectedLocationId: UUID?
     @State private var showDetail = false
+    @State private var showLocationDeniedHint = false
 
     var userId: UUID?
     @Binding var focusLocation: Location?
@@ -66,7 +67,11 @@ struct Karte: View {
                             .frame(width: 30)
 
                         Button {
-                            locationManager.centerOnUser()
+                            if locationManager.authorizationStatus == .denied || locationManager.authorizationStatus == .restricted {
+                                showLocationDeniedHint = true
+                            } else {
+                                locationManager.centerOnUser()
+                            }
                         } label: {
                             Image(systemName: "location.fill")
                                 .font(.title2.weight(.semibold))
@@ -86,6 +91,16 @@ struct Karte: View {
             }
         }
 
+        .alert("Standort nicht verfuegbar", isPresented: $showLocationDeniedHint) {
+            Button("Einstellungen oeffnen") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("Abbrechen", role: .cancel) {}
+        } message: {
+            Text("Erlaube Sidequest den Standortzugriff in den Einstellungen, um deinen Standort auf der Karte zu sehen.")
+        }
         .sheet(isPresented: $showFilterSheet) {
             LocationFilterView(
                 mapViewModel: mapViewModel,
@@ -98,6 +113,7 @@ struct Karte: View {
             )
         }
         .task {
+            locationManager.requestPermission()
             guard let userId else { return }
             await mapViewModel.loadLocations(userId: userId)
         }

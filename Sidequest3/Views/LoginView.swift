@@ -10,6 +10,7 @@ struct LoginView: View {
     @Bindable var authViewModel: AuthViewModel
     let size = UIScreen.main.bounds.width / 3.5
     
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -23,69 +24,147 @@ struct LoginView: View {
                               .fontWeight(.bold)
                               .foregroundColor(Color(.systemIndigo))
                           Spacer()
+                            if #available(iOS 26.0, *) {
+                                HStack {
+                                    
+                                    
+                                    VStack {
+                                        ZStack {
+                                            Image("IMGSTART01")
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: size, height: size)
+                                                .clipped()
+                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                        }
+                                        .frame(width: size, height: size)
+                                        .cornerRadius(25)
+                                        .shadow(radius: 10)
+                                    }
+                                    VStack {
+                                        ZStack {
+                                            Image("IMGSTART02")
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: size, height: size)
+                                                .clipped()
+                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                        }
+                                        .frame(width: size, height: size)
+                                        .cornerRadius(25)
+                                        .shadow(radius: 10)
+                                    }
+                                    VStack {
+                                        ZStack {
+                                            Image("IMGSTART03")
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: size, height: size)
+                                                .clipped()
+                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                        }
+                                        .frame(width: size, height: size)
+                                        .cornerRadius(25)
+                                        .shadow(radius: 10)
+                                    }
+                                    
+                                    
+                                    
+                                        
+                                            
+                                   
+                                    
+                                }
+                                .padding(.horizontal)
+                                HStack {
+                                    VStack {
+                                        ZStack {
+                                            Image("IMGSTART04")
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: size, height: size)
+                                                .clipped()
+                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                        }
+                                        .frame(width: size, height: size)
+                                        .cornerRadius(25)
+                                        .shadow(radius: 10)
+                                    }
+                                    VStack {
+                                        ZStack {
+                                            Image("IMGSTART05")
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: size, height: size)
+                                                .clipped()
+                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                        }
+                                        .frame(width: size, height: size)
+                                        .cornerRadius(25)
+                                        .shadow(radius: 10)
+                                    }
+                                    VStack {
+                                        ZStack {
+                                            Image("IMGSTART06")
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: size, height: size)
+                                                .clipped()
+                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                        }
+                                        .frame(width: size, height: size)
+                                        .cornerRadius(25)
+                                        .shadow(radius: 10)
+                                    }
+                                        
+                                }
+                                .padding(.horizontal)
+                                HStack {
+                                    VStack {
+                                        ZStack {
+                                            Image("IMGSTART07")
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: size, height: size)
+                                                .clipped()
+                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                        }
+                                        .frame(width: size, height: size)
+                                        .cornerRadius(25)
+                                        .shadow(radius: 10)
+                                    }
+                                    VStack {
+                                        ZStack {
+                                            Image("IMGSTART08")
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: size, height: size)
+                                                .clipped()
+                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                        }
+                                        .frame(width: size, height: size)
+                                        .cornerRadius(25)
+                                        .shadow(radius: 10)
+                                    }
+                                    VStack {
+                                        ZStack {
+                                            Image("IMGSTART03")
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: size, height: size)
+                                                .clipped()
+                                                .glassEffect(in: .rect(cornerRadius: 25))
+                                        }
+                                        .frame(width: size, height: size)
+                                        .cornerRadius(25)
+                                        .shadow(radius: 10)
+                                    }
+                                }
+                                .padding(.horizontal)
+                            } else {
+                            // Fallback on earlier versions
+                            }
                           
-                          HStack {
-                              Image("IMGSTART01")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                                  .padding(.top)
-                              Image("IMGSTART02")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                                  .padding(.top)
-                              Image("IMGSTART03")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                                  .padding(.top)
-                          }
-                          .padding(.horizontal)
-                          HStack {
-                              Image("IMGSTART04")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                              Image("IMGSTART05")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                                  
-                              Image("IMGSTART06")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                                  
-                          }
-                          .padding(.horizontal)
-                          HStack {
-                              Image("IMGSTART07")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                                  .padding(.bottom)
-                              Image("IMGSTART08")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                                  .padding(.bottom)
-                              Image("IMGSTART09")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                                  .padding(.bottom)
-                          }
-                          .padding(.horizontal)
                           
                           Spacer()
                           if authViewModel.isLoading {

@@ -35,6 +35,10 @@ struct LocationDetailView: View {
         LocationCategory.color(for: location.category)
     }
 
+    
+    
+    
+    
     var body: some View {
         ZStack {
             // Dark background

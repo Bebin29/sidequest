@@ -11,6 +11,7 @@ import AVFoundation
 final class FriendsViewModel {
     var friends: [Friendship] = []
     var pendingRequests: [Friendship] = []
+    var suggestions: [FriendSuggestion] = []
     var searchResults: [User] = []
     var isLoading = false
     var errorMessage: String?
@@ -36,6 +37,15 @@ final class FriendsViewModel {
         }
     }
 
+    func loadSuggestions(userId: UUID) async {
+        do {
+            suggestions = try await service.getSuggestions(userId: userId)
+        } catch {
+            // Suggestions sind nice-to-have, Fehler still ignorieren
+            print("loadSuggestions error: \(error)")
+        }
+    }
+
     func searchUsers(query: String) async {
         guard query.count >= 2 else {
             searchResults = []
@@ -58,6 +68,8 @@ final class FriendsViewModel {
             AudioServicesPlayAlertSound(1407)
             successMessage = "Anfrage an @\(receiverUsername) gesendet"
             searchResults = []
+            // Suggestions neu laden (User verschwindet aus Vorschlägen)
+            await loadSuggestions(userId: requesterId)
         } catch {
             errorMessage = error.localizedDescription
         }

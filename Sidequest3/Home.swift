@@ -38,9 +38,11 @@ struct Home: View {
                 Karte(userId: authViewModel.currentUser?.id, focusLocation: $focusLocation)
             }
             
-        
-             
-            Tab("Friends", systemImage: "person.2.fill", value: .profile) {
+            Tab("Friends", systemImage: "person.2.fill", value: .friends) {
+                FriendsView(currentUser: authViewModel.currentUser)
+            }
+
+            Tab("Profile", systemImage: "person.fill", value: .profile) {
                 Profile(authViewModel: authViewModel)
             }
             

@@ -123,6 +123,22 @@ final class FriendshipService {
         return try JSONDecoder().decode(SingleResponse.self, from: data).data
     }
 
+    func getSuggestions(userId: UUID) async throws -> [FriendSuggestion] {
+        guard let url = URL(string: "\(Constants.API.baseURL)/api/friends/\(userId.uuidString)/suggestions") else {
+            throw AppError.unknown(underlying: nil)
+        }
+
+        let (data, response) = try await session.data(from: url)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw AppError.server(statusCode: (response as? HTTPURLResponse)?.statusCode ?? 0, message: nil)
+        }
+
+        let decoded = try JSONDecoder().decode(FriendSuggestionsResponse.self, from: data)
+        return decoded.data
+    }
+
     func removeFriend(friendshipId: UUID) async throws {
         guard let url = URL(string: "\(Constants.API.baseURL)/api/friendships/\(friendshipId.uuidString)") else {
             throw AppError.unknown(underlying: nil)

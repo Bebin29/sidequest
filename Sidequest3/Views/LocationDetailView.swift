@@ -55,6 +55,10 @@ struct LocationDetailView: View {
         dominantColor
     }
 
+    
+    
+    
+    
     var body: some View {
         ZStack {
             // Dark background

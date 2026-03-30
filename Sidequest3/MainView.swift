@@ -591,8 +591,8 @@ struct SettingsRow: View {
             
             Spacer()
             
-            Text(value)
-                .foregroundColor(.gray)
+            //Text(value)
+            //    .foregroundColor(.gray)
             
             Image(systemName: "chevron.right")
                 .foregroundColor(.gray)

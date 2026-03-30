@@ -103,105 +103,80 @@ struct MainView: View {
 
     }
     private var header: some View {
-        
-            HStack {
-                
+        HStack {
             Text("Home")
                 .font(.system(size: 34, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
-            
+
             Spacer()
-            
-            // Placeholder for future action buttons (profile, etc.)
-                VStack {
-                    Button {
-                        showSearchSheet = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.title2.weight(.semibold))
-                            .foregroundStyle(.white)
-                            .frame(width: 50, height: 50)
-                            .background(
-                                Circle()
-                                    .fill(.ultraThinMaterial)
-                                    .overlay(
-                                        Circle()
-                                            .stroke(.white.opacity(0.25), lineWidth: 1)
-                                    )
-                            )
+
+            Button {
+                showSearchSheet = true
+            } label: {
+                Image(systemName: "plus")
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 50, height: 50)
+                    .background(
+                        Circle()
+                            .fill(.ultraThinMaterial)
                             .overlay(
                                 Circle()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [
-                                                .white.opacity(0.35),
-                                                .clear
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                    .blendMode(.overlay)
+                                    .stroke(.white.opacity(0.25), lineWidth: 1)
                             )
-                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
-                    }
+                    )
+                    .overlay(
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [.white.opacity(0.35), .clear],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .blendMode(.overlay)
+                    )
+                    .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+            }
+            .sheet(isPresented: $showSearchSheet) {
+                PlaceSearchView(mapViewModel: mapViewModel, userId: userId) {
+                    showSearchSheet = false
                 }
-                .sheet(isPresented: $showSearchSheet) {
-                    PlaceSearchView(mapViewModel: mapViewModel, userId: userId) {
-                        showSearchSheet = false
-                    }
-                }
-                
-                
-                
-               
-                
-                
-                
-                
-                
-            VStack {
-                Button {
-                    showSettings = true
-                } label: {
-                    if let user = authViewModel.currentUser {
-                        Group {
-                            if let urlString = user.profileImageUrl,
-                               let url = URL(string: urlString) {
-                                AsyncImage(url: url) { image in
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 50, height: 50)
-                                        .clipShape(Circle())
-                                } placeholder: {
-                                    Image(systemName: "person.crop.circle.fill")
-                                        .resizable()
-                                        .frame(width: 50, height: 50)
-                                        .foregroundColor(.indigo)
-                                }
-                            } else {
-                                Image(systemName: "person.crop.circle.fill")
-                                    .resizable()
-                                    .frame(width: 50, height: 50)
-                                    .foregroundColor(.indigo)
-                            }
+            }
+
+            Button {
+                showSettings = true
+            } label: {
+                if let user = authViewModel.currentUser {
+                    if let urlString = user.profileImageUrl,
+                       let url = URL(string: urlString) {
+                        AsyncImage(url: url) { image in
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 50, height: 50)
+                                .clipShape(Circle())
+                        } placeholder: {
+                            Image(systemName: "person.crop.circle.fill")
+                                .resizable()
+                                .frame(width: 50, height: 50)
+                                .foregroundColor(.indigo)
                         }
+                    } else {
+                        Image(systemName: "person.crop.circle.fill")
+                            .resizable()
+                            .frame(width: 50, height: 50)
+                            .foregroundColor(.indigo)
                     }
                 }
             }
             .sheet(isPresented: $showSettings) {
                 SettingsView(authViewModel: authViewModel)
             }
-            
-            
-            
-            
         }
-            .padding(.horizontal, 28)
-            .padding(.top, 8)
-            .padding(.bottom, 4)
-    
+        .padding(.horizontal, 28)
+        .padding(.top, 8)
+        .padding(.bottom, 4)
     }
 
     // MARK: - Carousel
@@ -281,21 +256,7 @@ struct MainView: View {
     // MARK: - Category Colors
 
     private func categoryColor(for category: String) -> Color {
-        switch category {
-        case "Restaurant": return .orange
-        case "Café": return .brown
-        case "Bar": return .purple
-        case "Club": return .pink
-        case "Bäckerei": return .yellow
-        case "Fast Food": return .red
-        case "Eisdiele": return .cyan
-        case "Park": return .green
-        case "Museum": return .blue
-        case "Shopping": return .pink
-        case "Aussichtspunkt": return .teal
-        case "Strand": return .cyan
-        default: return .indigo
-        }
+        LocationCategory.color(for: category)
     }
 
     // MARK: - Empty State

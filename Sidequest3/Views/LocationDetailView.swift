@@ -21,8 +21,6 @@ struct LocationDetailView: View {
     @State private var showDeleteConfirm = false
     @State private var editDescription = ""
     @State private var editCategory = ""
-    @State private var displayDescription: String?
-    @State private var displayCategory: String?
     @State private var dominantColor: Color = .indigo
     @State private var currentImageIndex: Int = 0
     @Environment(\.dismiss) private var dismiss
@@ -34,25 +32,7 @@ struct LocationDetailView: View {
     }
 
     private var categoryColor: Color {
-        switch displayCategory ?? location.category {
-        case "Restaurant": return .orange
-        case "Café": return .brown
-        case "Bar": return .purple
-        case "Club": return .pink
-        case "Bäckerei": return .yellow
-        case "Fast Food": return .red
-        case "Eisdiele": return .cyan
-        case "Park": return .green
-        case "Museum": return .blue
-        case "Shopping": return .pink
-        case "Aussichtspunkt": return .teal
-        case "Strand": return .cyan
-        default: return .indigo
-        }
-    }
-
-    private var accentColor: Color {
-        dominantColor
+        LocationCategory.color(for: location.category)
     }
 
     var body: some View {
@@ -72,7 +52,7 @@ struct LocationDetailView: View {
                         .background {
                             // Match the warm glass from the hero bottom
                             ZStack {
-                                accentColor.opacity(0.5)
+                                dominantColor.opacity(0.5)
                                 Rectangle().fill(.ultraThinMaterial)
                             }
                         }
@@ -100,7 +80,7 @@ struct LocationDetailView: View {
             Button("Löschen", role: .destructive) {
                 Task {
                     do {
-                        try await LocationService().deleteLocation(id: location.id)
+                        try await locationService.deleteLocation(id: location.id)
                         onDelete?()
                         dismiss()
                     } catch {
@@ -153,13 +133,13 @@ struct LocationDetailView: View {
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 8)
-                                .background(accentColor.opacity(0.8))
+                                .background(dominantColor.opacity(0.8))
                                 .clipShape(Capsule())
                         }
                     } else {
                         Button {
-                            editDescription = displayDescription ?? location.description ?? ""
-                            editCategory = displayCategory ?? location.category
+                            editDescription = location.description ?? ""
+                            editCategory = location.category
                             isEditing = true
                         } label: {
                             Image(systemName: "pencil")
@@ -204,9 +184,9 @@ struct LocationDetailView: View {
             // Warm gradient overlay to improve text contrast
             LinearGradient(
                 colors: [
-                    accentColor.opacity(0.0),
-                    accentColor.opacity(0.15),
-                    accentColor.opacity(0.35),
+                    dominantColor.opacity(0.0),
+                    dominantColor.opacity(0.15),
+                    dominantColor.opacity(0.35),
                     Color.black.opacity(0.45)
                 ],
                 startPoint: .top,
@@ -228,7 +208,7 @@ struct LocationDetailView: View {
                 titleSection
                     .background(
                         ZStack {
-                            accentColor.opacity(0.45)
+                            dominantColor.opacity(0.45)
                             Rectangle().fill(.ultraThinMaterial)
                         }
                     )
@@ -317,7 +297,7 @@ struct LocationDetailView: View {
                 .multilineTextAlignment(.center)
                 .shadow(color: .black.opacity(0.3), radius: 6, y: 2)
 
-            Text(displayCategory ?? location.category)
+            Text(location.category)
                 .font(.system(size: 14, weight: .medium, design: .rounded))
                 .foregroundStyle(.white.opacity(0.7))
 
@@ -351,7 +331,7 @@ struct LocationDetailView: View {
             // Description (if exists)
             if isEditing {
                 editSection
-            } else if let description = displayDescription ?? location.description, !description.isEmpty {
+            } else if let description = location.description, !description.isEmpty {
                 descriptionCard(description)
             }
 
@@ -388,7 +368,7 @@ struct LocationDetailView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(accentColor.opacity(0.3), lineWidth: 0.8)
+                        .strokeBorder(dominantColor.opacity(0.3), lineWidth: 0.8)
                 }
             }
 
@@ -411,7 +391,7 @@ struct LocationDetailView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay {
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(accentColor.opacity(0.3), lineWidth: 0.8)
+                            .strokeBorder(dominantColor.opacity(0.3), lineWidth: 0.8)
                     }
                 }
             }
@@ -430,7 +410,7 @@ struct LocationDetailView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(accentColor.opacity(0.3), lineWidth: 0.8)
+                        .strokeBorder(dominantColor.opacity(0.3), lineWidth: 0.8)
                 }
             }
         }
@@ -446,7 +426,7 @@ struct LocationDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(accentColor.opacity(0.25), lineWidth: 0.8)
+                    .strokeBorder(dominantColor.opacity(0.25), lineWidth: 0.8)
             }
     }
 
@@ -475,10 +455,8 @@ struct LocationDetailView: View {
                     .foregroundStyle(.white)
 
                 Picker("Kategorie", selection: $editCategory) {
-                    ForEach(["Restaurant", "Café", "Bar", "Club", "Bäckerei", "Fast Food",
-                             "Eisdiele", "Park", "Museum", "Shopping", "Aussichtspunkt",
-                             "Strand", "Sonstiges"], id: \.self) { cat in
-                        Text(cat).tag(cat)
+                    ForEach(LocationCategory.allCases, id: \.self) { cat in
+                        Text(cat.rawValue).tag(cat.rawValue)
                     }
                 }
                 .pickerStyle(.menu)
@@ -497,50 +475,46 @@ struct LocationDetailView: View {
 
     // MARK: - Creator Card
 
+    @ViewBuilder
     private var creatorCard: some View {
         if let creatorUsername = location.creatorUsername {
-            return AnyView(
-                NavigationLink(destination: UserProfileView(userId: location.createdBy, currentUserId: currentUserId)) {
-                    glassCard {
-                        HStack(spacing: 12) {
-                            // Avatar
-                            if let urlString = location.creatorProfileImageUrl,
-                               let url = URL(string: urlString) {
-                                CachedAsyncImage(url: url) { image in
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                        .clipShape(Circle())
-                                } placeholder: {
-                                    creatorPlaceholder(username: creatorUsername)
-                                }
-                                .frame(width: 40, height: 40)
-                            } else {
+            NavigationLink(destination: UserProfileView(userId: location.createdBy, currentUserId: currentUserId)) {
+                glassCard {
+                    HStack(spacing: 12) {
+                        if let urlString = location.creatorProfileImageUrl,
+                           let url = URL(string: urlString) {
+                            CachedAsyncImage(url: url) { image in
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .clipShape(Circle())
+                            } placeholder: {
                                 creatorPlaceholder(username: creatorUsername)
-                                    .frame(width: 40, height: 40)
                             }
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Erstellt von")
-                                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                                    .foregroundStyle(.white.opacity(0.5))
-                                Text(location.creatorDisplayName ?? creatorUsername)
-                                    .font(.system(size: 15, weight: .bold, design: .rounded))
-                                    .foregroundStyle(.white)
-                            }
-
-                            Spacer()
-
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(.white.opacity(0.3))
+                            .frame(width: 40, height: 40)
+                        } else {
+                            creatorPlaceholder(username: creatorUsername)
+                                .frame(width: 40, height: 40)
                         }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Erstellt von")
+                                .font(.system(size: 12, weight: .medium, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.5))
+                            Text(location.creatorDisplayName ?? creatorUsername)
+                                .font(.system(size: 15, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.3))
                     }
                 }
-                .buttonStyle(.plain)
-            )
-        } else {
-            return AnyView(EmptyView())
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -684,7 +658,7 @@ struct LocationDetailView: View {
                     } label: {
                         Image(systemName: "arrow.up.circle.fill")
                             .font(.system(size: 28))
-                            .foregroundStyle(newComment.isEmpty ? .white.opacity(0.2) : accentColor)
+                            .foregroundStyle(newComment.isEmpty ? .white.opacity(0.2) : dominantColor)
                     }
                     .disabled(newComment.isEmpty)
                 }
@@ -749,8 +723,6 @@ struct LocationDetailView: View {
         ]
         do {
             let updated = try await locationService.updateLocation(id: location.id, body: body)
-            displayDescription = updated.description
-            displayCategory = updated.category
             location = updated
             onUpdate?(updated)
             isEditing = false

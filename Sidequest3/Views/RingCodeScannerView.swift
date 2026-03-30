@@ -18,6 +18,7 @@ struct RingCodeScannerView: View {
     @State private var isSearching = false
     @State private var statusText = "Ring-Code in den Kreis halten"
     @State private var hasDetection = false
+    @State private var spinAngle: Double = 0
 
     private let guideSize: CGFloat = 250
 
@@ -59,7 +60,7 @@ struct RingCodeScannerView: View {
                                 .trim(from: 0, to: 0.3)
                                 .stroke(Color.indigo, lineWidth: 3)
                                 .frame(width: guideSize, height: guideSize)
-                                .rotationEffect(.degrees(scanner.scanAngle))
+                                .rotationEffect(.degrees(spinAngle))
                         }
                     }
 
@@ -99,6 +100,15 @@ struct RingCodeScannerView: View {
             .onChange(of: scanner.hasCandidate) { _, value in
                 hasDetection = value
             }
+            .onChange(of: isSearching) { _, searching in
+                if searching {
+                    withAnimation(.linear(duration: 3.6).repeatForever(autoreverses: false)) {
+                        spinAngle = 360
+                    }
+                } else {
+                    spinAngle = 0
+                }
+            }
         }
     }
 
@@ -130,7 +140,6 @@ struct RingCodeScannerView: View {
 final class RingCodeScanner: NSObject, ObservableObject {
     @Published var confirmedCode: String?
     @Published var hasCandidate = false
-    @Published var scanAngle: Double = 0
 
     let captureSession = AVCaptureSession()
     private let videoOutput = AVCaptureVideoDataOutput()
@@ -141,7 +150,6 @@ final class RingCodeScanner: NSObject, ObservableObject {
     private var candidateCode: String?
     private var candidateCount = 0
     private let requiredConfidence = 3
-    private var spinTimer: Timer?
 
     func setup() {
         guard !isSetup else { return }
@@ -166,18 +174,10 @@ final class RingCodeScanner: NSObject, ObservableObject {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             self?.captureSession.startRunning()
         }
-
-        // Spinning animation
-        spinTimer = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true) { [weak self] _ in
-            DispatchQueue.main.async {
-                self?.scanAngle += 3
-            }
-        }
     }
 
     func stop() {
         captureSession.stopRunning()
-        spinTimer?.invalidate()
     }
 
     func reset() {

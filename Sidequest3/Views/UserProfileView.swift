@@ -335,17 +335,23 @@ struct UserProfileView: View {
         }
     }
 
-    private func memberSinceText(from dateString: String) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-        formatter.locale = Locale(identifier: "de_DE")
+    private static let parseFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        f.locale = Locale(identifier: "de_DE")
+        return f
+    }()
 
-        // Try with fractional seconds
-        if let date = formatter.date(from: String(dateString.prefix(19))) {
-            let display = DateFormatter()
-            display.dateFormat = "MMMM yyyy"
-            display.locale = Locale(identifier: "de_DE")
-            return "Mitglied seit \(display.string(from: date))"
+    private static let displayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMMM yyyy"
+        f.locale = Locale(identifier: "de_DE")
+        return f
+    }()
+
+    private func memberSinceText(from dateString: String) -> String {
+        if let date = Self.parseFormatter.date(from: String(dateString.prefix(19))) {
+            return "Mitglied seit \(Self.displayFormatter.string(from: date))"
         }
         return "Mitglied"
     }

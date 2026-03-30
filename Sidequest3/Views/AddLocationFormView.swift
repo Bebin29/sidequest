@@ -149,15 +149,19 @@ struct AddLocationFormView: View {
         guard let coordinate = mapItem.placemark.location?.coordinate else { return }
         isUploading = true
 
-        var imageUrls: [String] = []
-
-        for image in selectedImages {
-            do {
-                let url = try await imageUploadService.upload(image: image)
-                imageUrls.append(url)
-            } catch {
-                print("Image upload failed:", error)
+        let indexedImages = Array(selectedImages.enumerated())
+        var imageUrls: [String] = await withTaskGroup(of: (Int, String?).self) { group in
+            for (index, image) in indexedImages {
+                group.addTask {
+                    let url = try? await imageUploadService.upload(image: image)
+                    return (index, url)
+                }
             }
+            var results = [(Int, String)]()
+            for await (index, url) in group {
+                if let url { results.append((index, url)) }
+            }
+            return results.sorted { $0.0 < $1.0 }.map(\.1)
         }
 
         let address = [mapItem.placemark.thoroughfare, mapItem.placemark.subThoroughfare, mapItem.placemark.postalCode, mapItem.placemark.locality]

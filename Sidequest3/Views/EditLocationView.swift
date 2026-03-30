@@ -34,10 +34,8 @@ struct EditLocationView: View {
 
                 Section("Kategorie") {
                     Picker("Kategorie", selection: $category) {
-                        ForEach(["Restaurant", "Café", "Bar", "Club", "Bäckerei", "Fast Food",
-                                 "Eisdiele", "Park", "Museum", "Shopping", "Aussichtspunkt",
-                                 "Strand", "Sonstiges"], id: \.self) { cat in
-                            Text(cat).tag(cat)
+                        ForEach(LocationCategory.allCases, id: \.self) { cat in
+                            Text(cat.rawValue).tag(cat.rawValue)
                         }
                     }
                     .pickerStyle(.menu)

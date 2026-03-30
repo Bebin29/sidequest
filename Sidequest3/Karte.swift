@@ -52,39 +52,18 @@ struct Karte: View {
                 HStack {
                     Spacer()
 
-                    VStack(spacing: 12) {
-
+                    VStack(spacing: 0) {
                         Button {
                             showFilterSheet = true
                         } label: {
                             Image(systemName: mapViewModel.filter.isEmpty ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
                                 .font(.title2.weight(.semibold))
-                                .foregroundStyle(.white)
-                                .frame(width: 50, height: 50)
-                                .background(
-                                    Circle()
-                                        .fill(.ultraThinMaterial)
-                                        .overlay(
-                                            Circle()
-                                                .stroke(.white.opacity(0.25), lineWidth: 1)
-                                        )
-                                )
-                                .overlay(
-                                    Circle()
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [
-                                                    .white.opacity(0.35),
-                                                    .clear
-                                                ],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .blendMode(.overlay)
-                                )
-                                .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                                .foregroundStyle(.primary)
+                                .frame(width: 48, height: 48)
                         }
+
+                        Divider()
+                            .frame(width: 30)
 
                         Button {
                             locationManager.centerOnUser()
@@ -92,34 +71,17 @@ struct Karte: View {
                             Image(systemName: "location.fill")
                                 .font(.title2.weight(.semibold))
                                 .foregroundStyle(.indigo)
-                                .frame(width: 50, height: 50)
-                                .background(
-                                    Circle()
-                                        .fill(.ultraThinMaterial)
-                                        .overlay(
-                                            Circle()
-                                                .stroke(.white.opacity(0.25), lineWidth: 1)
-                                        )
-                                )
-                                .overlay(
-                                    Circle()
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [
-                                                    .white.opacity(0.35),
-                                                    .clear
-                                                ],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .blendMode(.overlay)
-                                )
-                                .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                                .frame(width: 48, height: 48)
                         }
-
-                    }.padding()
-
+                    }
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(.white.opacity(0.2), lineWidth: 0.5)
+                    )
+                    .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+                    .padding()
                 }
             }
         }

@@ -46,12 +46,17 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
             }
         }
         .task(id: url) {
+            // Reset state when URL changes (MapKit annotation view recycling)
+            image = nil
+            isLoading = false
+            failed = false
+            retryCount = 0
             await loadImage()
         }
     }
 
     private func loadImage() async {
-        guard let url, image == nil else { return }
+        guard let url else { return }
         guard !isLoading else { return }
         isLoading = true
         failed = false

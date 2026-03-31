@@ -83,6 +83,7 @@ struct FriendsView: View {
                         showShareCard = true
                     } label: {
                         Image(systemName: "square.and.arrow.up")
+                            .symbolEffect(.bounce, value: showShareCard)
                     }
                     .accessibilityLabel("Teilen")
                 }
@@ -91,7 +92,7 @@ struct FriendsView: View {
                         showSearch = true
                     } label: {
                         Image(systemName: "person.badge.plus")
-                            .offset(y: 4)
+                            .symbolEffect(.bounce, value: showSearch)
                     }
                     .accessibilityLabel("Freund hinzufuegen")
                 }

@@ -24,6 +24,7 @@ struct LocationDetailView: View {
     @State private var currentImageIndex: Int = 0
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Namespace private var topBarNamespace
 
     private let locationService = LocationService()
 
@@ -44,7 +45,7 @@ struct LocationDetailView: View {
                 // Warm base — material picks up this color
                 dominantColor.opacity(0.85)
                     .ignoresSafeArea()
-                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: dominantColor.description)
+                    .animation(reduceMotion ? nil : .bouncy(duration: 0.5), value: dominantColor.description)
 
                 ScrollView {
                     ZStack(alignment: .top) {
@@ -150,7 +151,7 @@ struct LocationDetailView: View {
                     if isOwner {
                         if isEditing {
                             Button {
-                                isEditing = false
+                                withAnimation(.snappy) { isEditing = false }
                             } label: {
                                 Text("Abbrechen")
                                     .font(.subheadline).fontWeight(.semibold).fontDesign(.rounded)
@@ -160,6 +161,7 @@ struct LocationDetailView: View {
                                     .frame(height: 44)
                             }
                             .adaptiveInteractiveGlass(in: Capsule())
+                            .glassEffectID("moreButton", in: topBarNamespace)
 
                             Button {
                                 Task { await saveEdit() }
@@ -172,11 +174,12 @@ struct LocationDetailView: View {
                                     .frame(height: 44)
                             }
                             .adaptiveTintedGlass(dominantColor, in: Capsule())
+                            .glassEffectID("editButton", in: topBarNamespace)
                         } else {
                             Button {
                                 editDescription = location.description ?? ""
                                 editCategory = location.category
-                                isEditing = true
+                                withAnimation(.snappy) { isEditing = true }
                             } label: {
                                 Image(systemName: "pencil")
                                     .font(.subheadline).fontWeight(.semibold)
@@ -185,9 +188,7 @@ struct LocationDetailView: View {
                             }
                             .accessibilityLabel("Bearbeiten")
                             .adaptiveInteractiveGlass(in: Circle())
-
-
-
+                            .glassEffectID("editButton", in: topBarNamespace)
 
 
 
@@ -210,6 +211,7 @@ struct LocationDetailView: View {
                             }
                             .accessibilityLabel("Mehr Optionen")
                             .adaptiveInteractiveGlass(in: Circle())
+                            .glassEffectID("moreButton", in: topBarNamespace)
                         }
                     }
                 }
@@ -257,7 +259,7 @@ struct LocationDetailView: View {
             let urlString = location.imageUrls[newIndex]
             Task {
                 if let cached = await DominantColorCache.shared.color(for: urlString) {
-                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.5)) {
+                    withAnimation(reduceMotion ? nil : .bouncy(duration: 0.5)) {
                         dominantColor = cached
                     }
                 }
@@ -276,7 +278,7 @@ struct LocationDetailView: View {
                         Circle()
                             .fill(index == currentImageIndex ? Theme.textPrimary : Theme.textTertiary)
                             .frame(width: 7, height: 7)
-                            .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: currentImageIndex)
+                            .animation(reduceMotion ? nil : .snappy(duration: 0.2), value: currentImageIndex)
                     }
                 }
                 .padding(.bottom, 4)
@@ -304,7 +306,7 @@ struct LocationDetailView: View {
     private func updateDominantColor(from image: UIImage, cacheKey: String) {
         Task {
             if let color = await DominantColorLoader.dominantColor(from: image, cacheKey: cacheKey) {
-                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.5)) {
+                withAnimation(reduceMotion ? nil : .bouncy(duration: 0.5)) {
                     dominantColor = color
                 }
             }
@@ -534,9 +536,15 @@ struct LocationDetailView: View {
     private var commentsCard: some View {
         glassCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Kommentare (\(viewModel.comments.count))")
-                    .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
-                    .foregroundStyle(Theme.textPrimary)
+                HStack(spacing: 4) {
+                    Text("Kommentare (")
+                    Text("\(viewModel.comments.count)")
+                        .contentTransition(.numericText())
+                    Text(")")
+                }
+                .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
+                .foregroundStyle(Theme.textPrimary)
+                .animation(.snappy, value: viewModel.comments.count)
 
                 if viewModel.isLoading {
                     ProgressView()
@@ -604,7 +612,9 @@ struct LocationDetailView: View {
                         Image(systemName: "arrow.up.circle.fill")
                             .font(.title)
                             .foregroundStyle(newComment.isEmpty ? Theme.textTertiary : dominantColor)
+                            .symbolEffect(.bounce, value: viewModel.comments.count)
                     }
+                    .sensoryFeedback(.success, trigger: viewModel.comments.count)
                     .accessibilityLabel("Kommentar senden")
                     .disabled(newComment.isEmpty)
                 }

@@ -74,7 +74,7 @@ struct RingCodeScannerView: View {
                                 lineWidth: hasDetection ? 3 : 2
                             )
                             .frame(width: guideSize, height: guideSize)
-                            .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: hasDetection)
+                            .animation(reduceMotion ? nil : .snappy(duration: 0.3), value: hasDetection)
 
                         if isSearching {
                             Circle()
@@ -98,8 +98,7 @@ struct RingCodeScannerView: View {
                     .foregroundStyle(Theme.textPrimary)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 12)
-                    .background(.black.opacity(0.6))
-                    .clipShape(Capsule())
+                    .glassEffect(.regular, in: .capsule)
                     .padding(.bottom, 60)
                 }
                 } // else (camera available)

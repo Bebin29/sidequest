@@ -11,8 +11,6 @@ struct FeedCarouselCard: View {
     let location: Location
     var onTap: () -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
     var body: some View {
         Button(action: onTap) {
             ZStack(alignment: .bottom) {

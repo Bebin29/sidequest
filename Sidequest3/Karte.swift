@@ -38,7 +38,7 @@ struct Karte: View {
             .onChange(of: focusLocation, initial: true) { _, location in
                 guard let location else { return }
                 locationManager.positionOverridden = true
-                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.6)) {
+                withAnimation(reduceMotion ? nil : .bouncy(duration: 0.6)) {
                     locationManager.position = .region(MKCoordinateRegion(
                         center: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude),
                         span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)

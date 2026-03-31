@@ -247,7 +247,7 @@ struct EditProfileView: View {
                     .allowsHitTesting(false)
                 }
             }
-            .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: showSuccess)
+            .animation(reduceMotion ? nil : .snappy(duration: 0.3), value: showSuccess)
     }
 
     private var profilePlaceholder: some View {

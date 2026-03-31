@@ -57,7 +57,7 @@ struct MainView: View {
                         .offset(y: hasAppeared ? 0 : 30)
                         .onAppear {
                             guard !hasAppeared else { return }
-                            withAnimation(reduceMotion ? nil : .spring(response: 0.6, dampingFraction: 0.8)) {
+                            withAnimation(reduceMotion ? nil : .bouncy(duration: 0.6)) {
                                 hasAppeared = true
                             }
                         }
@@ -74,7 +74,6 @@ struct MainView: View {
             if let index = viewModel.locations.firstIndex(where: { $0.id == newId }) {
                 if index != viewModel.currentIndex {
                     viewModel.currentIndex = index
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 }
                 // Pagination: load more when near the end
                 if index >= viewModel.locations.count - 2 {
@@ -83,14 +82,13 @@ struct MainView: View {
                 }
             }
         }
+        .sensoryFeedback(.selection, trigger: viewModel.currentIndex)
         .sheet(item: $selectedLocation) { location in
             NavigationStack {
                 LocationDetailView(location: location, currentUserId: currentUserId)
             }
             .presentationDragIndicator(.visible)
         }
-
-        
 
     }
     private var header: some View {
@@ -199,7 +197,7 @@ struct MainView: View {
                 .opacity(0.6)
             }
         }
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: viewModel.currentImageUrl)
+        .animation(reduceMotion ? nil : .bouncy(duration: 0.5), value: viewModel.currentImageUrl)
     }
 
     // MARK: - Empty State

@@ -67,7 +67,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func centerOnUser() {
         guard let location = lastLocation else { return }
 
-        withAnimation(.easeInOut(duration: 0.6)) {
+        withAnimation(.bouncy(duration: 0.6)) {
             self.position = .region(
                 MKCoordinateRegion(
                     center: location.coordinate,

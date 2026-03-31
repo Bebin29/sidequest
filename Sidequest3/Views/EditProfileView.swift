@@ -180,10 +180,14 @@ struct EditProfileView: View {
                 }
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
-                    Button("Fertig") {
+                    Button {
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    } label: {
+                        Image(systemName: "checkmark")
+                        
                     }
                 }
+                
             }
             .alert("Foto auswählen", isPresented: $showImageSourceDialog) {
                 

@@ -27,11 +27,11 @@ struct Home: View {
                          currentUserId: authViewModel.currentUser?.id,
                          mapViewModel: mapViewModel,
                          onShowOnMap: { location in
-                             focusLocation = location
-                             selectedTab = .map
-                         }
+                    focusLocation = location
+                    selectedTab = .map
+                }
                 )
-                    
+                
             }
             
             
@@ -40,12 +40,10 @@ struct Home: View {
             }
             
             Tab("Friends", systemImage: "person.2.fill", value: .friends) {
-                FriendsView(currentUser: authViewModel.currentUser)
+                FriendsView(authViewModel: authViewModel, currentUser: authViewModel.currentUser)
             }
-
-            Tab("Profile", systemImage: "person.fill", value: .profile) {
-                Profile(authViewModel: authViewModel, mapViewModel: mapViewModel)
-            }
+            
+           
             
             if let user = authViewModel.currentUser {
                 if(user.isModerator) {
@@ -77,7 +75,7 @@ struct Home: View {
             }
         }
         .sheet(isPresented: $showFriendsFromNotification) {
-            FriendsView(currentUser: authViewModel.currentUser)
+            FriendsView(authViewModel: authViewModel, currentUser: authViewModel.currentUser)
         }
     }
 

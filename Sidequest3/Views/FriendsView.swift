@@ -13,7 +13,8 @@ struct FriendsView: View {
     @State private var friendToRemove: Friendship?
     @State private var showRemoveConfirmation = false
     @State private var myLocationCount: Int = 0
-
+    @Bindable var authViewModel: AuthViewModel
+    @State private var showShareCard = false
     var currentUser: User?
 
     private let locationService = LocationService()
@@ -68,7 +69,26 @@ struct FriendsView: View {
             }
             .background(Color(UIColor.systemGray6).ignoresSafeArea())
             .navigationTitle("Freunde")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showShareCard = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showSearch = true
@@ -80,6 +100,11 @@ struct FriendsView: View {
             .sheet(isPresented: $showSearch) {
                 FriendSearchView(viewModel: viewModel, currentUser: currentUser) {
                     showSearch = false
+                }
+            }
+            .sheet(isPresented: $showShareCard) {
+                if let user = authViewModel.currentUser {
+                    ProfileShareCardView(user: user)
                 }
             }
             .confirmationDialog(

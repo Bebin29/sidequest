@@ -398,11 +398,7 @@ struct FriendSearchView: View {
                 TextField("Username suchen...", text: $searchText)
                     .autocorrectionDisabled()
                     .padding()
-                    .background(
-                        // Liquid Glass Effekt
-                        VisualEffectBlur(blurStyle: .systemUltraThinMaterial)
-                            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    )
+                    .glassEffect(.regular, in: .rect(cornerRadius: 20))
                     .foregroundStyle(Theme.textPrimary)
                     .font(.headline)
                     .padding()

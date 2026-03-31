@@ -86,15 +86,7 @@ struct Karte: View {
                         }
                         .accessibilityLabel("Mein Standort")
                     }
-                    .background(
-                        RoundedRectangle(cornerRadius: 30, style: .continuous)
-                            .fill(.ultraThinMaterial)
-                    )
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 30, style: .continuous)
-                            .stroke(Theme.borderLight, lineWidth: 0.6)
-                    }
-                    .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
+                    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 30))
                     .padding()
                 }
             }
@@ -126,7 +118,7 @@ struct Karte: View {
             if mapViewModel.isLoading {
                 ProgressView()
                     .padding()
-                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    .glassEffect(.regular, in: .rect(cornerRadius: 12))
             }
         }
         .task {

@@ -173,7 +173,8 @@ struct UserProfileView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                 }
-                .buttonStyle(GlassProminentButtonStyle(color: Theme.accent))
+                .buttonStyle(.glassProminent)
+                .tint(Theme.accent)
                 .disabled(friendActionInProgress)
 
             case .pendingSent:
@@ -182,7 +183,7 @@ struct UserProfileView: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
-                    .adaptiveGlass(in: Capsule())
+                    .glassEffect(.regular, in: .capsule)
 
             case .pendingReceived:
                 HStack(spacing: 8) {
@@ -195,7 +196,8 @@ struct UserProfileView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
                     }
-                    .buttonStyle(GlassProminentButtonStyle(color: Theme.accent))
+                    .buttonStyle(.glassProminent)
+                    .tint(Theme.accent)
 
                     Button {
                         Task { await declineFriendRequest() }
@@ -206,7 +208,7 @@ struct UserProfileView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
                     }
-                    .buttonStyle(GlassButtonStyle())
+                    .buttonStyle(.glass)
                 }
 
             case .accepted:
@@ -215,7 +217,7 @@ struct UserProfileView: View {
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
-                    .adaptiveInteractiveGlass(in: Capsule())
+                    .glassEffect(.regular.interactive(), in: .capsule)
             }
         }
     }
@@ -299,8 +301,7 @@ struct UserProfileView: View {
             .padding(8)
         }
         .frame(width: 140)
-        .adaptiveGlass(in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .glassEffect(.regular, in: .rect(cornerRadius: 14))
     }
 
     // MARK: - Member Since

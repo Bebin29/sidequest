@@ -129,26 +129,7 @@ struct MainView: View {
                     .font(.body.weight(.semibold))
                     .foregroundStyle(Theme.textPrimary)
                     .frame(width: 40, height: 40)
-                    .background(
-                        Circle()
-                            .fill(.ultraThinMaterial)
-                            .overlay(
-                                Circle()
-                                    .stroke(Theme.borderLight, lineWidth: 1)
-                            )
-                    )
-                    .overlay(
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [.white.opacity(0.35), .clear],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .blendMode(.overlay)
-                    )
-                    .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                    .glassEffect(.regular.interactive(), in: .circle)
             }
             .accessibilityLabel("Ort hinzufuegen")
             .sheet(isPresented: $showSearchSheet) {

@@ -37,11 +37,7 @@ struct PlaceSearchView: View {
                     TextField("Ort suchen", text: $searchText)
                         .autocorrectionDisabled()
                         .padding()
-                        .background(
-                            // Liquid Glass Effekt
-                            VisualEffectBlur(blurStyle: .systemUltraThinMaterial)
-                                .clipShape(RoundedRectangle(cornerRadius: Radius.medium, style: .continuous))
-                        )
+                        .glassEffect(.regular, in: .rect(cornerRadius: Radius.medium))
                         .foregroundStyle(Theme.textPrimary)
                         .font(.headline)
                         .padding()

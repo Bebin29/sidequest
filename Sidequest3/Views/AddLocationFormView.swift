@@ -86,11 +86,8 @@ struct AddLocationFormView: View {
                         .frame(maxWidth: .infinity)
                         .foregroundStyle(Theme.textPrimary)
                         .background(
-                            ZStack {
-                                Theme.accent // Hintergrundfarbe
-                                //VisualEffectBlur(blurStyle: .systemThinMaterial) // Liquid Glass
-                            }
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            Theme.accent,
+                            in: RoundedRectangle(cornerRadius: 16, style: .continuous)
                         )
                         
                 }

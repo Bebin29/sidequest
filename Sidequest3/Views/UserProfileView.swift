@@ -183,23 +183,20 @@ struct UserProfileView: View {
                 } label: {
                     Label("Freund hinzufügen", systemImage: "person.badge.plus")
                         .font(.subheadline.weight(.semibold))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(Color.indigo)
                         .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(GlassProminentButtonStyle(color: .indigo))
                 .disabled(friendActionInProgress)
 
             case .pendingSent:
                 Label("Anfrage gesendet", systemImage: "clock")
                     .font(.subheadline.weight(.semibold))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(Color(.systemGray5))
                     .foregroundStyle(.secondary)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .adaptiveGlass(in: Capsule())
 
             case .pendingReceived:
                 HStack(spacing: 8) {
@@ -208,36 +205,31 @@ struct UserProfileView: View {
                     } label: {
                         Text("Annehmen")
                             .font(.subheadline.weight(.semibold))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(Color.indigo)
                             .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(GlassProminentButtonStyle(color: .indigo))
 
                     Button {
                         Task { await declineFriendRequest() }
                     } label: {
                         Text("Ablehnen")
                             .font(.subheadline.weight(.semibold))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(Color(.systemGray5))
                             .foregroundStyle(.primary)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(GlassButtonStyle())
                 }
 
             case .accepted:
                 Label("Befreundet", systemImage: "person.2.fill")
                     .font(.subheadline.weight(.semibold))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(Color(.systemGray5))
                     .foregroundStyle(.primary)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .adaptiveInteractiveGlass(in: Capsule())
             }
         }
     }
@@ -319,8 +311,8 @@ struct UserProfileView: View {
             .padding(8)
         }
         .frame(width: 140)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .adaptiveGlass(in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     // MARK: - Member Since

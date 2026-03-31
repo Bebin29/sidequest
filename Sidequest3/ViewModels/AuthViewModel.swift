@@ -71,4 +71,20 @@ final class AuthViewModel {
         currentUser = nil
         isAuthenticated = false
     }
+
+    func deleteAccount() async {
+        guard let userId = currentUser?.id else { return }
+
+        let url = URL(string: "\(Constants.API.baseURL)/api/users/\(userId.uuidString)")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else { return }
+            signOut()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
 }

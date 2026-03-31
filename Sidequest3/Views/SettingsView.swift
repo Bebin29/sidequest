@@ -11,6 +11,7 @@ struct SettingsView: View {
 
     @Bindable var authViewModel: AuthViewModel
     @State private var showLogoutAlert = false
+    @State private var showDeleteAlert = false
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -181,8 +182,32 @@ struct SettingsView: View {
                                         Text("Moechtest du dich wirklich abmelden?")
                                     }
 
-
-
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Button {
+                                            showDeleteAlert = true
+                                        } label: {
+                                            HStack {
+                                                Image(systemName: "trash")
+                                                    .foregroundColor(.red)
+                                                    .font(.system(size: 14))
+                                                Text("Account löschen")
+                                                    .foregroundColor(.red)
+                                                Spacer()
+                                            }
+                                            .padding()
+                                            .background(Color(UIColor.systemGray).opacity(0.2))
+                                            .clipShape(RoundedRectangle(cornerRadius: 30))
+                                            .padding(.horizontal)
+                                        }
+                                    }
+                                    .alert("Account loeschen?", isPresented: $showDeleteAlert) {
+                                        Button("Loeschen", role: .destructive) {
+                                            Task { await authViewModel.deleteAccount() }
+                                        }
+                                        Button("Abbrechen", role: .cancel) {}
+                                    } message: {
+                                        Text("Dein Account und alle deine Daten werden unwiderruflich geloescht. Diese Aktion kann nicht rueckgaengig gemacht werden.")
+                                    }
 
                                 HStack(spacing: 4) {
                                     Image(systemName: "map.fill")

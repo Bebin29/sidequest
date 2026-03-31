@@ -22,25 +22,30 @@ struct Home: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("Home", systemImage: "house.fill", value: .test) {
-                MainView(authViewModel: authViewModel, userId: authViewModel.currentUser?.id,
-                         currentUserId: authViewModel.currentUser?.id,
-                         mapViewModel: mapViewModel,
-                         onShowOnMap: { location in
-                    focusLocation = location
-                    selectedTab = .map
+            Tab("Home", systemImage: "house.fill", value: .home) {
+                NavigationStack {
+                    MainView(authViewModel: authViewModel, userId: authViewModel.currentUser?.id,
+                             currentUserId: authViewModel.currentUser?.id,
+                             mapViewModel: mapViewModel,
+                             onShowOnMap: { location in
+                        focusLocation = location
+                        selectedTab = .map
+                    }
+                    )
                 }
-                )
-                
             }
             
             
             Tab("Map", systemImage: "map.fill", value: .map) {
-                Karte(mapViewModel: mapViewModel, userId: authViewModel.currentUser?.id, focusLocation: $focusLocation)
+                NavigationStack {
+                    Karte(mapViewModel: mapViewModel, userId: authViewModel.currentUser?.id, focusLocation: $focusLocation)
+                }
             }
             
             Tab("Friends", systemImage: "person.2.fill", value: .friends) {
-                FriendsView(authViewModel: authViewModel, currentUser: authViewModel.currentUser)
+                NavigationStack {
+                    FriendsView(authViewModel: authViewModel, currentUser: authViewModel.currentUser)
+                }
             }
             
            
@@ -48,7 +53,9 @@ struct Home: View {
             if let user = authViewModel.currentUser {
                 if(user.isModerator) {
                     Tab("Admin", systemImage: "gearshape.fill", value: .admin) {
-                        AdminView()
+                        NavigationStack {
+                            AdminView()
+                        }
                     }
                 }
             }

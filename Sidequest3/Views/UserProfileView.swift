@@ -5,7 +5,6 @@
 
 import SwiftUI
 import AudioToolbox
-import AVFoundation
 
 struct UserProfileView: View {
     let userId: UUID
@@ -387,9 +386,7 @@ struct UserProfileView: View {
         defer { friendActionInProgress = false }
         do {
             _ = try await friendshipService.sendRequest(requesterId: currentUserId, receiverUsername: username)
-            try? AVAudioSession.sharedInstance().setCategory(.playback)
-            try? AVAudioSession.sharedInstance().setActive(true)
-            AudioServicesPlayAlertSound(1407)
+            AudioServicesPlaySystemSound(1407)
             await loadData()
         } catch {}
     }

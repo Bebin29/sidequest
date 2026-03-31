@@ -46,7 +46,6 @@ struct EditProfileView: View {
     }
 
     var body: some View {
-        NavigationStack {
             List {
                 // Profilbild
                 Section ("Profilbild") {
@@ -245,7 +244,6 @@ struct EditProfileView: View {
                 }
             }
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: showSuccess)
-        }
     }
 
     private var profilePlaceholder: some View {

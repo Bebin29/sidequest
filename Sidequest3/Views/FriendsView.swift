@@ -549,7 +549,7 @@ struct FriendSearchView: View {
                 Button {
                     showScanner = true
                 } label: {
-                    Label("Ring-Code scannen", systemImage: "camera")
+                    Label("Ring-Code scannen", systemImage: "qrcode.viewfinder")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }

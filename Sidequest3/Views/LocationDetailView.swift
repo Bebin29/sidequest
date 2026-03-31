@@ -39,32 +39,74 @@ struct LocationDetailView: View {
     
     
     
+    private var imageHeight: CGFloat {
+        UIScreen.main.bounds.width * 1.15
+    }
+
     var body: some View {
         ZStack {
-            // Dark background
-            Color(red: 0.06, green: 0.05, blue: 0.12)
+            // Warm base — material picks up this color
+            dominantColor.opacity(0.85)
                 .ignoresSafeArea()
+                .animation(.easeInOut(duration: 0.5), value: dominantColor.description)
 
-            // Scrollable content
             ScrollView {
-                VStack(spacing: 0) {
-                    // Hero: image + warm gradient + glass + title as one unit
-                    heroSection
+                ZStack(alignment: .top) {
+                    // Layer 1: Image at top
+                    VStack(spacing: 0) {
+                        imageCarousel
+                            .frame(height: imageHeight)
+                        Spacer().frame(height: 0)
+                    }
 
-                    // Content below — same glass continues
-                    contentSections
-                        .background {
-                            // Match the warm glass from the hero bottom
-                            ZStack {
-                                dominantColor.opacity(0.5)
-                                Rectangle().fill(.ultraThinMaterial)
+                    // Layer 2: Gradient over image → fades into warm color
+                    VStack(spacing: 0) {
+                        LinearGradient(
+                            stops: [
+                                .init(color: .clear, location: 0.0),
+                                .init(color: .clear, location: 0.25),
+                                .init(color: dominantColor.opacity(0.3), location: 0.5),
+                                .init(color: dominantColor.opacity(0.75), location: 0.8),
+                                .init(color: dominantColor.opacity(0.95), location: 1.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: imageHeight)
+                        .allowsHitTesting(false)
+
+                        Spacer().frame(height: 0)
+                    }
+
+                    // Layer 3: Material fades in smoothly at the transition zone
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: imageHeight - 100)
+                        Rectangle()
+                            .fill(.ultraThinMaterial)
+                            .mask {
+                                VStack(spacing: 0) {
+                                    LinearGradient(
+                                        colors: [.clear, .black],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                    .frame(height: 120)
+                                    Color.black
+                                }
                             }
-                        }
+                    }
+
+                    // Layer 4: Content on top
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: imageHeight - 100)
+                        titleSection
+                        contentSections
+                        Spacer().frame(height: 40)
+                    }
                 }
             }
             .scrollDismissesKeyboard(.immediately)
 
-            // Floating top bar (X button + actions)
             VStack {
                 floatingTopBar
                 Spacer()
@@ -100,73 +142,68 @@ struct LocationDetailView: View {
     // MARK: - Floating Top Bar
 
     private var floatingTopBar: some View {
-        HStack {
-            // Close button
-            Button { dismiss() } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 36, height: 36)
-                    .background(.ultraThinMaterial)
-                    .clipShape(Circle())
-            }
+        GlassGroup {
+            HStack {
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 36, height: 36)
+                }
+                .adaptiveInteractiveGlass(in: Circle())
 
-            Spacer()
+                Spacer()
 
-            // Action buttons
-            HStack(spacing: 10) {
-                if isOwner {
-                    if isEditing {
-                        Button {
-                            isEditing = false
-                        } label: {
-                            Text("Abbrechen")
-                                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 8)
-                                .background(.ultraThinMaterial)
-                                .clipShape(Capsule())
-                        }
-
-                        Button {
-                            Task { await saveEdit() }
-                        } label: {
-                            Text("Speichern")
-                                .font(.system(size: 13, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 8)
-                                .background(dominantColor.opacity(0.8))
-                                .clipShape(Capsule())
-                        }
-                    } else {
-                        Button {
-                            editDescription = location.description ?? ""
-                            editCategory = location.category
-                            isEditing = true
-                        } label: {
-                            Image(systemName: "pencil")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .frame(width: 36, height: 36)
-                                .background(.ultraThinMaterial)
-                                .clipShape(Circle())
-                        }
-
-                        Menu {
-                            Button(role: .destructive) {
-                                showDeleteConfirm = true
+                HStack(spacing: 10) {
+                    if isOwner {
+                        if isEditing {
+                            Button {
+                                isEditing = false
                             } label: {
-                                Label("Löschen", systemImage: "trash")
+                                Text("Abbrechen")
+                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 8)
                             }
-                        } label: {
-                            Image(systemName: "ellipsis")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .frame(width: 36, height: 36)
-                                .background(.ultraThinMaterial)
-                                .clipShape(Circle())
+                            .adaptiveInteractiveGlass(in: Capsule())
+
+                            Button {
+                                Task { await saveEdit() }
+                            } label: {
+                                Text("Speichern")
+                                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 8)
+                            }
+                            .adaptiveTintedGlass(dominantColor, in: Capsule())
+                        } else {
+                            Button {
+                                editDescription = location.description ?? ""
+                                editCategory = location.category
+                                isEditing = true
+                            } label: {
+                                Image(systemName: "pencil")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 36, height: 36)
+                            }
+                            .adaptiveInteractiveGlass(in: Circle())
+
+                            Menu {
+                                Button(role: .destructive) {
+                                    showDeleteConfirm = true
+                                } label: {
+                                    Label("Löschen", systemImage: "trash")
+                                }
+                            } label: {
+                                Image(systemName: "ellipsis")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 36, height: 36)
+                            }
+                            .adaptiveInteractiveGlass(in: Circle())
                         }
                     }
                 }
@@ -176,55 +213,7 @@ struct LocationDetailView: View {
         .padding(.top, 8)
     }
 
-    // MARK: - Hero Section (image + warm gradient + glass + title)
-
-    private var heroSection: some View {
-        ZStack(alignment: .bottom) {
-            // Image carousel as background
-            imageCarousel
-                .frame(height: UIScreen.main.bounds.width * 1.0)
-                .clipped()
-
-            // Warm gradient overlay to improve text contrast
-            LinearGradient(
-                colors: [
-                    dominantColor.opacity(0.0),
-                    dominantColor.opacity(0.15),
-                    dominantColor.opacity(0.35),
-                    Color.black.opacity(0.45)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .allowsHitTesting(false)
-
-            // Glass background with title content sitting on top
-            VStack(spacing: 0) {
-                // A subtle glass strip blending into content below
-                Rectangle()
-                    .fill(.ultraThinMaterial)
-                    .frame(height: 12)
-                    .opacity(0.8)
-                    .overlay {
-                        LinearGradient(colors: [Color.white.opacity(0.12), Color.clear], startPoint: .top, endPoint: .bottom)
-                    }
-
-                titleSection
-                    .background(
-                        ZStack {
-                            dominantColor.opacity(0.45)
-                            Rectangle().fill(.ultraThinMaterial)
-                        }
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 14)
-            }
-            .frame(maxWidth: .infinity, alignment: .bottom)
-        }
-    }
-
-    // MARK: - Image Carousel (with glass blur at bottom edge)
+    // MARK: - Image Carousel
 
     private var imageCarousel: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -259,6 +248,7 @@ struct LocationDetailView: View {
             .scrollTargetLayout()
         }
         .scrollTargetBehavior(.paging)
+        .scrollDisabled(location.imageUrls.count <= 1)
         .scrollPosition(id: Binding(
             get: { currentImageIndex },
             set: { if let idx = $0 { currentImageIndex = idx } }
@@ -274,15 +264,14 @@ struct LocationDetailView: View {
                 }
             }
         }
-        .frame(height: UIScreen.main.bounds.width * 1.0)
+        .frame(height: imageHeight)
         .backgroundExtensionIfAvailable()
     }
 
     // MARK: - Title Section (sits on glass background)
 
     private var titleSection: some View {
-        VStack(spacing: 6) {
-            // Dot indicator for multiple images
+        VStack(spacing: 8) {
             if location.imageUrls.count > 1 {
                 HStack(spacing: 6) {
                     ForEach(0..<location.imageUrls.count, id: \.self) { index in
@@ -292,27 +281,26 @@ struct LocationDetailView: View {
                             .animation(.easeInOut(duration: 0.2), value: currentImageIndex)
                     }
                 }
-                .padding(.bottom, 6)
+                .padding(.bottom, 4)
             }
 
             Text(location.name)
-                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .font(.system(size: 36, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
-                .shadow(color: .black.opacity(0.3), radius: 6, y: 2)
+                .shadow(color: .black.opacity(0.25), radius: 8, y: 2)
 
             Text(location.category)
-                .font(.system(size: 14, weight: .medium, design: .rounded))
-                .foregroundStyle(.white.opacity(0.7))
+                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.65))
 
             Text(location.address)
                 .font(.system(size: 15, weight: .medium, design: .rounded))
-                .foregroundStyle(.white.opacity(0.75))
+                .foregroundStyle(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
         }
         .padding(.horizontal, 28)
-        .padding(.top, 90) // space for the faded overlap area
-        .padding(.bottom, 20)
+        .padding(.bottom, 24)
     }
 
     private func updateDominantColor(from image: UIImage, cacheKey: String) {
@@ -357,67 +345,40 @@ struct LocationDetailView: View {
     // MARK: - Action Buttons
 
     private var actionButtons: some View {
-        HStack(spacing: 12) {
-            Button { openInAppleMaps() } label: {
-                VStack(spacing: 6) {
-                    Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
-                        .font(.system(size: 18, weight: .medium))
-                    Text("Route")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+        GlassGroup(spacing: 12) {
+            HStack(spacing: 12) {
+                actionButton("Route", icon: "arrow.triangle.turn.up.right.diamond.fill") {
+                    openInAppleMaps()
                 }
-                .foregroundStyle(.white.opacity(0.85))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(dominantColor.opacity(0.3), lineWidth: 0.8)
-                }
-            }
 
-            if let phone = location.phoneNumber, !phone.isEmpty {
-                Button {
-                    if let url = URL(string: "tel:\(phone)") {
-                        UIApplication.shared.open(url)
-                    }
-                } label: {
-                    VStack(spacing: 6) {
-                        Image(systemName: "phone.fill")
-                            .font(.system(size: 18, weight: .medium))
-                        Text("Anrufen")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    }
-                    .foregroundStyle(.white.opacity(0.85))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(dominantColor.opacity(0.3), lineWidth: 0.8)
+                if let phone = location.phoneNumber, !phone.isEmpty {
+                    actionButton("Anrufen", icon: "phone.fill") {
+                        if let url = URL(string: "tel:\(phone)") {
+                            UIApplication.shared.open(url)
+                        }
                     }
                 }
-            }
 
-            Button { showFullImage = true } label: {
-                VStack(spacing: 6) {
-                    Image(systemName: "photo.on.rectangle")
-                        .font(.system(size: 18, weight: .medium))
-                    Text("Fotos")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                }
-                .foregroundStyle(.white.opacity(0.85))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(dominantColor.opacity(0.3), lineWidth: 0.8)
+                actionButton("Fotos", icon: "photo.on.rectangle") {
+                    showFullImage = true
                 }
             }
         }
+    }
+
+    private func actionButton(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 22, weight: .medium))
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+            }
+            .foregroundStyle(.white.opacity(0.85))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 18)
+        }
+        .adaptiveInteractiveGlass(in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     // MARK: - Glass Card Modifier
@@ -426,12 +387,7 @@ struct LocationDetailView: View {
         content()
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.ultraThinMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(dominantColor.opacity(0.25), lineWidth: 0.8)
-            }
+            .adaptiveGlass(in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     // MARK: - Description Card
@@ -700,11 +656,13 @@ struct LocationDetailView: View {
             Button {
                 showFullImage = false
             } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.title)
-                    .foregroundStyle(.white.opacity(0.8))
-                    .padding()
+                Image(systemName: "xmark")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 36, height: 36)
             }
+            .adaptiveInteractiveGlass(in: Circle())
+            .padding()
         }
     }
 

@@ -28,6 +28,10 @@ struct Friendship: Codable, Identifiable {
     let requesterDisplayName: String?
     let requesterProfileImageUrl: String?
     let mutualCount: Int?
+    let receiverDisplayName: String?
+    let receiverProfileImageUrl: String?
+    let requesterSpotCount: Int?
+    let receiverSpotCount: Int?
 
     enum CodingKeys: String, CodingKey {
         case id, status
@@ -40,6 +44,10 @@ struct Friendship: Codable, Identifiable {
         case requesterDisplayName = "requester_display_name"
         case requesterProfileImageUrl = "requester_profile_image_url"
         case mutualCount = "mutual_count"
+        case receiverDisplayName = "receiver_display_name"
+        case receiverProfileImageUrl = "receiver_profile_image_url"
+        case requesterSpotCount = "requester_spot_count"
+        case receiverSpotCount = "receiver_spot_count"
     }
 }
 

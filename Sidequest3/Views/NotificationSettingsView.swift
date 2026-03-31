@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 struct NotificationSettingsView: View {
     @Bindable var authViewModel: AuthViewModel
@@ -14,11 +15,37 @@ struct NotificationSettingsView: View {
     @State private var newReaction = true
     @State private var friendNewSpot = true
     @State private var isSaving = false
+    @State private var pushAuthStatus: UNAuthorizationStatus = .authorized
 
     private let profileService = ProfileService()
 
     var body: some View {
         List {
+            if pushAuthStatus == .notDetermined {
+                Section {
+                    Button {
+                        requestPushPermission()
+                    } label: {
+                        Label("Push-Benachrichtigungen aktivieren", systemImage: "bell.badge")
+                    }
+                } footer: {
+                    Text("Aktiviere Push-Benachrichtigungen, um ueber neue Aktivitaeten informiert zu werden.")
+                }
+            } else if pushAuthStatus == .denied {
+                Section {
+                    Button {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(url)
+                        }
+                    } label: {
+                        Label("In Einstellungen aktivieren", systemImage: "bell.slash")
+                            .foregroundStyle(.secondary)
+                    }
+                } footer: {
+                    Text("Push-Benachrichtigungen sind deaktiviert. Aktiviere sie in den Systemeinstellungen.")
+                }
+            }
+
             Section {
                 toggleRow(
                     icon: "person.badge.plus",
@@ -58,6 +85,10 @@ struct NotificationSettingsView: View {
         }
         .navigationTitle("Benachrichtigungen")
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            let settings = await UNUserNotificationCenter.current().notificationSettings()
+            pushAuthStatus = settings.authorizationStatus
+        }
         .onAppear {
             loadPreferences()
         }
@@ -86,6 +117,27 @@ struct NotificationSettingsView: View {
             }
         }
         .tint(.accentColor)
+    }
+
+    // MARK: - Push Permission
+
+    private func requestPushPermission() {
+        Task {
+            do {
+                let granted = try await UNUserNotificationCenter.current()
+                    .requestAuthorization(options: [.alert, .sound, .badge])
+                await MainActor.run {
+                    pushAuthStatus = granted ? .authorized : .denied
+                }
+                if granted {
+                    await MainActor.run {
+                        UIApplication.shared.registerForRemoteNotifications()
+                    }
+                }
+            } catch {
+                print("Push authorization error: \(error)")
+            }
+        }
     }
 
     // MARK: - Preferences

@@ -16,7 +16,6 @@ struct LocationDetailView: View {
 
     @State private var viewModel = LocationDetailViewModel()
     @State private var newComment = ""
-    @State private var showFullImage = false
     @State private var isEditing = false
     @State private var showDeleteConfirm = false
     @State private var editDescription = ""
@@ -35,10 +34,6 @@ struct LocationDetailView: View {
         LocationCategory.color(for: location.category)
     }
 
-    
-    
-    
-    
     private var imageHeight: CGFloat {
         UIScreen.main.bounds.width * 1.15
     }
@@ -52,15 +47,22 @@ struct LocationDetailView: View {
 
             ScrollView {
                 ZStack(alignment: .top) {
-                    // Layer 1: Image at top
-                    VStack(spacing: 0) {
-                        imageCarousel
-                            .frame(height: imageHeight)
-                        Spacer().frame(height: 0)
-                    }
+                    // Layer 1: Image at top (stretches on top overscroll)
+                    GeometryReader { geo in
+                        let offset = geo.frame(in: .named("scroll")).minY
+                        let stretch = max(0, offset)
 
-                    // Layer 2: Gradient over image → fades into warm color
-                    VStack(spacing: 0) {
+                        imageCarousel
+                            .frame(width: geo.size.width, height: imageHeight + stretch)
+                            .offset(y: -stretch)
+                    }
+                    .frame(height: imageHeight)
+
+                    // Layer 2: Gradient over image (stretches with image)
+                    GeometryReader { geo in
+                        let offset = geo.frame(in: .named("scroll")).minY
+                        let stretch = max(0, offset)
+
                         LinearGradient(
                             stops: [
                                 .init(color: .clear, location: 0.0),
@@ -72,39 +74,46 @@ struct LocationDetailView: View {
                             startPoint: .top,
                             endPoint: .bottom
                         )
-                        .frame(height: imageHeight)
+                        .frame(height: imageHeight + stretch)
+                        .offset(y: -stretch)
                         .allowsHitTesting(false)
-
-                        Spacer().frame(height: 0)
                     }
+                    .frame(height: imageHeight)
 
-                    // Layer 3: Material fades in smoothly at the transition zone
+                    // Layer 3: Content with material background
                     VStack(spacing: 0) {
                         Spacer().frame(height: imageHeight - 100)
-                        Rectangle()
-                            .fill(.ultraThinMaterial)
-                            .mask {
-                                VStack(spacing: 0) {
-                                    LinearGradient(
-                                        colors: [.clear, .black],
-                                        startPoint: .top,
-                                        endPoint: .bottom
-                                    )
-                                    .frame(height: 120)
-                                    Color.black
+
+                        VStack(spacing: 0) {
+                            titleSection
+                            contentSections
+                            Spacer().frame(height: 40)
+                        }
+                        .background(alignment: .top) {
+                            Rectangle()
+                                .fill(.ultraThinMaterial)
+                                .mask {
+                                    VStack(spacing: 0) {
+                                        LinearGradient(
+                                            colors: [.clear, .black],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                        .frame(height: 120)
+                                        Color.black
+                                        LinearGradient(
+                                            colors: [.black, .clear],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                        .frame(height: 120)
+                                    }
                                 }
-                            }
-                    }
-
-                    // Layer 4: Content on top
-                    VStack(spacing: 0) {
-                        Spacer().frame(height: imageHeight - 100)
-                        titleSection
-                        contentSections
-                        Spacer().frame(height: 40)
+                        }
                     }
                 }
             }
+            .coordinateSpace(name: "scroll")
             .scrollDismissesKeyboard(.immediately)
 
             VStack {
@@ -115,12 +124,6 @@ struct LocationDetailView: View {
         .navigationBarHidden(true)
         .task {
             await viewModel.loadComments(locationId: location.id)
-        }
-        .refreshable {
-            await reloadLocation()
-        }
-        .fullScreenCover(isPresented: $showFullImage) {
-            fullScreenImageViewer
         }
         .confirmationDialog("Location löschen?", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
             Button("Löschen", role: .destructive) {
@@ -216,43 +219,34 @@ struct LocationDetailView: View {
     // MARK: - Image Carousel
 
     private var imageCarousel: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 0) {
-                ForEach(Array(location.imageUrls.enumerated()), id: \.offset) { index, urlString in
-                    Color.clear
-                        .overlay {
-                            if let url = URL(string: urlString) {
-                                CachedAsyncImage(url: url, onLoad: { uiImage in
-                                    if index == currentImageIndex {
-                                        updateDominantColor(from: uiImage, cacheKey: urlString)
-                                    }
-                                }) { image in
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                } placeholder: {
-                                    Rectangle()
-                                        .fill(Color.white.opacity(0.05))
-                                        .overlay {
-                                            ProgressView()
-                                                .tint(.white.opacity(0.3))
-                                        }
+        TabView(selection: $currentImageIndex) {
+            ForEach(Array(location.imageUrls.enumerated()), id: \.offset) { index, urlString in
+                Color.clear
+                    .overlay {
+                        if let url = URL(string: urlString) {
+                            CachedAsyncImage(url: url, onLoad: { uiImage in
+                                if index == currentImageIndex {
+                                    updateDominantColor(from: uiImage, cacheKey: urlString)
                                 }
+                            }) { image in
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                            } placeholder: {
+                                Rectangle()
+                                    .fill(Color.white.opacity(0.05))
+                                    .overlay {
+                                        ProgressView()
+                                            .tint(.white.opacity(0.3))
+                                    }
                             }
                         }
-                        .clipped()
-                        .frame(width: UIScreen.main.bounds.width)
-                        .onTapGesture { showFullImage = true }
-                }
+                    }
+                    .clipped()
+                    .tag(index)
             }
-            .scrollTargetLayout()
         }
-        .scrollTargetBehavior(.paging)
-        .scrollDisabled(location.imageUrls.count <= 1)
-        .scrollPosition(id: Binding(
-            get: { currentImageIndex },
-            set: { if let idx = $0 { currentImageIndex = idx } }
-        ))
+        .tabViewStyle(.page(indexDisplayMode: .never))
         .onChange(of: currentImageIndex) { _, newIndex in
             guard newIndex >= 0, newIndex < location.imageUrls.count else { return }
             let urlString = location.imageUrls[newIndex]
@@ -264,7 +258,6 @@ struct LocationDetailView: View {
                 }
             }
         }
-        .frame(height: imageHeight)
         .backgroundExtensionIfAvailable()
     }
 
@@ -359,8 +352,8 @@ struct LocationDetailView: View {
                     }
                 }
 
-                actionButton("Fotos", icon: "photo.on.rectangle") {
-                    showFullImage = true
+                actionButton("Teilen", icon: "square.and.arrow.up") {
+                    shareLocation()
                 }
             }
         }
@@ -626,47 +619,20 @@ struct LocationDetailView: View {
         }
     }
 
-    // MARK: - Full Screen Image Viewer
+    // MARK: - Helpers
 
-    private var fullScreenImageViewer: some View {
-        ZStack(alignment: .topTrailing) {
-            Color.black.ignoresSafeArea()
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: 0) {
-                    ForEach(0..<location.imageUrls.count, id: \.self) { index in
-                        if let url = URL(string: location.imageUrls[index]) {
-                            CachedAsyncImage(url: url) { image in
-                                image
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            } placeholder: {
-                                ProgressView()
-                                    .tint(.white.opacity(0.4))
-                            }
-                            .frame(width: UIScreen.main.bounds.width)
-                        }
-                    }
-                }
-                .scrollTargetLayout()
+    private func shareLocation() {
+        let text = "\(location.name)\n\(location.address)"
+        let activityVC = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let root = scene.keyWindow?.rootViewController {
+            var topController = root
+            while let presented = topController.presentedViewController {
+                topController = presented
             }
-            
-            .scrollTargetBehavior(.paging)
-
-            Button {
-                showFullImage = false
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 36, height: 36)
-            }
-            .adaptiveInteractiveGlass(in: Circle())
-            .padding()
+            topController.present(activityVC, animated: true)
         }
     }
-
-    // MARK: - Helpers
 
     private func creatorPlaceholder(username: String) -> some View {
         Circle()

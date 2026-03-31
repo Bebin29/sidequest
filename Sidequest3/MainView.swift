@@ -22,17 +22,6 @@ struct MainView: View {
     @State private var showCardDetailViewSheet = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    // Adaptive background color — falls back to category color
-    private var dominantColor: Color {
-        if let color = viewModel.currentDominantColor {
-            return color
-        }
-        guard viewModel.currentIndex >= 0,
-              viewModel.currentIndex < viewModel.locations.count else {
-            return Theme.accent
-        }
-        return categoryColor(for: viewModel.locations[viewModel.currentIndex].category)
-    }
 
 
     
@@ -94,16 +83,6 @@ struct MainView: View {
                 }
             }
         }
-        /*
-         .sheet(item: $selectedLocation) { location in
-             NavigationStack {
-                 CardDetailView(location: location, currentUserId: currentUserId, providedDominantColor: viewModel.dominantColors[location.id], onTap: {})
-             }
-         }
-         */
-        
-        
-        
         .sheet(item: $selectedLocation) { location in
             NavigationStack {
                 LocationDetailView(location: location, currentUserId: currentUserId)
@@ -174,11 +153,7 @@ struct MainView: View {
                     ForEach(viewModel.locations) { location in
                         FeedCarouselCard(
                             location: location,
-                            borderColor: viewModel.dominantColors[location.id] ?? categoryColor(for: location.category),
-                            onTap: { selectedLocation = location },
-                            onImageLoaded: { image in
-                                handleImageLoaded(image, for: location)
-                            }
+                            onTap: { selectedLocation = location }
                         )
                         .frame(width: cardWidth, height: cardHeight)
                         .onAppear {
@@ -210,35 +185,21 @@ struct MainView: View {
         ZStack {
             Theme.darkBase
 
-            RadialGradient(
-                colors: [
-                    dominantColor.opacity(0.65),
-                    dominantColor.opacity(0.35),
-                    .clear
-                ],
-                center: .top,
-                startRadius: 0,
-                endRadius: 800
-            )
-        }
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: dominantColor.description)
-    }
-
-    // MARK: - Image Loaded Handler
-
-    private func handleImageLoaded(_ image: UIImage, for location: Location) {
-        guard let urlString = location.imageUrls.first else { return }
-        Task {
-            if let color = await DominantColorLoader.dominantColor(from: image, cacheKey: urlString) {
-                viewModel.setDominantColor(color, for: location.id)
+            if let url = viewModel.currentImageUrl {
+                CachedAsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                } placeholder: {
+                    Color.clear
+                }
+                .blur(radius: 60)
+                .scaleEffect(1.3)
+                .clipped()
+                .opacity(0.6)
             }
         }
-    }
-
-    // MARK: - Category Colors
-
-    private func categoryColor(for category: String) -> Color {
-        LocationCategory.color(for: category)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: viewModel.currentImageUrl)
     }
 
     // MARK: - Empty State

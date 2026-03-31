@@ -9,9 +9,7 @@ import SwiftUI
 
 struct FeedCarouselCard: View {
     let location: Location
-    var borderColor: Color = .accentColor
     var onTap: () -> Void
-    var onImageLoaded: ((UIImage) -> Void)?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -26,33 +24,12 @@ struct FeedCarouselCard: View {
                     .clipped()
                     .backgroundExtensionIfAvailable()
 
-                // Warm gradient + glass transition at bottom
-                VStack(spacing: 0) {
-                    Spacer()
-
-                    LinearGradient(
-                        stops: [
-                            .init(color: .clear, location: 0.0),
-                            .init(color: borderColor.opacity(0.3), location: 0.4),
-                            .init(color: borderColor.opacity(0.6), location: 0.7),
-                            .init(color: borderColor.opacity(0.8), location: 1.0),
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: 120)
-
-                    Rectangle()
-                        .fill(borderColor.opacity(0.7))
-                        .frame(height: 140)
-                }
-
-                // Glass blur overlay on the bottom portion
+                // Glass overlay on the bottom portion
                 VStack(spacing: 0) {
                     Spacer()
                     Rectangle()
-                        .fill(.ultraThinMaterial)
                         .frame(height: 220)
+                        .glassEffect(.clear, in: .rect)
                         .mask {
                             LinearGradient(
                                 stops: [
@@ -85,14 +62,6 @@ struct FeedCarouselCard: View {
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-            // Warm colored border glow
-            .overlay {
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .strokeBorder(
-                        borderColor.opacity(0.45),
-                        lineWidth: 1.2
-                    )
-            }
             .shadow(color: .black.opacity(0.35), radius: 32, y: 18)
             .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
             .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
@@ -155,9 +124,7 @@ struct FeedCarouselCard: View {
     private var heroImage: some View {
         if let firstUrl = location.imageUrls.first,
            let url = URL(string: firstUrl) {
-            CachedAsyncImage(url: url, onLoad: { uiImage in
-                onImageLoaded?(uiImage)
-            }) { image in
+            CachedAsyncImage(url: url) { image in
                 image
                     .resizable()
                     .scaledToFill()

@@ -17,20 +17,15 @@ final class FeedViewModel {
 
     // Carousel state
     var currentIndex: Int = 0
-    var dominantColors: [UUID: Color] = [:]
 
     private let feedService = FeedService()
     private let pageSize = 20
 
-    // MARK: - Dominant Color
-
-    var currentDominantColor: Color? {
-        guard currentIndex >= 0, currentIndex < locations.count else { return nil }
-        return dominantColors[locations[currentIndex].id]
-    }
-
-    func setDominantColor(_ color: Color, for locationId: UUID) {
-        dominantColors[locationId] = color
+    /// The first image URL of the currently visible card.
+    var currentImageUrl: URL? {
+        guard currentIndex >= 0, currentIndex < locations.count,
+              let first = locations[currentIndex].imageUrls.first else { return nil }
+        return URL(string: first)
     }
 
     func loadFeed(userId: UUID) async {

@@ -90,27 +90,7 @@ struct LocationDetailView: View {
                                 contentSections
                                 Spacer().frame(height: 40)
                             }
-                            .background(alignment: .top) {
-                                Rectangle()
-                                    .fill(.ultraThinMaterial)
-                                    .mask {
-                                        VStack(spacing: 0) {
-                                            LinearGradient(
-                                                colors: [.clear, .black],
-                                                startPoint: .top,
-                                                endPoint: .bottom
-                                            )
-                                            .frame(height: 120)
-                                            Color.black
-                                            LinearGradient(
-                                                colors: [.black, .clear],
-                                                startPoint: .top,
-                                                endPoint: .bottom
-                                            )
-                                            .frame(height: 120)
-                                        }
-                                    }
-                            }
+                            .glassEffect(.clear, in: .rect(cornerRadius: 0))
                         }
                     }
 

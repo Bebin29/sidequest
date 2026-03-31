@@ -153,7 +153,7 @@ struct LocationDetailView: View {
                 
                  Button { dismiss() } label: {
                      Image(systemName: "xmark")
-                         .font(.system(size: 15, weight: .bold))
+                         .font(.subheadline).fontWeight(.bold)
                          .foregroundStyle(.white)
                          .frame(width: 44, height: 44)
                  }
@@ -169,7 +169,7 @@ struct LocationDetailView: View {
                                 isEditing = false
                             } label: {
                                 Text("Abbrechen")
-                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                    .font(.subheadline).fontWeight(.semibold).fontDesign(.rounded)
                                     .foregroundStyle(.white)
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 8)
@@ -181,7 +181,7 @@ struct LocationDetailView: View {
                                 Task { await saveEdit() }
                             } label: {
                                 Text("Speichern")
-                                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                                    .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
                                     .foregroundStyle(.white)
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 8)
@@ -195,7 +195,7 @@ struct LocationDetailView: View {
                                 isEditing = true
                             } label: {
                                 Image(systemName: "pencil")
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(.subheadline).fontWeight(.semibold)
                                     .foregroundStyle(.white)
                                     .frame(width: 44, height: 44)
                             }
@@ -219,7 +219,7 @@ struct LocationDetailView: View {
                                 }
                             } label: {
                                 Image(systemName: "ellipsis")
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(.subheadline).fontWeight(.semibold)
                                     .foregroundStyle(.white)
                                     .frame(width: 44, height: 44)
                             }
@@ -296,17 +296,17 @@ struct LocationDetailView: View {
             }
 
             Text(location.name)
-                .font(.system(size: 36, weight: .bold, design: .rounded))
+                .font(.largeTitle).fontWeight(.bold).fontDesign(.rounded)
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .shadow(color: .black.opacity(0.25), radius: 8, y: 2)
 
             Text(location.category)
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .font(.subheadline).fontWeight(.medium).fontDesign(.rounded)
                 .foregroundStyle(.white.opacity(0.65))
 
             Text(location.address)
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .font(.subheadline).fontWeight(.medium).fontDesign(.rounded)
                 .foregroundStyle(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
         }
@@ -381,9 +381,9 @@ struct LocationDetailView: View {
         Button(action: action) {
             VStack(spacing: 8) {
                 Image(systemName: icon)
-                    .font(.system(size: 22, weight: .medium))
+                    .font(.title2).fontWeight(.medium)
                 Text(title)
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.subheadline).fontWeight(.semibold).fontDesign(.rounded)
             }
             .foregroundStyle(.white.opacity(0.85))
             .frame(maxWidth: .infinity)
@@ -407,10 +407,10 @@ struct LocationDetailView: View {
         glassCard {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Beschreibung")
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
                     .foregroundStyle(.white)
                 Text(text)
-                    .font(.system(size: 14, weight: .regular, design: .rounded))
+                    .font(.subheadline).fontWeight(.regular).fontDesign(.rounded)
                     .foregroundStyle(.white.opacity(0.7))
             }
         }
@@ -422,7 +422,7 @@ struct LocationDetailView: View {
         glassCard {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Bearbeiten")
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
                     .foregroundStyle(.white)
 
                 Picker("Kategorie", selection: $editCategory) {
@@ -435,7 +435,7 @@ struct LocationDetailView: View {
 
                 TextField("Beschreibung", text: $editDescription, axis: .vertical)
                     .lineLimit(3...6)
-                    .font(.system(size: 14, design: .rounded))
+                    .font(.subheadline).fontDesign(.rounded)
                     .foregroundStyle(.white)
                     .padding(12)
                     .background(Color.white.opacity(0.08))
@@ -470,17 +470,17 @@ struct LocationDetailView: View {
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Erstellt von")
-                                .font(.system(size: 12, weight: .medium, design: .rounded))
+                                .font(.caption).fontWeight(.medium).fontDesign(.rounded)
                                 .foregroundStyle(.white.opacity(0.5))
                             Text(location.creatorDisplayName ?? creatorUsername)
-                                .font(.system(size: 15, weight: .bold, design: .rounded))
+                                .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
                                 .foregroundStyle(.white)
                         }
 
                         Spacer()
 
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.footnote).fontWeight(.semibold)
                             .foregroundStyle(.white.opacity(0.3))
                     }
                 }
@@ -505,7 +505,7 @@ struct LocationDetailView: View {
                 glassCard {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Details")
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
                             .foregroundStyle(.white)
 
                         if let price = location.priceRange {
@@ -545,15 +545,15 @@ struct LocationDetailView: View {
     private func infoRow(icon: String, label: String, value: String) -> some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
-                .font(.system(size: 14, weight: .medium))
+                .font(.subheadline).fontWeight(.medium)
                 .foregroundStyle(.white.opacity(0.5))
                 .frame(width: 22)
             Text(label)
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(.footnote).fontWeight(.medium).fontDesign(.rounded)
                 .foregroundStyle(.white.opacity(0.6))
             Spacer()
             Text(value)
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(.footnote).fontWeight(.semibold).fontDesign(.rounded)
                 .foregroundStyle(.white.opacity(0.85))
                 .lineLimit(1)
         }
@@ -565,12 +565,12 @@ struct LocationDetailView: View {
         glassCard {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Kommentare (\(viewModel.comments.count))")
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
                     .foregroundStyle(.white)
 
                 if viewModel.comments.isEmpty {
                     Text("Noch keine Kommentare")
-                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .font(.subheadline).fontWeight(.medium).fontDesign(.rounded)
                         .foregroundStyle(.white.opacity(0.4))
                         .padding(.vertical, 4)
                 } else {
@@ -581,22 +581,22 @@ struct LocationDetailView: View {
                                 .frame(width: 30, height: 30)
                                 .overlay(
                                     Text(String(comment.username.prefix(1)).uppercased())
-                                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                                        .font(.caption).fontWeight(.bold).fontDesign(.rounded)
                                         .foregroundStyle(.white.opacity(0.6))
                                 )
 
                             VStack(alignment: .leading, spacing: 3) {
                                 HStack {
                                     Text("@\(comment.username)")
-                                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                                        .font(.footnote).fontWeight(.bold).fontDesign(.rounded)
                                         .foregroundStyle(.white.opacity(0.8))
                                     Spacer()
                                     Text(String(comment.createdAt.prefix(10)))
-                                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                                        .font(.caption).fontWeight(.medium).fontDesign(.rounded)
                                         .foregroundStyle(.white.opacity(0.3))
                                 }
                                 Text(comment.text)
-                                    .font(.system(size: 13, weight: .regular, design: .rounded))
+                                    .font(.footnote).fontWeight(.regular).fontDesign(.rounded)
                                     .foregroundStyle(.white.opacity(0.65))
                             }
                         }
@@ -612,7 +612,7 @@ struct LocationDetailView: View {
                 // Comment input
                 HStack(spacing: 10) {
                     TextField("Kommentar...", text: $newComment)
-                        .font(.system(size: 14, design: .rounded))
+                        .font(.subheadline).fontDesign(.rounded)
                         .foregroundStyle(.white)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)
@@ -628,7 +628,7 @@ struct LocationDetailView: View {
                         }
                     } label: {
                         Image(systemName: "arrow.up.circle.fill")
-                            .font(.system(size: 28))
+                            .font(.title)
                             .foregroundStyle(newComment.isEmpty ? .white.opacity(0.2) : dominantColor)
                     }
                     .disabled(newComment.isEmpty)
@@ -657,7 +657,7 @@ struct LocationDetailView: View {
             .fill(Color.white.opacity(0.1))
             .overlay(
                 Text(String(username.prefix(1)).uppercased())
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .font(.footnote).fontWeight(.bold).fontDesign(.rounded)
                     .foregroundStyle(.white.opacity(0.6))
             )
     }

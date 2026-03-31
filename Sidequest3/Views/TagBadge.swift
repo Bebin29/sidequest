@@ -7,7 +7,7 @@ struct TagBadge: View {
     var body: some View {
         HStack(spacing: 6) {
             Text(label)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .font(.caption).fontWeight(.semibold).fontDesign(.rounded)
                 .textCase(.uppercase)
         }
         .foregroundStyle(.white)

@@ -183,7 +183,7 @@ private struct MyProfileCard: View {
 
                 Image(systemName: "chevron.right")
                     .foregroundColor(.gray)
-                    .font(.system(size: 14))
+                    .font(.subheadline)
             }
             .padding()
             .background(Color(UIColor.systemGray).opacity(0.2))
@@ -314,7 +314,7 @@ private struct FriendSuggestionsSection: View {
                     Circle().fill(Color(.systemGray4))
                         .overlay(
                             Text(String(suggestion.username.prefix(1)).uppercased())
-                                .font(.system(size: 11, weight: .bold))
+                                .font(.caption).fontWeight(.bold)
                                 .foregroundStyle(.white)
                         )
                 }
@@ -325,7 +325,7 @@ private struct FriendSuggestionsSection: View {
                     .frame(width: 36, height: 36)
                     .overlay(
                         Text(String(suggestion.username.prefix(1)).uppercased())
-                            .font(.system(size: 11, weight: .bold))
+                            .font(.caption).fontWeight(.bold)
                             .foregroundStyle(.white)
                     )
             }
@@ -448,7 +448,7 @@ private struct FriendsListSection: View {
 
                 Image(systemName: "chevron.right")
                     .foregroundColor(.gray)
-                    .font(.system(size: 14))
+                    .font(.subheadline)
             }
             .padding()
             .contentShape(Rectangle())

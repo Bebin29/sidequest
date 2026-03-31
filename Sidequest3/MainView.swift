@@ -116,7 +116,7 @@ struct MainView: View {
     private var header: some View {
         HStack {
             Text("Home")
-                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .font(.largeTitle).fontWeight(.bold).fontDesign(.rounded)
                 .foregroundStyle(.white)
 
             Spacer()
@@ -280,11 +280,11 @@ struct MainView: View {
 
             VStack(spacing: 8) {
                 Text("Noch nichts im Feed")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(.title3).fontWeight(.bold).fontDesign(.rounded)
                     .foregroundStyle(.white)
 
                 Text("Füge Freunde hinzu, um ihre Spots zu sehen.")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(.subheadline).fontWeight(.medium).fontDesign(.rounded)
                     .foregroundStyle(.white.opacity(0.5))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
@@ -303,11 +303,11 @@ struct MainView: View {
 
             VStack(spacing: 8) {
                 Text("Laden fehlgeschlagen")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(.title3).fontWeight(.bold).fontDesign(.rounded)
                     .foregroundStyle(.white)
 
                 Text(message)
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(.subheadline).fontWeight(.medium).fontDesign(.rounded)
                     .foregroundStyle(.white.opacity(0.5))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
@@ -318,7 +318,7 @@ struct MainView: View {
                 Task { await viewModel.loadFeed(userId: userId) }
             } label: {
                 Text("Erneut versuchen")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.subheadline).fontWeight(.semibold).fontDesign(.rounded)
                     .foregroundStyle(.white)
                     .padding(.horizontal, 26)
                     .padding(.vertical, 11)

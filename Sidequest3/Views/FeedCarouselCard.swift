@@ -125,7 +125,7 @@ struct FeedCarouselCard: View {
 
             // Location name — large, centered
             Text(location.name)
-                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .font(.title).fontWeight(.bold).fontDesign(.rounded)
                 .foregroundStyle(.white)
                 .shadow(color: .black.opacity(0.30), radius: 6, y: 2)
                 .multilineTextAlignment(.center)
@@ -134,9 +134,9 @@ struct FeedCarouselCard: View {
             // Address — centered
             HStack(spacing: 5) {
                 Image(systemName: "mappin.and.ellipse")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.caption).fontWeight(.semibold)
                 Text(location.address)
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(.footnote).fontWeight(.medium).fontDesign(.rounded)
                     .lineLimit(1)
             }
             .foregroundStyle(.white.opacity(0.75))
@@ -191,7 +191,7 @@ struct FeedCarouselCard: View {
             .fill(Color.white.opacity(0.10))
             .overlay(
                 Text(String((location.creatorUsername ?? "?").prefix(1)).uppercased())
-                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                    .font(.caption2).fontWeight(.bold).fontDesign(.rounded)
                     .foregroundStyle(.white.opacity(0.6))
             )
     }
@@ -201,7 +201,7 @@ struct FeedCarouselCard: View {
             .fill(Color.white.opacity(0.05))
             .overlay(
                 Image(systemName: "photo")
-                    .font(.system(size: 36, weight: .light))
+                    .font(.largeTitle).fontWeight(.light)
                     .foregroundStyle(.white.opacity(0.2))
             )
     }

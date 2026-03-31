@@ -155,7 +155,7 @@ struct SettingsView: View {
                                                 HStack {
                                                     Image(systemName: "rectangle.portrait.and.arrow.right")
                                                         .foregroundColor(.red)
-                                                        .font(.system(size: 14))
+                                                        .font(.subheadline)
                                                     Text("Abmelden")
                                                         .foregroundColor(.red)
 
@@ -189,7 +189,7 @@ struct SettingsView: View {
                                             HStack {
                                                 Image(systemName: "trash")
                                                     .foregroundColor(.red)
-                                                    .font(.system(size: 14))
+                                                    .font(.subheadline)
                                                 Text("Account löschen")
                                                     .foregroundColor(.red)
                                                 Spacer()
@@ -271,7 +271,7 @@ struct SettingsRow: View {
 
             Image(systemName: "chevron.right")
                 .foregroundColor(.gray)
-                .font(.system(size: 14))
+                .font(.subheadline)
         }
         .padding()
         .background(Color(UIColor.systemGray).opacity(0.2))

@@ -39,7 +39,9 @@ struct AddLocationFormView: View {
             }
 
             Section("Beschreibung") {
-                TextField("Warum empfiehlst du diesen Ort?", text: $description, axis: .vertical) .lineLimit(3...6)
+                TextField("Warum empfiehlst du diesen Ort?", text: $description, axis: .vertical)
+                    .lineLimit(3...6)
+                    .autocorrectionDisabled()
             }
 
             Section("Fotos (\(selectedImages.count))") {

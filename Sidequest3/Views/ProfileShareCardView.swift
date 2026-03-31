@@ -111,7 +111,6 @@ struct ProfileShareCardView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var renderedImage: UIImage?
-    @State private var showShareSheet = false
     @State private var profileImage: UIImage?
     @State private var locations: [Location] = []
 
@@ -180,12 +179,6 @@ struct ProfileShareCardView: View {
                     Button("Fertig") { dismiss() }
                 }
             }
-            .sheet(isPresented: $showShareSheet) {
-                if let image = renderedImage {
-                    ShareSheetView(items: [image])
-                        .presentationDragIndicator(.visible)
-                }
-            }
             .task {
                 await loadProfileImage()
                 await loadLocations()
@@ -224,20 +217,15 @@ struct ProfileShareCardView: View {
     @MainActor
     private func renderAndShare() {
         renderImage()
-        if renderedImage != nil {
-            showShareSheet = true
+        guard let image = renderedImage else { return }
+        let activityVC = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let root = windowScene.keyWindow?.rootViewController else { return }
+        var topController = root
+        while let presented = topController.presentedViewController {
+            topController = presented
         }
+        topController.present(activityVC, animated: true)
     }
 }
 
-// MARK: - UIKit Share Sheet wrapper
-
-struct ShareSheetView: UIViewControllerRepresentable {
-    let items: [Any]
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}

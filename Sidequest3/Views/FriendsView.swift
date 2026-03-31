@@ -490,12 +490,13 @@ struct FriendSearchView: View {
                     Button("Fertig") { onDismiss() }
                 }
             }
-            .fullScreenCover(isPresented: $showScanner) {
+            .sheet(isPresented: $showScanner) {
                 RingCodeScannerView(currentUserId: currentUser?.id) { user in
                     scannedUser = user
                     showScanner = false
                     showScannedUserAlert = true
                 }
+                .presentationDragIndicator(.visible)
             }
             .alert("Freund hinzufügen?", isPresented: $showScannedUserAlert) {
                 Button("Anfrage senden") {

@@ -178,11 +178,15 @@ struct EditProfileView: View {
                 }
                 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Speichern") {
-                        Task { await save() }
+                    if isSaving {
+                        ProgressView()
+                    } else {
+                        Button("Speichern") {
+                            Task { await save() }
+                        }
+                        .bold()
+                        .disabled(!canSave)
                     }
-                    .bold()
-                    .disabled(!canSave)
                 }
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()

@@ -11,9 +11,8 @@ struct ProfileShareCardContent: View {
     let user: User
     let profileImage: UIImage?
     let locations: [Location]
-
-    private let cardWidth: CGFloat = 360
-    private let cardHeight: CGFloat = 520
+    var cardWidth: CGFloat = 360
+    var cardHeight: CGFloat = 520
     private let centerSafeRadius: CGFloat = 100 // Radius um Ring Code + Name, keine Spots hier
 
     var body: some View {
@@ -122,13 +121,19 @@ struct ProfileShareCardView: View {
                 Color(.systemGroupedBackground)
                     .ignoresSafeArea()
 
+                GeometryReader { geo in
+                    let width = min(geo.size.width - 48, 360)
+                    let height = width * (520 / 360)
+
                 VStack(spacing: 28) {
                     Spacer()
 
                     ProfileShareCardContent(
                         user: user,
                         profileImage: profileImage,
-                        locations: locations
+                        locations: locations,
+                        cardWidth: width,
+                        cardHeight: height
                     )
                     .shadow(color: .black.opacity(0.15), radius: 20, y: 10)
 
@@ -165,6 +170,8 @@ struct ProfileShareCardView: View {
 
                     Spacer()
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } // GeometryReader
             }
             .navigationTitle("Profil teilen")
             .navigationBarTitleDisplayMode(.inline)

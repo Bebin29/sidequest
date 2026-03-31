@@ -17,64 +17,62 @@ struct LoginView: View {
     ]
 
     var body: some View {
-        NavigationStack {
-            GeometryReader { geometry in
-                let size = geometry.size.width / 3.5
+        GeometryReader { geometry in
+            let size = geometry.size.width / 3.5
 
-                VStack {
-                    Text("Sidequest")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundStyle(Theme.accent)
-                    Text("Entdecke und teile Orte mit Freunden")
-                        .font(.headline)
-                        .fontWeight(.bold)
-                        .foregroundStyle(Theme.accent)
+            VStack {
+                Text("Sidequest")
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .foregroundStyle(Theme.accent)
+                Text("Entdecke und teile Orte mit Freunden")
+                    .font(.headline)
+                    .fontWeight(.bold)
+                    .foregroundStyle(Theme.accent)
 
-                    Spacer()
+                Spacer()
 
-                    ForEach(imageNames, id: \.self) { row in
-                        HStack {
-                            ForEach(row, id: \.self) { name in
-                                Image(name)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: size, height: size)
-                                    .clipped()
-                                    .clipShape(RoundedRectangle(cornerRadius: 25))
-                                    .shadow(radius: 10)
-                                    .accessibilityHidden(true)
-                            }
+                ForEach(imageNames, id: \.self) { row in
+                    HStack {
+                        ForEach(row, id: \.self) { name in
+                            Image(name)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: size, height: size)
+                                .clipped()
+                                .clipShape(RoundedRectangle(cornerRadius: 25))
+                                .shadow(radius: 10)
+                                .accessibilityHidden(true)
                         }
-                        .padding(.horizontal)
                     }
-
-                    Spacer()
-
-                    if authViewModel.isLoading {
-                        ProgressView()
-                    } else {
-                        SignInWithAppleButton(.signIn) { request in
-                            request.requestedScopes = [.fullName, .email]
-                        } onCompletion: { result in
-                            authViewModel.handleAppleSignIn(result: result)
-                        }
-                        .signInWithAppleButtonStyle(.whiteOutline)
-                        .frame(height: 50)
-                        .padding(.horizontal)
-                    }
-
-                    if let error = authViewModel.errorMessage {
-                        Text(error)
-                            .font(.caption)
-                            .foregroundStyle(Theme.destructive)
-                    }
-
-                    Spacer()
+                    .padding(.horizontal)
                 }
-                .padding()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                Spacer()
+
+                if authViewModel.isLoading {
+                    ProgressView()
+                } else {
+                    SignInWithAppleButton(.signIn) { request in
+                        request.requestedScopes = [.fullName, .email]
+                    } onCompletion: { result in
+                        authViewModel.handleAppleSignIn(result: result)
+                    }
+                    .signInWithAppleButtonStyle(.whiteOutline)
+                    .frame(height: 50)
+                    .padding(.horizontal)
+                }
+
+                if let error = authViewModel.errorMessage {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(Theme.destructive)
+                }
+
+                Spacer()
             }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }

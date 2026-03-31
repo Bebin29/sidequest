@@ -105,6 +105,7 @@ struct NotificationSettingsView: View {
         Toggle(isOn: isOn) {
             HStack(spacing: 12) {
                 Image(systemName: icon)
+                    .fontWeight(.regular)
                     .frame(width: 24)
                     .foregroundStyle(.primary)
                 VStack(alignment: .leading, spacing: 2) {

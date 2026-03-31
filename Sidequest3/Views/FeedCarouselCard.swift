@@ -16,86 +16,88 @@ struct FeedCarouselCard: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            // Full-bleed hero image behind everything
-            Color.clear
-                .overlay {
-                    heroImage
-                }
-                .clipped()
-                .backgroundExtensionIfAvailable()
-
-            // Warm gradient + glass transition at bottom
-            VStack(spacing: 0) {
-                Spacer()
-
-                LinearGradient(
-                    stops: [
-                        .init(color: .clear, location: 0.0),
-                        .init(color: borderColor.opacity(0.3), location: 0.4),
-                        .init(color: borderColor.opacity(0.6), location: 0.7),
-                        .init(color: borderColor.opacity(0.8), location: 1.0),
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(height: 120)
-
-                Rectangle()
-                    .fill(borderColor.opacity(0.7))
-                    .frame(height: 140)
-            }
-
-            // Glass blur overlay on the bottom portion
-            VStack(spacing: 0) {
-                Spacer()
-                Rectangle()
-                    .fill(.ultraThinMaterial)
-                    .frame(height: 220)
-                    .mask {
-                        LinearGradient(
-                            stops: [
-                                .init(color: .clear, location: 0.0),
-                                .init(color: .black.opacity(0.6), location: 0.2),
-                                .init(color: .black, location: 0.45),
-                                .init(color: .black, location: 1.0),
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
+        Button(action: onTap) {
+            ZStack(alignment: .bottom) {
+                // Full-bleed hero image behind everything
+                Color.clear
+                    .overlay {
+                        heroImage
                     }
-            }
-            .allowsHitTesting(false)
+                    .clipped()
+                    .backgroundExtensionIfAvailable()
 
-            // Bottom content (avatar, name, title, address)
-            bottomContent
+                // Warm gradient + glass transition at bottom
+                VStack(spacing: 0) {
+                    Spacer()
 
-            // Category badge (top-left)
-            VStack {
-                HStack {
-                    TagBadge(
-                        label: location.category,
-                        color: categoryColor(for: location.category)
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0.0),
+                            .init(color: borderColor.opacity(0.3), location: 0.4),
+                            .init(color: borderColor.opacity(0.6), location: 0.7),
+                            .init(color: borderColor.opacity(0.8), location: 1.0),
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
                     )
+                    .frame(height: 120)
+
+                    Rectangle()
+                        .fill(borderColor.opacity(0.7))
+                        .frame(height: 140)
+                }
+
+                // Glass blur overlay on the bottom portion
+                VStack(spacing: 0) {
+                    Spacer()
+                    Rectangle()
+                        .fill(.ultraThinMaterial)
+                        .frame(height: 220)
+                        .mask {
+                            LinearGradient(
+                                stops: [
+                                    .init(color: .clear, location: 0.0),
+                                    .init(color: .black.opacity(0.6), location: 0.2),
+                                    .init(color: .black, location: 0.45),
+                                    .init(color: .black, location: 1.0),
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        }
+                }
+                .allowsHitTesting(false)
+
+                // Bottom content (avatar, name, title, address)
+                bottomContent
+
+                // Category badge (top-left)
+                VStack {
+                    HStack {
+                        TagBadge(
+                            label: location.category,
+                            color: categoryColor(for: location.category)
+                        )
+                        Spacer()
+                    }
+                    .padding(16)
                     Spacer()
                 }
-                .padding(16)
-                Spacer()
             }
+            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+            // Warm colored border glow
+            .overlay {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .strokeBorder(
+                        borderColor.opacity(0.45),
+                        lineWidth: 1.2
+                    )
+            }
+            .shadow(color: .black.opacity(0.35), radius: 32, y: 18)
+            .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
+            .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         }
-        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-        // Warm colored border glow
-        .overlay {
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .strokeBorder(
-                    borderColor.opacity(0.45),
-                    lineWidth: 1.2
-                )
-        }
-        .shadow(color: .black.opacity(0.35), radius: 32, y: 18)
-        .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
-        .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-        .onTapGesture { onTap() }
+        .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(location.name), \(location.category), \(location.address)")
         .accessibilityHint("Tippe um Details zu sehen")

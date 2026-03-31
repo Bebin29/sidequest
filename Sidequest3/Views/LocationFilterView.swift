@@ -50,6 +50,7 @@ struct LocationFilterView: View {
                                         .clipShape(Capsule())
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityAddTraits(selectedCategory == category ? .isSelected : [])
                             }
                         }
                         .padding(.vertical, 4)

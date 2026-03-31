@@ -46,6 +46,9 @@ struct AdminView: View {
             .task {
                 await viewModel.loadUsers()
             }
+            .refreshable {
+                await viewModel.loadUsers()
+            }
         }
     }
 }

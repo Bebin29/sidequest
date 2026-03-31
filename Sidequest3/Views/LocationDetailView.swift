@@ -237,7 +237,7 @@ struct LocationDetailView: View {
 
         }
         .padding(.horizontal, 20)
-        .padding(.top, 8)
+        .padding(.top)
     }
 
     // MARK: - Image Carousel
@@ -271,6 +271,7 @@ struct LocationDetailView: View {
             }
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
+        .accessibilityHint("Streiche um zwischen Bildern zu wechseln")
         .onChange(of: currentImageIndex) { _, newIndex in
             guard newIndex >= 0, newIndex < location.imageUrls.count else { return }
             let urlString = location.imageUrls[newIndex]
@@ -557,7 +558,11 @@ struct LocationDetailView: View {
                     .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
                     .foregroundStyle(Theme.textPrimary)
 
-                if viewModel.comments.isEmpty {
+                if viewModel.isLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                } else if viewModel.comments.isEmpty {
                     Text("Noch keine Kommentare")
                         .font(.subheadline).fontWeight(.medium).fontDesign(.rounded)
                         .foregroundStyle(Theme.textTertiary)

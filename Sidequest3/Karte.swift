@@ -122,6 +122,13 @@ struct Karte: View {
             )
             .presentationDragIndicator(.visible)
         }
+        .overlay {
+            if mapViewModel.isLoading {
+                ProgressView()
+                    .padding()
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            }
+        }
         .task {
             guard let userId else { return }
             await mapViewModel.loadLocations(userId: userId)

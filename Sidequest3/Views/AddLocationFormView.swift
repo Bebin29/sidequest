@@ -32,7 +32,7 @@ struct AddLocationFormView: View {
                 Text(category)
                     .font(.caption.weight(.medium))
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
+                    .padding(.vertical, 6)
                     .background(Theme.accent)
                     .foregroundStyle(Theme.textPrimary)
                     .clipShape(Capsule())

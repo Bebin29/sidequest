@@ -37,10 +37,8 @@ struct LocationPin: View {
                     .overlay(Circle().stroke(.white, lineWidth: 2))
                     .shadow(radius: 3)
             }
-
-            
-            
         }
+        .accessibilityLabel("Standort-Pin")
     }
 }
 #Preview {

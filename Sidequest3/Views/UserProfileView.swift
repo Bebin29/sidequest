@@ -252,6 +252,7 @@ struct UserProfileView: View {
                                 locationCard(location)
                             }
                             .buttonStyle(.plain)
+                            .accessibilityHint("Tippe um Details zu sehen")
                         }
                     }
                     .padding(.horizontal)

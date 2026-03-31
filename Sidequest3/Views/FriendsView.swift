@@ -21,52 +21,59 @@ struct FriendsView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 18) {
-                    if let user = currentUser {
-                        MyProfileCard(
-                            user: user,
-                            locationCount: myLocationCount,
-                            friendCount: viewModel.friends.count
-                        )
-                    }
-
-                    if !viewModel.pendingRequests.isEmpty {
-                        PendingRequestsSection(
-                            requests: viewModel.pendingRequests,
-                            onAccept: { id in
-                                guard let userId = currentUser?.id else { return }
-                                await viewModel.acceptRequest(friendshipId: id, userId: userId)
-                            },
-                            onDecline: { id in
-                                guard let userId = currentUser?.id else { return }
-                                await viewModel.declineRequest(friendshipId: id, userId: userId)
-                            }
-                        )
-                    }
-
-                    if !viewModel.suggestions.isEmpty {
-                        FriendSuggestionsSection(
-                            suggestions: viewModel.suggestions,
-                            onAdd: { username in
-                                guard let requesterId = currentUser?.id else { return }
-                                await viewModel.sendRequest(requesterId: requesterId, receiverUsername: username)
-                            }
-                        )
-                    }
-
-                    FriendsListSection(
-                        friends: viewModel.friends,
-                        currentUserId: currentUser?.id,
-                        onRemove: { friendship in
-                            friendToRemove = friendship
-                            showRemoveConfirmation = true
+            Group {
+            if viewModel.isLoading && viewModel.friends.isEmpty {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    VStack(spacing: 18) {
+                        if let user = currentUser {
+                            MyProfileCard(
+                                user: user,
+                                locationCount: myLocationCount,
+                                friendCount: viewModel.friends.count
+                            )
                         }
-                    )
+
+                        if !viewModel.pendingRequests.isEmpty {
+                            PendingRequestsSection(
+                                requests: viewModel.pendingRequests,
+                                onAccept: { id in
+                                    guard let userId = currentUser?.id else { return }
+                                    await viewModel.acceptRequest(friendshipId: id, userId: userId)
+                                },
+                                onDecline: { id in
+                                    guard let userId = currentUser?.id else { return }
+                                    await viewModel.declineRequest(friendshipId: id, userId: userId)
+                                }
+                            )
+                        }
+
+                        if !viewModel.suggestions.isEmpty {
+                            FriendSuggestionsSection(
+                                suggestions: viewModel.suggestions,
+                                onAdd: { username in
+                                    guard let requesterId = currentUser?.id else { return }
+                                    await viewModel.sendRequest(requesterId: requesterId, receiverUsername: username)
+                                }
+                            )
+                        }
+
+                        FriendsListSection(
+                            friends: viewModel.friends,
+                            currentUserId: currentUser?.id,
+                            onRemove: { friendship in
+                                friendToRemove = friendship
+                                showRemoveConfirmation = true
+                            }
+                        )
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 8)
                 }
-                .padding(.horizontal)
-                .padding(.top, 8)
             }
+            } // Group
             .background(Color(UIColor.systemGray6).ignoresSafeArea())
             .navigationTitle("Freunde")
             .navigationBarTitleDisplayMode(.inline)

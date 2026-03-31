@@ -19,7 +19,7 @@ struct LocationPin: View {
                         .clipShape(Circle())
                 } placeholder: {
                     Circle()
-                        .fill(Color(.systemGray5))
+                        .fill(Theme.imagePlaceholder)
                         .frame(width: 44, height: 44)
                         .overlay(ProgressView().controlSize(.small))
                 }
@@ -31,7 +31,7 @@ struct LocationPin: View {
                     .frame(width: 44, height: 44)
                     .overlay(
                         Image(systemName: "mappin.and.ellipse")
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.textPrimary)
                             .font(.body.bold())
                     )
                     .overlay(Circle().stroke(.white, lineWidth: 2))

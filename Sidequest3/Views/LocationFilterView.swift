@@ -45,7 +45,7 @@ struct LocationFilterView: View {
                                         .font(.subheadline)
                                         .padding(.horizontal, 12)
                                         .padding(.vertical, 6)
-                                        .background(selectedCategory == category ? Color.indigo : Color(.systemGray5))
+                                        .background(selectedCategory == category ? Theme.accent : Theme.imagePlaceholder)
                                         .foregroundStyle(selectedCategory == category ? .white : .primary)
                                         .clipShape(Capsule())
                                 }
@@ -71,7 +71,7 @@ struct LocationFilterView: View {
                         if userLatitude == nil {
                             Text("Standort nicht verfügbar")
                                 .font(.caption)
-                                .foregroundStyle(.red)
+                                .foregroundStyle(Theme.destructive)
                         }
                     }
                 }

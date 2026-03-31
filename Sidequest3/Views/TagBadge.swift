@@ -10,7 +10,7 @@ struct TagBadge: View {
                 .font(.caption).fontWeight(.semibold).fontDesign(.rounded)
                 .textCase(.uppercase)
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(Theme.textPrimary)
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(
@@ -18,7 +18,7 @@ struct TagBadge: View {
                 .fill(color.opacity(0.6))
                 .overlay(
                     Capsule(style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.25), lineWidth: 1)
+                        .strokeBorder(Theme.borderLight, lineWidth: 1)
                 )
                 .shadow(color: .black.opacity(0.2), radius: 6, y: 2)
         )

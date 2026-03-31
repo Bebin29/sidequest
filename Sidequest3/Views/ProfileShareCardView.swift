@@ -46,11 +46,11 @@ struct ProfileShareCardContent: View {
                     VStack(spacing: 2) {
                         Text(user.displayName)
                             .font(.title3.bold())
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.textPrimary)
 
                         Text("@\(user.username)")
                             .font(.subheadline)
-                            .foregroundStyle(.white.opacity(0.6))
+                            .foregroundStyle(Theme.textSecondary)
                     }
                 }
 
@@ -63,10 +63,10 @@ struct ProfileShareCardContent: View {
                 HStack(spacing: 6) {
                     Image(systemName: "map.fill")
                         .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(Theme.textTertiary)
                     Text("Sidequest")
                         .font(.caption.weight(.medium))
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(Theme.textTertiary)
                 }
                 .padding(.bottom, 20)
             }
@@ -141,8 +141,8 @@ struct ProfileShareCardView: View {
                                 .font(.subheadline.weight(.semibold))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
-                                .background(Color(.systemIndigo))
-                                .foregroundStyle(.white)
+                                .background(Theme.accent)
+                                .foregroundStyle(Theme.textPrimary)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
 
@@ -156,7 +156,7 @@ struct ProfileShareCardView: View {
                                 .font(.subheadline.weight(.semibold))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
-                                .background(Color(.systemGray5))
+                                .background(Theme.imagePlaceholder)
                                 .foregroundStyle(.primary)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                         }

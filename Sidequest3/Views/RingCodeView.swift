@@ -34,11 +34,11 @@ struct RingCodeView: View {
                         .resizable()
                         .scaledToFill()
                 } else {
-                    Color.white.opacity(0.15)
+                    Theme.skeletonFillMedium
                         .overlay(
                             Text(initial)
                                 .font(.system(size: profileSize * 0.4, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Theme.textPrimary)
                         )
                 }
             }

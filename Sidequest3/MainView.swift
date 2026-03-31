@@ -29,7 +29,7 @@ struct MainView: View {
         }
         guard viewModel.currentIndex >= 0,
               viewModel.currentIndex < viewModel.locations.count else {
-            return .indigo
+            return Theme.accent
         }
         return categoryColor(for: viewModel.locations[viewModel.currentIndex].category)
     }
@@ -117,7 +117,7 @@ struct MainView: View {
         HStack {
             Text("Home")
                 .font(.largeTitle).fontWeight(.bold).fontDesign(.rounded)
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.textPrimary)
 
             Spacer()
 
@@ -126,14 +126,14 @@ struct MainView: View {
             } label: {
                 Image(systemName: "plus")
                     .font(.title2.weight(.semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.textPrimary)
                     .frame(width: 50, height: 50)
                     .background(
                         Circle()
                             .fill(.ultraThinMaterial)
                             .overlay(
                                 Circle()
-                                    .stroke(.white.opacity(0.25), lineWidth: 1)
+                                    .stroke(Theme.borderLight, lineWidth: 1)
                             )
                     )
                     .overlay(
@@ -171,13 +171,13 @@ struct MainView: View {
                             Image(systemName: "person.crop.circle.fill")
                                 .resizable()
                                 .frame(width: 50, height: 50)
-                                .foregroundColor(.indigo)
+                                .foregroundStyle(Theme.accent)
                         }
                     } else {
                         Image(systemName: "person.crop.circle.fill")
                             .resizable()
                             .frame(width: 50, height: 50)
-                            .foregroundColor(.indigo)
+                            .foregroundStyle(Theme.accent)
                     }
                 }
             }
@@ -237,7 +237,7 @@ struct MainView: View {
 
     private var adaptiveBackground: some View {
         ZStack {
-            Color(red: 0.06, green: 0.05, blue: 0.12)
+            Theme.darkBase
 
             RadialGradient(
                 colors: [
@@ -276,16 +276,16 @@ struct MainView: View {
         VStack(spacing: 20) {
             Image(systemName: "person.2.slash")
                 .font(.system(size: 44, weight: .light, design: .rounded))
-                .foregroundStyle(.white.opacity(0.3))
+                .foregroundStyle(Theme.textTertiary)
 
             VStack(spacing: 8) {
                 Text("Noch nichts im Feed")
                     .font(.title3).fontWeight(.bold).fontDesign(.rounded)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.textPrimary)
 
                 Text("Füge Freunde hinzu, um ihre Spots zu sehen.")
                     .font(.subheadline).fontWeight(.medium).fontDesign(.rounded)
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             }
@@ -299,16 +299,16 @@ struct MainView: View {
         VStack(spacing: 20) {
             Image(systemName: "wifi.slash")
                 .font(.system(size: 44, weight: .light, design: .rounded))
-                .foregroundStyle(.white.opacity(0.3))
+                .foregroundStyle(Theme.textTertiary)
 
             VStack(spacing: 8) {
                 Text("Laden fehlgeschlagen")
                     .font(.title3).fontWeight(.bold).fontDesign(.rounded)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.textPrimary)
 
                 Text(message)
                     .font(.subheadline).fontWeight(.medium).fontDesign(.rounded)
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             }
@@ -319,7 +319,7 @@ struct MainView: View {
             } label: {
                 Text("Erneut versuchen")
                     .font(.subheadline).fontWeight(.semibold).fontDesign(.rounded)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.textPrimary)
                     .padding(.horizontal, 26)
                     .padding(.vertical, 11)
                     //.liquidGlassPill()
@@ -352,14 +352,14 @@ struct MainView: View {
 
     private var loadingMoreCard: some View {
         RoundedRectangle(cornerRadius: 28, style: .continuous)
-            .fill(Color.white.opacity(0.04))
+            .fill(Theme.skeletonFill)
             .overlay {
                 ProgressView()
                     .tint(.white.opacity(0.4))
             }
             .overlay {
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.8)
+                    .strokeBorder(Theme.border, lineWidth: 0.8)
             }
     }
 }

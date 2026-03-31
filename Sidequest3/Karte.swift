@@ -77,7 +77,7 @@ struct Karte: View {
                         } label: {
                             Image(systemName: "location.fill")
                                 .font(.title3.weight(.semibold))
-                                .foregroundStyle(.indigo)
+                                .foregroundStyle(Theme.accent)
                                 .frame(width: 50, height: 50)
                         }
                     }
@@ -87,7 +87,7 @@ struct Karte: View {
                     )
                     .overlay {
                         RoundedRectangle(cornerRadius: 30, style: .continuous)
-                            .stroke(.white.opacity(0.25), lineWidth: 0.6)
+                            .stroke(Theme.borderLight, lineWidth: 0.6)
                     }
                     .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
                     .padding()

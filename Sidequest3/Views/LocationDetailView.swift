@@ -20,7 +20,7 @@ struct LocationDetailView: View {
     @State private var showDeleteConfirm = false
     @State private var editDescription = ""
     @State private var editCategory = ""
-    @State private var dominantColor: Color = .indigo
+    @State private var dominantColor: Color = Theme.accent
     @State private var currentImageIndex: Int = 0
     @Environment(\.dismiss) private var dismiss
 
@@ -154,7 +154,7 @@ struct LocationDetailView: View {
                  Button { dismiss() } label: {
                      Image(systemName: "xmark")
                          .font(.subheadline).fontWeight(.bold)
-                         .foregroundStyle(.white)
+                         .foregroundStyle(Theme.textPrimary)
                          .frame(width: 44, height: 44)
                  }
                  .adaptiveInteractiveGlass(in: Circle())
@@ -170,7 +170,7 @@ struct LocationDetailView: View {
                             } label: {
                                 Text("Abbrechen")
                                     .font(.subheadline).fontWeight(.semibold).fontDesign(.rounded)
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Theme.textPrimary)
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 8)
                                     .frame(height: 44)
@@ -182,7 +182,7 @@ struct LocationDetailView: View {
                             } label: {
                                 Text("Speichern")
                                     .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Theme.textPrimary)
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 8)
                                     .frame(height: 44)
@@ -196,31 +196,31 @@ struct LocationDetailView: View {
                             } label: {
                                 Image(systemName: "pencil")
                                     .font(.subheadline).fontWeight(.semibold)
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Theme.textPrimary)
                                     .frame(width: 44, height: 44)
                             }
                             .adaptiveInteractiveGlass(in: Circle())
 
-                            
-                            
-                            
-                           
-                            
-                            
-                            
-                            
-                            
+
+
+
+
+
+
+
+
+
                             Menu {
                                 Button(role: .destructive) {
                                     showDeleteConfirm = true
                                 } label: {
                                     Text("Löschen")
-                                        .foregroundStyle(Color(.red))
+                                        .foregroundStyle(Theme.destructive)
                                 }
                             } label: {
                                 Image(systemName: "ellipsis")
                                     .font(.subheadline).fontWeight(.semibold)
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Theme.textPrimary)
                                     .frame(width: 44, height: 44)
                             }
                             .adaptiveInteractiveGlass(in: Circle())
@@ -228,7 +228,7 @@ struct LocationDetailView: View {
                     }
                 }
             }
-            
+
         }
         .padding(.horizontal, 20)
         .padding(.top, 8)
@@ -252,7 +252,7 @@ struct LocationDetailView: View {
                                     .scaledToFill()
                             } placeholder: {
                                 Rectangle()
-                                    .fill(Color.white.opacity(0.05))
+                                    .fill(Theme.skeletonFill)
                                     .overlay {
                                         ProgressView()
                                             .tint(.white.opacity(0.3))
@@ -287,7 +287,7 @@ struct LocationDetailView: View {
                 HStack(spacing: 6) {
                     ForEach(0..<location.imageUrls.count, id: \.self) { index in
                         Circle()
-                            .fill(index == currentImageIndex ? Color.white : Color.white.opacity(0.35))
+                            .fill(index == currentImageIndex ? Theme.textPrimary : Theme.textTertiary)
                             .frame(width: 7, height: 7)
                             .animation(.easeInOut(duration: 0.2), value: currentImageIndex)
                     }
@@ -297,17 +297,17 @@ struct LocationDetailView: View {
 
             Text(location.name)
                 .font(.largeTitle).fontWeight(.bold).fontDesign(.rounded)
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.textPrimary)
                 .multilineTextAlignment(.center)
                 .shadow(color: .black.opacity(0.25), radius: 8, y: 2)
 
             Text(location.category)
                 .font(.subheadline).fontWeight(.medium).fontDesign(.rounded)
-                .foregroundStyle(.white.opacity(0.65))
+                .foregroundStyle(Theme.textSecondary)
 
             Text(location.address)
                 .font(.subheadline).fontWeight(.medium).fontDesign(.rounded)
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .padding(.horizontal, 28)
@@ -385,7 +385,7 @@ struct LocationDetailView: View {
                 Text(title)
                     .font(.subheadline).fontWeight(.semibold).fontDesign(.rounded)
             }
-            .foregroundStyle(.white.opacity(0.85))
+            .foregroundStyle(Theme.textPrimary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 18)
         }
@@ -408,10 +408,10 @@ struct LocationDetailView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Beschreibung")
                     .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.textPrimary)
                 Text(text)
                     .font(.subheadline).fontWeight(.regular).fontDesign(.rounded)
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(Theme.textSecondary)
             }
         }
     }
@@ -423,7 +423,7 @@ struct LocationDetailView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Bearbeiten")
                     .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.textPrimary)
 
                 Picker("Kategorie", selection: $editCategory) {
                     ForEach(LocationCategory.allCases, id: \.self) { cat in
@@ -436,9 +436,9 @@ struct LocationDetailView: View {
                 TextField("Beschreibung", text: $editDescription, axis: .vertical)
                     .lineLimit(3...6)
                     .font(.subheadline).fontDesign(.rounded)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.textPrimary)
                     .padding(12)
-                    .background(Color.white.opacity(0.08))
+                    .background(Theme.skeletonFillLight)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             }
         }
@@ -471,17 +471,17 @@ struct LocationDetailView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Erstellt von")
                                 .font(.caption).fontWeight(.medium).fontDesign(.rounded)
-                                .foregroundStyle(.white.opacity(0.5))
+                                .foregroundStyle(Theme.textSecondary)
                             Text(location.creatorDisplayName ?? creatorUsername)
                                 .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Theme.textPrimary)
                         }
 
                         Spacer()
 
                         Image(systemName: "chevron.right")
                             .font(.footnote).fontWeight(.semibold)
-                            .foregroundStyle(.white.opacity(0.3))
+                            .foregroundStyle(Theme.textTertiary)
                     }
                 }
             }
@@ -506,7 +506,7 @@ struct LocationDetailView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Details")
                             .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.textPrimary)
 
                         if let price = location.priceRange {
                             infoRow(icon: "eurosign.circle", label: "Preis", value: price)
@@ -546,15 +546,15 @@ struct LocationDetailView: View {
         HStack(spacing: 10) {
             Image(systemName: icon)
                 .font(.subheadline).fontWeight(.medium)
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(Theme.textSecondary)
                 .frame(width: 22)
             Text(label)
                 .font(.footnote).fontWeight(.medium).fontDesign(.rounded)
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(Theme.textSecondary)
             Spacer()
             Text(value)
                 .font(.footnote).fontWeight(.semibold).fontDesign(.rounded)
-                .foregroundStyle(.white.opacity(0.85))
+                .foregroundStyle(Theme.textPrimary)
                 .lineLimit(1)
         }
     }
@@ -566,44 +566,44 @@ struct LocationDetailView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Kommentare (\(viewModel.comments.count))")
                     .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.textPrimary)
 
                 if viewModel.comments.isEmpty {
                     Text("Noch keine Kommentare")
                         .font(.subheadline).fontWeight(.medium).fontDesign(.rounded)
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(Theme.textTertiary)
                         .padding(.vertical, 4)
                 } else {
                     ForEach(viewModel.comments) { comment in
                         HStack(alignment: .top, spacing: 10) {
                             Circle()
-                                .fill(Color.white.opacity(0.1))
+                                .fill(Theme.skeletonFillMedium)
                                 .frame(width: 30, height: 30)
                                 .overlay(
                                     Text(String(comment.username.prefix(1)).uppercased())
                                         .font(.caption).fontWeight(.bold).fontDesign(.rounded)
-                                        .foregroundStyle(.white.opacity(0.6))
+                                        .foregroundStyle(Theme.textSecondary)
                                 )
 
                             VStack(alignment: .leading, spacing: 3) {
                                 HStack {
                                     Text("@\(comment.username)")
                                         .font(.footnote).fontWeight(.bold).fontDesign(.rounded)
-                                        .foregroundStyle(.white.opacity(0.8))
+                                        .foregroundStyle(Theme.textPrimary)
                                     Spacer()
                                     Text(String(comment.createdAt.prefix(10)))
                                         .font(.caption).fontWeight(.medium).fontDesign(.rounded)
-                                        .foregroundStyle(.white.opacity(0.3))
+                                        .foregroundStyle(Theme.textTertiary)
                                 }
                                 Text(comment.text)
                                     .font(.footnote).fontWeight(.regular).fontDesign(.rounded)
-                                    .foregroundStyle(.white.opacity(0.65))
+                                    .foregroundStyle(Theme.textSecondary)
                             }
                         }
 
                         if comment.id != viewModel.comments.last?.id {
                             Rectangle()
-                                .fill(Color.white.opacity(0.06))
+                                .fill(Theme.divider)
                                 .frame(height: 0.5)
                         }
                     }
@@ -613,10 +613,10 @@ struct LocationDetailView: View {
                 HStack(spacing: 10) {
                     TextField("Kommentar...", text: $newComment)
                         .font(.subheadline).fontDesign(.rounded)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.textPrimary)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)
-                        .background(Color.white.opacity(0.08))
+                        .background(Theme.skeletonFillLight)
                         .clipShape(Capsule())
 
                     Button {
@@ -629,7 +629,7 @@ struct LocationDetailView: View {
                     } label: {
                         Image(systemName: "arrow.up.circle.fill")
                             .font(.title)
-                            .foregroundStyle(newComment.isEmpty ? .white.opacity(0.2) : dominantColor)
+                            .foregroundStyle(newComment.isEmpty ? Theme.textTertiary : dominantColor)
                     }
                     .disabled(newComment.isEmpty)
                 }
@@ -654,11 +654,11 @@ struct LocationDetailView: View {
 
     private func creatorPlaceholder(username: String) -> some View {
         Circle()
-            .fill(Color.white.opacity(0.1))
+            .fill(Theme.skeletonFillMedium)
             .overlay(
                 Text(String(username.prefix(1)).uppercased())
                     .font(.footnote).fontWeight(.bold).fontDesign(.rounded)
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(Theme.textSecondary)
             )
     }
 

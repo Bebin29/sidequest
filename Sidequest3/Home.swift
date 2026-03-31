@@ -53,7 +53,7 @@ struct Home: View {
                 }
             }
         }
-        .tint(Color(.systemIndigo))
+        .tint(Theme.accent)
         .preferredColorScheme(.dark)
         .onChange(of: deepLinkRouter.pendingDestination) { _, destination in
             guard let destination else { return }

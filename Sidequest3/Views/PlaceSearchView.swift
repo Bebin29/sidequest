@@ -41,7 +41,7 @@ struct PlaceSearchView: View {
                             VisualEffectBlur(blurStyle: .systemUltraThinMaterial)
                                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                         )
-                        .foregroundColor(.white)
+                        .foregroundStyle(Theme.textPrimary)
                         .font(.headline)
                         .padding()
                         .onChange(of: searchText) { _, newValue in
@@ -65,7 +65,7 @@ struct PlaceSearchView: View {
                                         .foregroundStyle(.primary)
                                     Text(result.completion.subtitle)
                                         .font(.caption)
-                                        .foregroundColor(.gray)
+                                        .foregroundStyle(Theme.textSecondary)
                                 }
                                 Spacer()
                             }

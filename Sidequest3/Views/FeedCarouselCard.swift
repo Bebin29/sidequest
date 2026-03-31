@@ -9,7 +9,7 @@ import SwiftUI
 
 struct FeedCarouselCard: View {
     let location: Location
-    var borderColor: Color = .indigo
+    var borderColor: Color = .accentColor
     var onTap: () -> Void
     var onImageLoaded: ((UIImage) -> Void)?
 
@@ -126,7 +126,7 @@ struct FeedCarouselCard: View {
             // Location name — large, centered
             Text(location.name)
                 .font(.title).fontWeight(.bold).fontDesign(.rounded)
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.textPrimary)
                 .shadow(color: .black.opacity(0.30), radius: 6, y: 2)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
@@ -139,7 +139,7 @@ struct FeedCarouselCard: View {
                     .font(.footnote).fontWeight(.medium).fontDesign(.rounded)
                     .lineLimit(1)
             }
-            .foregroundStyle(.white.opacity(0.75))
+            .foregroundStyle(Theme.textPrimary)
             .padding(.top, 5)
         }
         .frame(maxWidth: .infinity)
@@ -188,21 +188,21 @@ struct FeedCarouselCard: View {
 
     private var avatarPlaceholder: some View {
         Circle()
-            .fill(Color.white.opacity(0.10))
+            .fill(Theme.skeletonFillMedium)
             .overlay(
                 Text(String((location.creatorUsername ?? "?").prefix(1)).uppercased())
                     .font(.caption2).fontWeight(.bold).fontDesign(.rounded)
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(Theme.textSecondary)
             )
     }
 
     private var imagePlaceholder: some View {
         Rectangle()
-            .fill(Color.white.opacity(0.05))
+            .fill(Theme.skeletonFill)
             .overlay(
                 Image(systemName: "photo")
                     .font(.largeTitle).fontWeight(.light)
-                    .foregroundStyle(.white.opacity(0.2))
+                    .foregroundStyle(Theme.textTertiary)
             )
     }
 

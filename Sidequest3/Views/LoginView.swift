@@ -23,11 +23,11 @@ struct LoginView: View {
                 Text("Sidequest")
                     .font(.title)
                     .fontWeight(.bold)
-                    .foregroundColor(Color(.systemIndigo))
+                    .foregroundStyle(Theme.accent)
                 Text("Entdecke und teile Orte mit Freunden")
                     .font(.headline)
                     .fontWeight(.bold)
-                    .foregroundColor(Color(.systemIndigo))
+                    .foregroundStyle(Theme.accent)
 
                 Spacer()
 
@@ -64,7 +64,7 @@ struct LoginView: View {
                 if let error = authViewModel.errorMessage {
                     Text(error)
                         .font(.caption)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Theme.destructive)
                 }
 
                 Spacer()

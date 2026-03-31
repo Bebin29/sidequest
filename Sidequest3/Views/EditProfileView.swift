@@ -84,7 +84,7 @@ struct EditProfileView: View {
                                     
                                     Image(systemName: "camera.fill")
                                         .font(.title2)
-                                        .foregroundStyle(.white)
+                                        .foregroundStyle(Theme.textPrimary)
                                 }
                             }
                         }
@@ -132,7 +132,7 @@ struct EditProfileView: View {
                                 .controlSize(.small)
                         } else if usernameChanged, let available = isUsernameAvailable {
                             Image(systemName: available ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                .foregroundStyle(available ? .green : .red)
+                                .foregroundStyle(available ? Theme.success : Theme.destructive)
                         }
                     }
 
@@ -144,7 +144,7 @@ struct EditProfileView: View {
                         } else if isUsernameAvailable == false {
                             Text("Username ist bereits vergeben")
                                 .font(.caption)
-                                .foregroundStyle(.red)
+                                .foregroundStyle(Theme.destructive)
                         }
                     }
                 }
@@ -152,7 +152,7 @@ struct EditProfileView: View {
                 if let error = errorMessage {
                     Section {
                         Text(error)
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Theme.destructive)
                     }
                 }
             }
@@ -227,8 +227,8 @@ struct EditProfileView: View {
                             .font(.subheadline.bold())
                             .padding(.horizontal, 16)
                             .padding(.vertical, 12)
-                            .background(.green, in: Capsule())
-                            .foregroundStyle(.white)
+                            .background(Theme.success, in: Capsule())
+                            .foregroundStyle(Theme.textPrimary)
                             .shadow(radius: 4)
                             .padding(.bottom, 32)
                     }
@@ -242,12 +242,12 @@ struct EditProfileView: View {
 
     private var profilePlaceholder: some View {
         Circle()
-            .fill(Color(.systemGray4))
+            .fill(Theme.imagePlaceholder)
             .frame(width: 100, height: 100)
             .overlay(
                 Image(systemName: "person.fill")
                     .font(.largeTitle)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.textPrimary)
             )
     }
 

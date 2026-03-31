@@ -47,31 +47,31 @@ struct SettingsView: View {
                                                     Image(systemName: "person.crop.circle.fill")
                                                         .resizable()
                                                         .frame(width: 50, height: 50)
-                                                        .foregroundColor(.indigo)
+                                                        .foregroundStyle(Theme.accent)
                                                 }
                                             } else {
                                                 Image(systemName: "person.crop.circle.fill")
                                                     .resizable()
                                                     .frame(width: 50, height: 50)
-                                                    .foregroundColor(.indigo)
+                                                    .foregroundStyle(Theme.accent)
                                             }
                                         }
 
                                         VStack(alignment: .leading, spacing: 4) {
 
                                             Text(user.displayName)
-                                                .foregroundColor(.white)
+                                                .foregroundStyle(Theme.textPrimary)
                                                 .font(.headline)
 
                                             Text("@\(user.username)")
-                                                .foregroundColor(.gray)
+                                                .foregroundStyle(Theme.textSecondary)
                                                 .font(.subheadline)
                                         }
 
                                         Spacer()
                                     }
                                     .padding()
-                                    .background(Color(UIColor.systemGray).opacity(0.2))
+                                    .background(Theme.cardBackground)
                                     .clipShape(RoundedRectangle(cornerRadius: 30))
                                     .padding(.horizontal)
 
@@ -79,7 +79,7 @@ struct SettingsView: View {
 
                                 Text("Du bist mit deinem Apple Account angemeldet. Du kannst deinen Namen und dein Profilbild ändern, wenn du auf dein Profil klickst.")
                                     .font(.footnote)
-                                    .foregroundColor(.gray)
+                                    .foregroundStyle(Theme.textSecondary)
                                     .padding(.horizontal)
 
 
@@ -113,7 +113,7 @@ struct SettingsView: View {
                                     VStack(alignment: .leading, spacing: 8) {
 
                                         Text("Datenschutz & Informationen")
-                                            .foregroundColor(.gray)
+                                            .foregroundStyle(Theme.textSecondary)
                                             .font(.footnote)
                                             .padding(.horizontal)
 
@@ -122,17 +122,17 @@ struct SettingsView: View {
                                             LinkRow(title: "Datenschutz")
 
                                             Divider()
-                                                .background(Color.gray.opacity(0.3))
+                                                .background(Theme.divider)
 
                                             LinkRow(title: "Impressum")
 
                                             Divider()
-                                                .background(Color.gray.opacity(0.3))
+                                                .background(Theme.divider)
 
                                             LinkRow(title: "Hilfe")
 
                                         }
-                                        .background(Color(UIColor.systemGray).opacity(0.2))
+                                        .background(Theme.cardBackground)
                                         .clipShape(RoundedRectangle(cornerRadius: 30))
                                         .padding(.horizontal)
 
@@ -154,10 +154,10 @@ struct SettingsView: View {
                                             VStack{
                                                 HStack {
                                                     Image(systemName: "rectangle.portrait.and.arrow.right")
-                                                        .foregroundColor(.red)
+                                                        .foregroundStyle(Theme.destructive)
                                                         .font(.subheadline)
                                                     Text("Abmelden")
-                                                        .foregroundColor(.red)
+                                                        .foregroundStyle(Theme.destructive)
 
                                                     Spacer()
 
@@ -166,7 +166,7 @@ struct SettingsView: View {
 
                                                 }
                                                 .padding()
-                                                .background(Color(UIColor.systemGray).opacity(0.2))
+                                                .background(Theme.cardBackground)
                                                 .clipShape(RoundedRectangle(cornerRadius: 30))
                                             }
                                             .padding(.horizontal)
@@ -188,14 +188,14 @@ struct SettingsView: View {
                                         } label: {
                                             HStack {
                                                 Image(systemName: "trash")
-                                                    .foregroundColor(.red)
+                                                    .foregroundStyle(Theme.destructive)
                                                     .font(.subheadline)
                                                 Text("Account löschen")
-                                                    .foregroundColor(.red)
+                                                    .foregroundStyle(Theme.destructive)
                                                 Spacer()
                                             }
                                             .padding()
-                                            .background(Color(UIColor.systemGray).opacity(0.2))
+                                            .background(Theme.cardBackground)
                                             .clipShape(RoundedRectangle(cornerRadius: 30))
                                             .padding(.horizontal)
                                         }
@@ -211,10 +211,10 @@ struct SettingsView: View {
 
                                 HStack(spacing: 4) {
                                     Image(systemName: "map.fill")
-                                        .foregroundColor(.gray)
+                                        .foregroundStyle(Theme.textSecondary)
                                         .font(.footnote)
                                     Text("sidequest")
-                                        .foregroundColor(.gray)
+                                        .foregroundStyle(Theme.textSecondary)
                                         .font(.footnote)
 
 
@@ -265,16 +265,16 @@ struct SettingsRow: View {
     var body: some View {
         HStack {
             Text(title)
-                .foregroundColor(.white)
+                .foregroundStyle(Theme.textPrimary)
 
             Spacer()
 
             Image(systemName: "chevron.right")
-                .foregroundColor(.gray)
+                .foregroundStyle(Theme.textSecondary)
                 .font(.subheadline)
         }
         .padding()
-        .background(Color(UIColor.systemGray).opacity(0.2))
+        .background(Theme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 30))
     }
 }
@@ -286,7 +286,7 @@ struct LinkRow: View {
     var body: some View {
         HStack {
             Text(title)
-                .foregroundColor(.blue)
+                .foregroundStyle(.blue)
 
             Spacer()
         }

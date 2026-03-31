@@ -112,7 +112,7 @@ struct UserProfileView: View {
             }
             .frame(width: 96, height: 96)
             .clipShape(Circle())
-            .overlay(Circle().stroke(Color(.systemGray4), lineWidth: 0.5))
+            .overlay(Circle().stroke(Theme.imagePlaceholder, lineWidth: 0.5))
             .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
 
             VStack(spacing: 4) {
@@ -183,11 +183,11 @@ struct UserProfileView: View {
                 } label: {
                     Label("Freund hinzufügen", systemImage: "person.badge.plus")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.textPrimary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                 }
-                .buttonStyle(GlassProminentButtonStyle(color: .indigo))
+                .buttonStyle(GlassProminentButtonStyle(color: Theme.accent))
                 .disabled(friendActionInProgress)
 
             case .pendingSent:
@@ -205,11 +205,11 @@ struct UserProfileView: View {
                     } label: {
                         Text("Annehmen")
                             .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.textPrimary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
                     }
-                    .buttonStyle(GlassProminentButtonStyle(color: .indigo))
+                    .buttonStyle(GlassProminentButtonStyle(color: Theme.accent))
 
                     Button {
                         Task { await declineFriendRequest() }
@@ -284,14 +284,14 @@ struct UserProfileView: View {
                         .scaledToFill()
                 } placeholder: {
                     Rectangle()
-                        .fill(Color(.systemGray5))
+                        .fill(Theme.imagePlaceholder)
                         .overlay(ProgressView())
                 }
                 .frame(width: 140, height: 140)
                 .clipped()
             } else {
                 Rectangle()
-                    .fill(Color(.systemGray5))
+                    .fill(Theme.imagePlaceholder)
                     .frame(width: 140, height: 140)
                     .overlay(
                         Image(systemName: "mappin")
@@ -352,11 +352,11 @@ struct UserProfileView: View {
 
     private var profilePlaceholder: some View {
         Circle()
-            .fill(Color(.systemGray4))
+            .fill(Theme.imagePlaceholder)
             .overlay(
                 Image(systemName: "person.fill")
                     .font(.largeTitle)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.textPrimary)
             )
     }
 

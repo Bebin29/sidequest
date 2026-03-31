@@ -69,7 +69,7 @@ struct RingCodeScannerView: View {
                     ZStack {
                         Circle()
                             .stroke(
-                                hasDetection ? Color.green.opacity(0.8) : Color.white.opacity(0.5),
+                                hasDetection ? Theme.success.opacity(0.8) : Theme.textSecondary,
                                 lineWidth: hasDetection ? 3 : 2
                             )
                             .frame(width: guideSize, height: guideSize)
@@ -78,7 +78,7 @@ struct RingCodeScannerView: View {
                         if isSearching {
                             Circle()
                                 .trim(from: 0, to: 0.3)
-                                .stroke(Color.indigo, lineWidth: 3)
+                                .stroke(Theme.accent, lineWidth: 3)
                                 .frame(width: guideSize, height: guideSize)
                                 .rotationEffect(.degrees(spinAngle))
                         }
@@ -94,7 +94,7 @@ struct RingCodeScannerView: View {
                         Text(statusText)
                     }
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.textPrimary)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 12)
                     .background(.black.opacity(0.6))
@@ -110,7 +110,7 @@ struct RingCodeScannerView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Abbrechen") { dismiss() }
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.textPrimary)
                 }
             }
             .onDisappear { scanner.stop() }

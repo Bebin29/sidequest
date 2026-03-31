@@ -63,13 +63,13 @@ struct OnboardingView: View {
                                     .controlSize(.small)
                             } else if let available = isAvailable {
                                 Image(systemName: available ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                    .foregroundStyle(available ? .green : .red)
+                                    .foregroundStyle(available ? Theme.success : Theme.destructive)
                             }
                         }
                         if let available = isAvailable, !available {
                             Text("Username ist bereits vergeben")
                                 .font(.caption)
-                                .foregroundStyle(.red)
+                                .foregroundStyle(Theme.destructive)
                         }
                         if !username.isEmpty && username.count < 3 {
                             Text("Mindestens 3 Zeichen")
@@ -92,7 +92,7 @@ struct OnboardingView: View {
                 if let error = errorMessage {
                     Text(error)
                         .font(.caption)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Theme.destructive)
                 }
 
                 Spacer()

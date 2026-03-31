@@ -159,12 +159,12 @@ private struct MyProfileCard: View {
                         } placeholder: {
                             Image(systemName: "person.crop.circle.fill")
                                 .resizable()
-                                .foregroundColor(.indigo)
+                                .foregroundStyle(Theme.accent)
                         }
                     } else {
                         Image(systemName: "person.crop.circle.fill")
                             .resizable()
-                            .foregroundColor(.indigo)
+                            .foregroundStyle(Theme.accent)
                     }
                 }
                 .frame(width: 50, height: 50)
@@ -173,20 +173,20 @@ private struct MyProfileCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(user.displayName)
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
                     Text("@\(user.username) · \(locationCount) Orte")
                         .font(.subheadline)
-                        .foregroundColor(.gray)
+                        .foregroundStyle(Theme.textSecondary)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .foregroundColor(.gray)
+                    .foregroundStyle(Theme.textSecondary)
                     .font(.subheadline)
             }
             .padding()
-            .background(Color(UIColor.systemGray).opacity(0.2))
+            .background(Theme.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 20))
         }
         .buttonStyle(.plain)
@@ -204,7 +204,7 @@ private struct PendingRequestsSection: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Anfragen (\(requests.count))")
                 .font(.footnote)
-                .foregroundStyle(.gray)
+                .foregroundStyle(Theme.textSecondary)
                 .padding(.horizontal, 4)
 
             ForEach(requests) { request in
@@ -266,17 +266,17 @@ private struct PendingRequestsSection: View {
             .controlSize(.small)
         }
         .padding()
-        .background(Color(UIColor.systemGray).opacity(0.2))
+        .background(Theme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 
     private func initialCircle(_ username: String) -> some View {
         Circle()
-            .fill(Color(.systemGray4))
+            .fill(Theme.imagePlaceholder)
             .overlay(
                 Text(String(username.prefix(1)).uppercased())
                     .font(.caption.bold())
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.textPrimary)
             )
     }
 }
@@ -291,7 +291,7 @@ private struct FriendSuggestionsSection: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Vorschläge")
                 .font(.footnote)
-                .foregroundStyle(.gray)
+                .foregroundStyle(Theme.textSecondary)
                 .padding(.horizontal, 4)
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -311,22 +311,22 @@ private struct FriendSuggestionsSection: View {
                 CachedAsyncImage(url: url) { image in
                     image.resizable().scaledToFill()
                 } placeholder: {
-                    Circle().fill(Color(.systemGray4))
+                    Circle().fill(Theme.imagePlaceholder)
                         .overlay(
                             Text(String(suggestion.username.prefix(1)).uppercased())
                                 .font(.caption).fontWeight(.bold)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Theme.textPrimary)
                         )
                 }
                 .frame(width: 36, height: 36)
                 .clipShape(Circle())
             } else {
-                Circle().fill(Color(.systemGray4))
+                Circle().fill(Theme.imagePlaceholder)
                     .frame(width: 36, height: 36)
                     .overlay(
                         Text(String(suggestion.username.prefix(1)).uppercased())
                             .font(.caption).fontWeight(.bold)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.textPrimary)
                     )
             }
 
@@ -344,12 +344,12 @@ private struct FriendSuggestionsSection: View {
             } label: {
                 Image(systemName: "plus.circle.fill")
                     .font(.title3)
-                    .foregroundStyle(.indigo)
+                    .foregroundStyle(Theme.accent)
             }
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(Color(UIColor.systemGray).opacity(0.2))
+        .background(Theme.cardBackground)
         .clipShape(Capsule())
     }
 }
@@ -365,7 +365,7 @@ private struct FriendsListSection: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Freunde (\(friends.count))")
                 .font(.footnote)
-                .foregroundStyle(.gray)
+                .foregroundStyle(Theme.textSecondary)
                 .padding(.horizontal, 4)
 
             if friends.isEmpty {
@@ -387,7 +387,7 @@ private struct FriendsListSection: View {
                         }
                     }
                 }
-                .background(Color(UIColor.systemGray).opacity(0.2))
+                .background(Theme.cardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
             }
         }
@@ -410,22 +410,22 @@ private struct FriendsListSection: View {
                     CachedAsyncImage(url: url) { image in
                         image.resizable().scaledToFill()
                     } placeholder: {
-                        Circle().fill(Color(.systemGray4))
+                        Circle().fill(Theme.imagePlaceholder)
                             .overlay(
                                 Text(String(friendUsername.prefix(1)).uppercased())
                                     .font(.caption.bold())
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Theme.textPrimary)
                             )
                     }
                     .frame(width: 44, height: 44)
                     .clipShape(Circle())
                 } else {
-                    Circle().fill(Color(.systemGray4))
+                    Circle().fill(Theme.imagePlaceholder)
                         .frame(width: 44, height: 44)
                         .overlay(
                             Text(String(friendUsername.prefix(1)).uppercased())
                                 .font(.caption.bold())
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Theme.textPrimary)
                         )
                 }
 
@@ -447,7 +447,7 @@ private struct FriendsListSection: View {
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .foregroundColor(.gray)
+                    .foregroundStyle(Theme.textSecondary)
                     .font(.subheadline)
             }
             .padding()
@@ -485,7 +485,7 @@ struct FriendSearchView: View {
                         VisualEffectBlur(blurStyle: .systemUltraThinMaterial)
                             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     )
-                    .foregroundColor(.white)
+                    .foregroundStyle(Theme.textPrimary)
                     .font(.headline)
                     .padding()
                     .onChange(of: searchText) { _, newValue in
@@ -508,13 +508,13 @@ struct FriendSearchView: View {
 
                 if let success = viewModel.successMessage {
                     Text(success)
-                        .foregroundStyle(.green)
+                        .foregroundStyle(Theme.success)
                         .padding(.horizontal)
                 }
 
                 if let error = viewModel.errorMessage {
                     Text(error)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Theme.destructive)
                         .padding(.horizontal)
                 }
 

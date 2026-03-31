@@ -33,8 +33,8 @@ struct AddLocationFormView: View {
                     .font(.caption.weight(.medium))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(.indigo)
-                    .foregroundStyle(.white)
+                    .background(Theme.accent)
+                    .foregroundStyle(Theme.textPrimary)
                     .clipShape(Capsule())
             }
 
@@ -56,7 +56,7 @@ struct AddLocationFormView: View {
                                         .shadow(radius: 4)
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 16)
-                                                .stroke(.white.opacity(0.3), lineWidth: 1)
+                                                .stroke(Theme.borderLight, lineWidth: 1)
                                         )
 
                                     Button {
@@ -80,10 +80,10 @@ struct AddLocationFormView: View {
                     Label("Foto hinzufügen", systemImage: "camera")
                         .padding()
                         .frame(maxWidth: .infinity)
-                        .foregroundStyle(Color(.white))
+                        .foregroundStyle(Theme.textPrimary)
                         .background(
                             ZStack {
-                                Color(.systemIndigo) // Hintergrundfarbe
+                                Theme.accent // Hintergrundfarbe
                                 //VisualEffectBlur(blurStyle: .systemThinMaterial) // Liquid Glass
                             }
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))

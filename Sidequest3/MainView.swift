@@ -162,26 +162,8 @@ struct MainView: View {
                 showSettings = true
             } label: {
                 if let user = authViewModel.currentUser {
-                    if let urlString = user.profileImageUrl,
-                       let url = URL(string: urlString) {
-                        AsyncImage(url: url) { image in
-                            image
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 50, height: 50)
-                                .clipShape(Circle())
-                        } placeholder: {
-                            Image(systemName: "person.crop.circle.fill")
-                                .resizable()
-                                .frame(width: 50, height: 50)
-                                .foregroundStyle(Theme.accent)
-                        }
-                    } else {
-                        Image(systemName: "person.crop.circle.fill")
-                            .resizable()
-                            .frame(width: 50, height: 50)
-                            .foregroundStyle(Theme.accent)
-                    }
+                    AvatarView(url: user.profileImageUrl, size: .medium)
+                        .frame(width: 50, height: 50)
                 }
             }
             .accessibilityLabel("Einstellungen")

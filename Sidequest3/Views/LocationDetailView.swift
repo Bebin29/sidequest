@@ -458,21 +458,8 @@ struct LocationDetailView: View {
             NavigationLink(destination: UserProfileView(userId: location.createdBy, currentUserId: currentUserId)) {
                 glassCard {
                     HStack(spacing: 12) {
-                        if let urlString = location.creatorProfileImageUrl,
-                           let url = URL(string: urlString) {
-                            CachedAsyncImage(url: url) { image in
-                                image
-                                    .resizable()
-                                    .scaledToFill()
-                                    .clipShape(Circle())
-                            } placeholder: {
-                                creatorPlaceholder(username: creatorUsername)
-                            }
+                        AvatarView(url: location.creatorProfileImageUrl, fallbackInitial: creatorUsername, size: .small)
                             .frame(width: 40, height: 40)
-                        } else {
-                            creatorPlaceholder(username: creatorUsername)
-                                .frame(width: 40, height: 40)
-                        }
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Erstellt von")
@@ -653,16 +640,6 @@ struct LocationDetailView: View {
             }
             topController.present(activityVC, animated: true)
         }
-    }
-
-    private func creatorPlaceholder(username: String) -> some View {
-        Circle()
-            .fill(Theme.skeletonFillMedium)
-            .overlay(
-                Text(String(username.prefix(1)).uppercased())
-                    .font(.footnote).fontWeight(.bold).fontDesign(.rounded)
-                    .foregroundStyle(Theme.textSecondary)
-            )
     }
 
     func saveEdit() async {

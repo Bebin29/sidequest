@@ -96,24 +96,9 @@ struct UserProfileView: View {
 
     private func profileHeader(user: User) -> some View {
         VStack(spacing: 12) {
-            Group {
-                if let urlString = user.profileImageUrl,
-                   let url = URL(string: urlString) {
-                    AsyncImage(url: url) { image in
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    } placeholder: {
-                        profilePlaceholder
-                    }
-                } else {
-                    profilePlaceholder
-                }
-            }
-            .frame(width: 96, height: 96)
-            .clipShape(Circle())
-            .overlay(Circle().stroke(Theme.imagePlaceholder, lineWidth: 0.5))
-            .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
+            AvatarView(url: user.profileImageUrl, fallbackInitial: user.displayName, size: .large)
+                .overlay(Circle().stroke(Theme.imagePlaceholder, lineWidth: 0.5))
+                .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
 
             VStack(spacing: 4) {
                 HStack(spacing: 6) {
@@ -348,18 +333,6 @@ struct UserProfileView: View {
             return "Mitglied seit \(Self.displayFormatter.string(from: date))"
         }
         return "Mitglied"
-    }
-
-    // MARK: - Placeholder
-
-    private var profilePlaceholder: some View {
-        Circle()
-            .fill(Theme.imagePlaceholder)
-            .overlay(
-                Image(systemName: "person.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(Theme.textPrimary)
-            )
     }
 
     // MARK: - Data Loading

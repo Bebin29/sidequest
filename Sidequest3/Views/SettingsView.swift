@@ -34,28 +34,8 @@ struct SettingsView: View {
                                     HStack(spacing: 16) {
 
 
-                                        Group {
-                                            if let urlString = user.profileImageUrl,
-                                               let url = URL(string: urlString) {
-                                                AsyncImage(url: url) { image in
-                                                    image
-                                                        .resizable()
-                                                        .scaledToFill()
-                                                        .frame(width: 50, height: 50)
-                                                        .clipShape(Circle())
-                                                } placeholder: {
-                                                    Image(systemName: "person.crop.circle.fill")
-                                                        .resizable()
-                                                        .frame(width: 50, height: 50)
-                                                        .foregroundStyle(Theme.accent)
-                                                }
-                                            } else {
-                                                Image(systemName: "person.crop.circle.fill")
-                                                    .resizable()
-                                                    .frame(width: 50, height: 50)
-                                                    .foregroundStyle(Theme.accent)
-                                            }
-                                        }
+                                        AvatarView(url: user.profileImageUrl, size: .medium)
+                                            .frame(width: 50, height: 50)
 
                                         VStack(alignment: .leading, spacing: 4) {
 

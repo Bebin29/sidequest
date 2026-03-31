@@ -169,31 +169,8 @@ struct FeedCarouselCard: View {
 
     // MARK: - Creator Avatar
 
-    @ViewBuilder
     private var creatorAvatar: some View {
-        if let urlString = location.creatorProfileImageUrl,
-           let url = URL(string: urlString) {
-            CachedAsyncImage(url: url) { image in
-                image
-                    .resizable()
-                    .scaledToFill()
-                    .clipShape(Circle())
-            } placeholder: {
-                avatarPlaceholder
-            }
-        } else {
-            avatarPlaceholder
-        }
-    }
-
-    private var avatarPlaceholder: some View {
-        Circle()
-            .fill(Theme.skeletonFillMedium)
-            .overlay(
-                Text(String((location.creatorUsername ?? "?").prefix(1)).uppercased())
-                    .font(.caption2).fontWeight(.bold).fontDesign(.rounded)
-                    .foregroundStyle(Theme.textSecondary)
-            )
+        AvatarView(url: location.creatorProfileImageUrl, fallbackInitial: location.creatorUsername, size: .small)
     }
 
     private var imagePlaceholder: some View {

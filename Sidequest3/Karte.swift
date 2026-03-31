@@ -71,7 +71,9 @@ struct Karte: View {
                             .opacity(0.35)
 
                         Button {
-                            if locationManager.authorizationStatus == .denied || locationManager.authorizationStatus == .restricted {
+                            if locationManager.authorizationStatus == .notDetermined {
+                                locationManager.requestPermission()
+                            } else if locationManager.authorizationStatus == .denied || locationManager.authorizationStatus == .restricted {
                                 showLocationDeniedHint = true
                             } else {
                                 locationManager.centerOnUser()
@@ -121,7 +123,6 @@ struct Karte: View {
             .presentationDragIndicator(.visible)
         }
         .task {
-            locationManager.requestPermission()
             guard let userId else { return }
             await mapViewModel.loadLocations(userId: userId)
         }

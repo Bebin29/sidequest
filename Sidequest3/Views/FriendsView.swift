@@ -155,24 +155,8 @@ private struct MyProfileCard: View {
             MyProfileView(user: user, friendCount: friendCount)
         } label: {
             HStack(spacing: 16) {
-                Group {
-                    if let urlString = user.profileImageUrl,
-                       let url = URL(string: urlString) {
-                        CachedAsyncImage(url: url) { image in
-                            image.resizable().scaledToFill()
-                        } placeholder: {
-                            Image(systemName: "person.crop.circle.fill")
-                                .resizable()
-                                .foregroundStyle(Theme.accent)
-                        }
-                    } else {
-                        Image(systemName: "person.crop.circle.fill")
-                            .resizable()
-                            .foregroundStyle(Theme.accent)
-                    }
-                }
-                .frame(width: 50, height: 50)
-                .clipShape(Circle())
+                AvatarView(url: user.profileImageUrl, size: .medium)
+                    .frame(width: 50, height: 50)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(user.displayName)
@@ -215,19 +199,7 @@ private struct PendingRequestsSection: View {
 
     private func requestCard(_ request: Friendship) -> some View {
         HStack(spacing: 12) {
-            if let urlString = request.requesterProfileImageUrl,
-               let url = URL(string: urlString) {
-                CachedAsyncImage(url: url) { image in
-                    image.resizable().scaledToFill()
-                } placeholder: {
-                    initialCircle(request.requesterUsername)
-                }
-                .frame(width: 44, height: 44)
-                .clipShape(Circle())
-            } else {
-                initialCircle(request.requesterUsername)
-                    .frame(width: 44, height: 44)
-            }
+            AvatarView(url: request.requesterProfileImageUrl, fallbackInitial: request.requesterUsername, size: .medium)
 
             VStack(alignment: .leading, spacing: 2) {
                 if let displayName = request.requesterDisplayName {
@@ -271,15 +243,6 @@ private struct PendingRequestsSection: View {
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 
-    private func initialCircle(_ username: String) -> some View {
-        Circle()
-            .fill(Theme.imagePlaceholder)
-            .overlay(
-                Text(String(username.prefix(1)).uppercased())
-                    .font(.caption.bold())
-                    .foregroundStyle(Theme.textPrimary)
-            )
-    }
 }
 
 // MARK: - FriendSuggestionsSection
@@ -308,29 +271,8 @@ private struct FriendSuggestionsSection: View {
 
     private func suggestionChip(_ suggestion: FriendSuggestion) -> some View {
         HStack(spacing: 8) {
-            if let urlString = suggestion.profileImageUrl,
-               let url = URL(string: urlString) {
-                CachedAsyncImage(url: url) { image in
-                    image.resizable().scaledToFill()
-                } placeholder: {
-                    Circle().fill(Theme.imagePlaceholder)
-                        .overlay(
-                            Text(String(suggestion.username.prefix(1)).uppercased())
-                                .font(.caption).fontWeight(.bold)
-                                .foregroundStyle(Theme.textPrimary)
-                        )
-                }
+            AvatarView(url: suggestion.profileImageUrl, fallbackInitial: suggestion.username, size: .small)
                 .frame(width: 36, height: 36)
-                .clipShape(Circle())
-            } else {
-                Circle().fill(Theme.imagePlaceholder)
-                    .frame(width: 36, height: 36)
-                    .overlay(
-                        Text(String(suggestion.username.prefix(1)).uppercased())
-                            .font(.caption).fontWeight(.bold)
-                            .foregroundStyle(Theme.textPrimary)
-                    )
-            }
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(suggestion.displayName ?? suggestion.username)
@@ -408,29 +350,7 @@ private struct FriendsListSection: View {
             UserProfileView(userId: friendId, currentUserId: currentUserId)
         } label: {
             HStack(spacing: 12) {
-                if let urlString = friendImageUrl,
-                   let url = URL(string: urlString) {
-                    CachedAsyncImage(url: url) { image in
-                        image.resizable().scaledToFill()
-                    } placeholder: {
-                        Circle().fill(Theme.imagePlaceholder)
-                            .overlay(
-                                Text(String(friendUsername.prefix(1)).uppercased())
-                                    .font(.caption.bold())
-                                    .foregroundStyle(Theme.textPrimary)
-                            )
-                    }
-                    .frame(width: 44, height: 44)
-                    .clipShape(Circle())
-                } else {
-                    Circle().fill(Theme.imagePlaceholder)
-                        .frame(width: 44, height: 44)
-                        .overlay(
-                            Text(String(friendUsername.prefix(1)).uppercased())
-                                .font(.caption.bold())
-                                .foregroundStyle(Theme.textPrimary)
-                        )
-                }
+                AvatarView(url: friendImageUrl, fallbackInitial: friendUsername, size: .medium)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(friendDisplayName ?? friendUsername)

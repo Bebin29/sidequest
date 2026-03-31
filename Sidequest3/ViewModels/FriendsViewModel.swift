@@ -23,6 +23,10 @@ final class FriendsViewModel {
         isLoading = true
         do {
             friends = try await service.getFriends(userId: userId)
+        } catch is CancellationError {
+            // View verschwunden, Task gecancelt – ignorieren
+        } catch let urlError as URLError where urlError.code == .cancelled {
+            // Netzwerk-Request gecancelt – ignorieren
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -32,6 +36,8 @@ final class FriendsViewModel {
     func loadPendingRequests(userId: UUID) async {
         do {
             pendingRequests = try await service.getPendingRequests(userId: userId)
+        } catch is CancellationError {
+        } catch let urlError as URLError where urlError.code == .cancelled {
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -40,6 +46,8 @@ final class FriendsViewModel {
     func loadSuggestions(userId: UUID) async {
         do {
             suggestions = try await service.getSuggestions(userId: userId)
+        } catch is CancellationError {
+        } catch let urlError as URLError where urlError.code == .cancelled {
         } catch {
             // Suggestions sind nice-to-have, Fehler still ignorieren
             print("loadSuggestions error: \(error)")

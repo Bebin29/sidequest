@@ -479,11 +479,32 @@ struct FriendSearchView: View {
         NavigationStack {
             VStack {
                 TextField("Username suchen...", text: $searchText)
+                    .padding()
+                    .background(
+                        // Liquid Glass Effekt
+                        VisualEffectBlur(blurStyle: .systemUltraThinMaterial)
+                            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    )
+                    .foregroundColor(.white)
+                    .font(.headline)
+                    .padding()
+                    .onChange(of: searchText) { _, newValue in
+                        Task { await viewModel.searchUsers(query: newValue) }
+                    }
+                
+                
+                
+                
+                
+                
+               /*
+                TextField("Username suchen...", text: $searchText)
                     .textFieldStyle(.roundedBorder)
                     .padding()
                     .onChange(of: searchText) { _, newValue in
                         Task { await viewModel.searchUsers(query: newValue) }
                     }
+                */
 
                 if let success = viewModel.successMessage {
                     Text(success)
@@ -535,6 +556,8 @@ struct FriendSearchView: View {
                 .padding(.bottom, 20)
             }
             .navigationTitle("Freund hinzufügen")
+            .navigationBarTitleDisplayMode(.inline)
+
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Fertig") { onDismiss() }

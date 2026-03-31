@@ -112,15 +112,18 @@ struct LocationDetailView: View {
                         }
                     }
                 }
+                
             }
             .coordinateSpace(name: "scroll")
             .scrollDismissesKeyboard(.immediately)
+            
 
             VStack {
                 floatingTopBar
                 Spacer()
             }
         }
+    
         .navigationBarHidden(true)
         .task {
             await viewModel.loadComments(locationId: location.id)
@@ -147,13 +150,15 @@ struct LocationDetailView: View {
     private var floatingTopBar: some View {
         GlassGroup {
             HStack {
-                Button { dismiss() } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 36, height: 36)
-                }
-                .adaptiveInteractiveGlass(in: Circle())
+                
+                 Button { dismiss() } label: {
+                     Image(systemName: "xmark")
+                         .font(.system(size: 15, weight: .bold))
+                         .foregroundStyle(.white)
+                         .frame(width: 44, height: 44)
+                 }
+                 .adaptiveInteractiveGlass(in: Circle())
+                 
 
                 Spacer()
 
@@ -164,10 +169,11 @@ struct LocationDetailView: View {
                                 isEditing = false
                             } label: {
                                 Text("Abbrechen")
-                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
                                     .foregroundStyle(.white)
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 8)
+                                    .frame(height: 44)
                             }
                             .adaptiveInteractiveGlass(in: Capsule())
 
@@ -175,10 +181,11 @@ struct LocationDetailView: View {
                                 Task { await saveEdit() }
                             } label: {
                                 Text("Speichern")
-                                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                                    .font(.system(size: 14, weight: .bold, design: .rounded))
                                     .foregroundStyle(.white)
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 8)
+                                    .frame(height: 44)
                             }
                             .adaptiveTintedGlass(dominantColor, in: Capsule())
                         } else {
@@ -190,27 +197,38 @@ struct LocationDetailView: View {
                                 Image(systemName: "pencil")
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundStyle(.white)
-                                    .frame(width: 36, height: 36)
+                                    .frame(width: 44, height: 44)
                             }
                             .adaptiveInteractiveGlass(in: Circle())
 
+                            
+                            
+                            
+                           
+                            
+                            
+                            
+                            
+                            
                             Menu {
                                 Button(role: .destructive) {
                                     showDeleteConfirm = true
                                 } label: {
-                                    Label("Löschen", systemImage: "trash")
+                                    Text("Löschen")
+                                        .foregroundStyle(Color(.red))
                                 }
                             } label: {
                                 Image(systemName: "ellipsis")
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundStyle(.white)
-                                    .frame(width: 36, height: 36)
+                                    .frame(width: 44, height: 44)
                             }
                             .adaptiveInteractiveGlass(in: Circle())
                         }
                     }
                 }
             }
+            
         }
         .padding(.horizontal, 20)
         .padding(.top, 8)

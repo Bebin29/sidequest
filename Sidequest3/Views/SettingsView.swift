@@ -233,6 +233,7 @@ struct SettingsView: View {
                                     Image(systemName: "xmark")
 
                                 }
+                                .accessibilityLabel("Schliessen")
                             }
                         }
                     }

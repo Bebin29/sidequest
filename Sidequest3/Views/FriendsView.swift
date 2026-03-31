@@ -77,6 +77,7 @@ struct FriendsView: View {
                     } label: {
                         Image(systemName: "square.and.arrow.up")
                     }
+                    .accessibilityLabel("Teilen")
                     
                     
                     
@@ -95,6 +96,7 @@ struct FriendsView: View {
                     } label: {
                         Image(systemName: "person.badge.plus")
                     }
+                    .accessibilityLabel("Freund hinzufuegen")
                 }
             }
             .sheet(isPresented: $showSearch) {
@@ -262,6 +264,7 @@ private struct PendingRequestsSection: View {
                 Image(systemName: "xmark")
                     .font(.caption.bold())
             }
+            .accessibilityLabel("Ablehnen")
             .buttonStyle(.bordered)
             .controlSize(.small)
         }
@@ -333,7 +336,7 @@ private struct FriendSuggestionsSection: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text(suggestion.displayName ?? suggestion.username)
                     .font(.caption.bold())
-                    .lineLimit(1)
+                    .lineLimit(2)
                 Text("\(suggestion.mutualCount) gem.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -346,6 +349,7 @@ private struct FriendSuggestionsSection: View {
                     .font(.title3)
                     .foregroundStyle(Theme.accent)
             }
+            .accessibilityLabel("Hinzufuegen")
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
@@ -479,6 +483,7 @@ struct FriendSearchView: View {
         NavigationStack {
             VStack {
                 TextField("Username suchen...", text: $searchText)
+                    .autocorrectionDisabled()
                     .padding()
                     .background(
                         // Liquid Glass Effekt

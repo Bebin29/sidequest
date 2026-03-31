@@ -40,6 +40,7 @@ struct AdminView: View {
                     } label: {
                         Image(systemName: "arrow.clockwise")
                     }
+                    .accessibilityLabel("Aktualisieren")
                 }
             }
             .task {
@@ -61,6 +62,7 @@ struct UserRow: View {
                     Image(systemName: "checkmark.seal.fill")
                         .foregroundStyle(.blue)
                         .font(.caption)
+                        .accessibilityLabel("Verifiziert")
                 }
                 if user.isModerator {
                     Image(systemName: "shield.fill")
@@ -78,7 +80,7 @@ struct UserRow: View {
                 Text(bio)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
-                    .lineLimit(1)
+                    .lineLimit(2)
             }
         }
         .padding(.vertical, 2)

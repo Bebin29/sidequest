@@ -23,6 +23,7 @@ struct LocationDetailView: View {
     @State private var dominantColor: Color = Theme.accent
     @State private var currentImageIndex: Int = 0
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let locationService = LocationService()
 
@@ -43,7 +44,7 @@ struct LocationDetailView: View {
             // Warm base — material picks up this color
             dominantColor.opacity(0.85)
                 .ignoresSafeArea()
-                .animation(.easeInOut(duration: 0.5), value: dominantColor.description)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: dominantColor.description)
 
             ScrollView {
                 ZStack(alignment: .top) {
@@ -157,6 +158,7 @@ struct LocationDetailView: View {
                          .foregroundStyle(Theme.textPrimary)
                          .frame(width: 44, height: 44)
                  }
+                 .accessibilityLabel("Schliessen")
                  .adaptiveInteractiveGlass(in: Circle())
                  
 
@@ -199,6 +201,7 @@ struct LocationDetailView: View {
                                     .foregroundStyle(Theme.textPrimary)
                                     .frame(width: 44, height: 44)
                             }
+                            .accessibilityLabel("Bearbeiten")
                             .adaptiveInteractiveGlass(in: Circle())
 
 
@@ -223,6 +226,7 @@ struct LocationDetailView: View {
                                     .foregroundStyle(Theme.textPrimary)
                                     .frame(width: 44, height: 44)
                             }
+                            .accessibilityLabel("Mehr Optionen")
                             .adaptiveInteractiveGlass(in: Circle())
                         }
                     }
@@ -270,7 +274,7 @@ struct LocationDetailView: View {
             let urlString = location.imageUrls[newIndex]
             Task {
                 if let cached = await DominantColorCache.shared.color(for: urlString) {
-                    withAnimation(.easeInOut(duration: 0.5)) {
+                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.5)) {
                         dominantColor = cached
                     }
                 }
@@ -289,7 +293,7 @@ struct LocationDetailView: View {
                         Circle()
                             .fill(index == currentImageIndex ? Theme.textPrimary : Theme.textTertiary)
                             .frame(width: 7, height: 7)
-                            .animation(.easeInOut(duration: 0.2), value: currentImageIndex)
+                            .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: currentImageIndex)
                     }
                 }
                 .padding(.bottom, 4)
@@ -317,7 +321,7 @@ struct LocationDetailView: View {
     private func updateDominantColor(from image: UIImage, cacheKey: String) {
         Task {
             if let color = await DominantColorLoader.dominantColor(from: image, cacheKey: cacheKey) {
-                withAnimation(.easeInOut(duration: 0.5)) {
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.5)) {
                     dominantColor = color
                 }
             }
@@ -555,7 +559,7 @@ struct LocationDetailView: View {
             Text(value)
                 .font(.footnote).fontWeight(.semibold).fontDesign(.rounded)
                 .foregroundStyle(Theme.textPrimary)
-                .lineLimit(1)
+                .lineLimit(3)
         }
     }
 
@@ -631,6 +635,7 @@ struct LocationDetailView: View {
                             .font(.title)
                             .foregroundStyle(newComment.isEmpty ? Theme.textTertiary : dominantColor)
                     }
+                    .accessibilityLabel("Kommentar senden")
                     .disabled(newComment.isEmpty)
                 }
             }

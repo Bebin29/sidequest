@@ -37,6 +37,7 @@ struct OnboardingView: View {
                             .foregroundStyle(.secondary)
                         HStack {
                             TextField("username", text: $username)
+                                .textContentType(.username)
                                 .textFieldStyle(.roundedBorder)
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
@@ -64,6 +65,9 @@ struct OnboardingView: View {
                             } else if let available = isAvailable {
                                 Image(systemName: available ? "checkmark.circle.fill" : "xmark.circle.fill")
                                     .foregroundStyle(available ? Theme.success : Theme.destructive)
+                                Text(available ? "Verfuegbar" : "Vergeben")
+                                    .font(.caption)
+                                    .foregroundStyle(available ? Theme.success : Theme.destructive)
                             }
                         }
                         if let available = isAvailable, !available {
@@ -84,6 +88,7 @@ struct OnboardingView: View {
                             .font(.caption.bold())
                             .foregroundStyle(.secondary)
                         TextField("Dein Name", text: $displayName)
+                            .textContentType(.name)
                             .textFieldStyle(.roundedBorder)
                     }
                 }

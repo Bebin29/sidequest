@@ -123,6 +123,7 @@ struct UserProfileView: View {
                         Image(systemName: "checkmark.seal.fill")
                             .foregroundStyle(.blue)
                             .font(.subheadline)
+                            .accessibilityLabel("Verifiziert")
                     }
                 }
 
@@ -303,7 +304,7 @@ struct UserProfileView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(location.name)
                     .font(.caption.bold())
-                    .lineLimit(1)
+                    .lineLimit(2)
                 Text(location.category)
                     .font(.caption2)
                     .foregroundStyle(.secondary)

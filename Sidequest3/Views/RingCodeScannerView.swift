@@ -13,6 +13,7 @@ struct RingCodeScannerView: View {
     let currentUserId: UUID?
     let onUserFound: (User) -> Void
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @StateObject private var scanner = RingCodeScanner()
     @State private var isSearching = false
@@ -73,7 +74,7 @@ struct RingCodeScannerView: View {
                                 lineWidth: hasDetection ? 3 : 2
                             )
                             .frame(width: guideSize, height: guideSize)
-                            .animation(.easeInOut(duration: 0.3), value: hasDetection)
+                            .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: hasDetection)
 
                         if isSearching {
                             Circle()
@@ -123,7 +124,7 @@ struct RingCodeScannerView: View {
             }
             .onChange(of: isSearching) { _, searching in
                 if searching {
-                    withAnimation(.linear(duration: 3.6).repeatForever(autoreverses: false)) {
+                    withAnimation(reduceMotion ? nil : .linear(duration: 3.6).repeatForever(autoreverses: false)) {
                         spinAngle = 360
                     }
                 } else {

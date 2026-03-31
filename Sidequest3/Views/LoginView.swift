@@ -41,6 +41,7 @@ struct LoginView: View {
                                 .clipped()
                                 .clipShape(RoundedRectangle(cornerRadius: 25))
                                 .shadow(radius: 10)
+                                .accessibilityHidden(true)
                         }
                     }
                     .padding(.horizontal)

@@ -137,7 +137,7 @@ struct FeedCarouselCard: View {
                     .font(.caption).fontWeight(.semibold)
                 Text(location.address)
                     .font(.footnote).fontWeight(.medium).fontDesign(.rounded)
-                    .lineLimit(1)
+                    .lineLimit(2)
             }
             .foregroundStyle(Theme.textPrimary)
             .padding(.top, 5)

@@ -7,6 +7,7 @@ import SwiftUI
 
 struct SkeletonCarouselCard: View {
     @State private var shimmer = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -53,7 +54,7 @@ struct SkeletonCarouselCard: View {
         .shadow(color: .black.opacity(0.32), radius: 32, y: 18)
         .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
         .opacity(shimmer ? 0.4 : 1.0)
-        .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: shimmer)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: shimmer)
         .onAppear { shimmer = true }
     }
 }

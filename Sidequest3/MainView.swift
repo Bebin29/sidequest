@@ -149,6 +149,7 @@ struct MainView: View {
                     )
                     .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
             }
+            .accessibilityLabel("Ort hinzufuegen")
             .sheet(isPresented: $showSearchSheet) {
                 PlaceSearchView(mapViewModel: mapViewModel, userId: userId) {
                     showSearchSheet = false
@@ -181,6 +182,7 @@ struct MainView: View {
                     }
                 }
             }
+            .accessibilityLabel("Einstellungen")
             .sheet(isPresented: $showSettings) {
                 SettingsView(authViewModel: authViewModel)
             }
@@ -250,7 +252,7 @@ struct MainView: View {
                 endRadius: 800
             )
         }
-        .animation(.easeInOut(duration: 0.5), value: dominantColor.description)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: dominantColor.description)
     }
 
     // MARK: - Image Loaded Handler

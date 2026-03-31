@@ -66,6 +66,7 @@ struct AddLocationFormView: View {
                                             .foregroundStyle(.white, .red)
                                             .font(.title3)
                                     }
+                                    .accessibilityLabel("Bild entfernen")
                                     .offset(x: 6, y: -6)
                                 }
                             }

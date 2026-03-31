@@ -9,6 +9,7 @@ struct Karte: View {
     @State private var selectedLocationId: UUID?
     @State private var showDetail = false
     @State private var showLocationDeniedHint = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var userId: UUID?
     @Binding var focusLocation: Location?
@@ -37,7 +38,7 @@ struct Karte: View {
             .onChange(of: focusLocation, initial: true) { _, location in
                 guard let location else { return }
                 locationManager.positionOverridden = true
-                withAnimation(.easeInOut(duration: 0.6)) {
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.6)) {
                     locationManager.position = .region(MKCoordinateRegion(
                         center: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude),
                         span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
@@ -63,6 +64,7 @@ struct Karte: View {
                                 .font(.title3.weight(.semibold))
                                 .frame(width: 50, height: 50)
                         }
+                        .accessibilityLabel("Filter")
 
                         Divider()
                             .frame(width: 26)
@@ -80,6 +82,7 @@ struct Karte: View {
                                 .foregroundStyle(Theme.accent)
                                 .frame(width: 50, height: 50)
                         }
+                        .accessibilityLabel("Mein Standort")
                     }
                     .background(
                         RoundedRectangle(cornerRadius: 30, style: .continuous)

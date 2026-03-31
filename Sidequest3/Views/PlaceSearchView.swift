@@ -35,6 +35,7 @@ struct PlaceSearchView: View {
             } else {
                 VStack {
                     TextField("Ort suchen", text: $searchText)
+                        .autocorrectionDisabled()
                         .padding()
                         .background(
                             // Liquid Glass Effekt
@@ -81,8 +82,9 @@ struct PlaceSearchView: View {
                             dismiss()
                         } label: {
                             Image(systemName: "xmark")
-                            
+
                         }
+                        .accessibilityLabel("Schliessen")
                     }
                 }
             }

@@ -20,6 +20,7 @@ struct EditProfileView: View {
     @State private var isCheckingUsername = false
     @State private var usernameCheckTask: Task<Void, Never>?
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let profileService = ProfileService()
     private let imageUploadService = ImageUploadService()
@@ -81,12 +82,13 @@ struct EditProfileView: View {
                                 ZStack {
                                     Circle()
                                         .fill(.black.opacity(0.35))   // leichter dunkler Overlay
-                                    
+
                                     Image(systemName: "camera.fill")
                                         .font(.title2)
                                         .foregroundStyle(Theme.textPrimary)
                                 }
                             }
+                            .accessibilityLabel("Profilbild aendern")
                         }
                         Spacer()
                     }
@@ -95,6 +97,7 @@ struct EditProfileView: View {
                 // Anzeigename
                 Section("Anzeigename") {
                     TextField("Anzeigename", text: $displayName)
+                        .textContentType(.name)
                 }
 
                 // Username
@@ -103,6 +106,7 @@ struct EditProfileView: View {
                         Text("@")
                             .foregroundStyle(.secondary)
                         TextField("username", text: $username)
+                            .textContentType(.username)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
                             .onChange(of: username) { _, newValue in
@@ -132,6 +136,9 @@ struct EditProfileView: View {
                                 .controlSize(.small)
                         } else if usernameChanged, let available = isUsernameAvailable {
                             Image(systemName: available ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                .foregroundStyle(available ? Theme.success : Theme.destructive)
+                            Text(available ? "Verfuegbar" : "Vergeben")
+                                .font(.caption)
                                 .foregroundStyle(available ? Theme.success : Theme.destructive)
                         }
                     }
@@ -236,7 +243,7 @@ struct EditProfileView: View {
                     .allowsHitTesting(false)
                 }
             }
-            .animation(.easeInOut(duration: 0.3), value: showSuccess)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: showSuccess)
         }
     }
 

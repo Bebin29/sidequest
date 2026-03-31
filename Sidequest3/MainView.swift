@@ -126,9 +126,9 @@ struct MainView: View {
                 showSearchSheet = true
             } label: {
                 Image(systemName: "plus")
-                    .font(.title2.weight(.semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundStyle(Theme.textPrimary)
-                    .frame(width: 50, height: 50)
+                    .frame(width: 40, height: 40)
                     .background(
                         Circle()
                             .fill(.ultraThinMaterial)
@@ -163,7 +163,7 @@ struct MainView: View {
             } label: {
                 if let user = authViewModel.currentUser {
                     AvatarView(url: user.profileImageUrl, size: .medium)
-                        .frame(width: 50, height: 50)
+                        .frame(width: 40, height: 40)
                 }
             }
             .accessibilityLabel("Einstellungen")

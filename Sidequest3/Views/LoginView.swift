@@ -18,9 +18,11 @@ struct LoginView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let size = geometry.size.width / 3.5
+            let padding: CGFloat = 16
+            let spacing: CGFloat = 12
+            let size = (geometry.size.width - padding * 2 - spacing * 2) / 3
 
-            VStack {
+            VStack(spacing: spacing) {
                 Text("Sidequest")
                     .font(.title)
                     .fontWeight(.bold)
@@ -33,7 +35,7 @@ struct LoginView: View {
                 Spacer()
 
                 ForEach(imageNames, id: \.self) { row in
-                    HStack {
+                    HStack(spacing: spacing) {
                         ForEach(row, id: \.self) { name in
                             Image(name)
                                 .resizable()
@@ -45,7 +47,6 @@ struct LoginView: View {
                                 .accessibilityHidden(true)
                         }
                     }
-                    .padding(.horizontal)
                 }
 
                 Spacer()

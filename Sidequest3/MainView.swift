@@ -108,6 +108,7 @@ struct MainView: View {
             NavigationStack {
                 LocationDetailView(location: location, currentUserId: currentUserId)
             }
+            .presentationDragIndicator(.visible)
         }
 
         
@@ -154,6 +155,7 @@ struct MainView: View {
                 PlaceSearchView(mapViewModel: mapViewModel, userId: userId) {
                     showSearchSheet = false
                 }
+                .presentationDragIndicator(.visible)
             }
 
             Button {
@@ -185,6 +187,7 @@ struct MainView: View {
             .accessibilityLabel("Einstellungen")
             .sheet(isPresented: $showSettings) {
                 SettingsView(authViewModel: authViewModel)
+                    .presentationDragIndicator(.visible)
             }
         }
         .padding(.horizontal, 28)
@@ -197,42 +200,45 @@ struct MainView: View {
     /// Apple-Docs-Pattern: ScrollView + LazyHStack + scrollTargetLayout + viewAligned
     /// Fixed 2:3 aspect ratio for cards (portrait, like Apple Invitations).
     private var carousel: some View {
-        let cardWidth = UIScreen.main.bounds.width - 56
-        let imageHeight = cardWidth * 4.0 / 3.0  // 3:4 aspect ratio for image
-        let glassHeight: CGFloat = 140            // warm glass panel below image
-        let cardHeight = imageHeight + glassHeight
+        GeometryReader { geometry in
+            let cardWidth = geometry.size.width - 56
+            let imageHeight = cardWidth * 4.0 / 3.0
+            let glassHeight: CGFloat = 140
+            let cardHeight = imageHeight + glassHeight
 
-        return ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 14) {
-                ForEach(viewModel.locations) { location in
-                    FeedCarouselCard(
-                        location: location,
-                        borderColor: viewModel.dominantColors[location.id] ?? categoryColor(for: location.category),
-                        onTap: { selectedLocation = location },
-                        onImageLoaded: { image in
-                            handleImageLoaded(image, for: location)
-                        }
-                    )
-                    .frame(width: cardWidth, height: cardHeight)
-                    .onAppear {
-                        if location.id == viewModel.locations.last?.id {
-                            guard let userId else { return }
-                            Task { await viewModel.loadMore(userId: userId) }
+            ScrollView(.horizontal) {
+                LazyHStack(spacing: 14) {
+                    ForEach(viewModel.locations) { location in
+                        FeedCarouselCard(
+                            location: location,
+                            borderColor: viewModel.dominantColors[location.id] ?? categoryColor(for: location.category),
+                            onTap: { selectedLocation = location },
+                            onImageLoaded: { image in
+                                handleImageLoaded(image, for: location)
+                            }
+                        )
+                        .frame(width: cardWidth, height: cardHeight)
+                        .onAppear {
+                            if location.id == viewModel.locations.last?.id {
+                                guard let userId else { return }
+                                Task { await viewModel.loadMore(userId: userId) }
+                            }
                         }
                     }
-                }
 
-                // Loading more indicator
-                if viewModel.isLoadingMore {
-                    loadingMoreCard
-                        .frame(width: cardWidth, height: cardHeight)
+                    // Loading more indicator
+                    if viewModel.isLoadingMore {
+                        loadingMoreCard
+                            .frame(width: cardWidth, height: cardHeight)
+                    }
                 }
+                .scrollTargetLayout()
             }
-            .scrollTargetLayout()
+            .scrollIndicators(.hidden)
+            .scrollTargetBehavior(.viewAligned)
+            .scrollPosition(id: $scrolledId)
+            .contentMargins(.horizontal, 28, for: .scrollContent)
         }
-        .scrollTargetBehavior(.viewAligned)
-        .scrollPosition(id: $scrolledId)
-        .contentMargins(.horizontal, 28, for: .scrollContent)
     }
 
     // MARK: - Adaptive Background
@@ -333,21 +339,24 @@ struct MainView: View {
     // MARK: - Skeleton
 
     private var skeletonView: some View {
-        let cardWidth = UIScreen.main.bounds.width - 56
-        let imageHeight = cardWidth * 4.0 / 3.0
-        let cardHeight = imageHeight + 140
+        GeometryReader { geometry in
+            let cardWidth = geometry.size.width - 56
+            let imageHeight = cardWidth * 4.0 / 3.0
+            let cardHeight = imageHeight + 140
 
-        return ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 14) {
-                ForEach(0..<3, id: \.self) { _ in
-                    SkeletonCarouselCard()
-                        .frame(width: cardWidth, height: cardHeight)
+            ScrollView(.horizontal) {
+                LazyHStack(spacing: 14) {
+                    ForEach(0..<3, id: \.self) { _ in
+                        SkeletonCarouselCard()
+                            .frame(width: cardWidth, height: cardHeight)
+                    }
                 }
+                .scrollTargetLayout()
             }
-            .scrollTargetLayout()
+            .scrollIndicators(.hidden)
+            .scrollTargetBehavior(.viewAligned)
+            .contentMargins(.horizontal, 28, for: .scrollContent)
         }
-        .scrollTargetBehavior(.viewAligned)
-        .contentMargins(.horizontal, 28, for: .scrollContent)
     }
 
     // MARK: - Loading More Card

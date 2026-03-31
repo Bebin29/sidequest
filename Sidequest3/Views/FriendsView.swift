@@ -103,10 +103,12 @@ struct FriendsView: View {
                 FriendSearchView(viewModel: viewModel, currentUser: currentUser) {
                     showSearch = false
                 }
+                .presentationDragIndicator(.visible)
             }
             .sheet(isPresented: $showShareCard) {
                 if let user = authViewModel.currentUser {
                     ProfileShareCardView(user: user)
+                        .presentationDragIndicator(.visible)
                 }
             }
             .confirmationDialog(
@@ -182,10 +184,6 @@ private struct MyProfileCard: View {
                 }
 
                 Spacer()
-
-                Image(systemName: "chevron.right")
-                    .foregroundStyle(Theme.textSecondary)
-                    .font(.subheadline)
             }
             .padding()
             .background(Theme.cardBackground)
@@ -297,13 +295,14 @@ private struct FriendSuggestionsSection: View {
                 .foregroundStyle(Theme.textSecondary)
                 .padding(.horizontal, 4)
 
-            ScrollView(.horizontal, showsIndicators: false) {
+            ScrollView(.horizontal) {
                 HStack(spacing: 8) {
                     ForEach(suggestions) { suggestion in
                         suggestionChip(suggestion)
                     }
                 }
             }
+            .scrollIndicators(.hidden)
         }
     }
 
@@ -449,10 +448,6 @@ private struct FriendsListSection: View {
                 }
 
                 Spacer()
-
-                Image(systemName: "chevron.right")
-                    .foregroundStyle(Theme.textSecondary)
-                    .font(.subheadline)
             }
             .padding()
             .contentShape(Rectangle())

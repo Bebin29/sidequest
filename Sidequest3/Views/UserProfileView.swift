@@ -89,6 +89,7 @@ struct UserProfileView: View {
                         }
                     }
             }
+            .presentationDragIndicator(.visible)
         }
     }
 
@@ -258,7 +259,7 @@ struct UserProfileView: View {
                     Spacer()
                 }
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
+                ScrollView(.horizontal) {
                     LazyHStack(spacing: 12) {
                         ForEach(locations) { location in
                             Button {
@@ -271,6 +272,7 @@ struct UserProfileView: View {
                     }
                     .padding(.horizontal)
                 }
+                .scrollIndicators(.hidden)
             }
         }
     }

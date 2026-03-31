@@ -73,9 +73,11 @@ struct Home: View {
                     }
                 }
             }
+            .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showFriendsFromNotification) {
             FriendsView(authViewModel: authViewModel, currentUser: authViewModel.currentUser)
+                .presentationDragIndicator(.visible)
         }
     }
 

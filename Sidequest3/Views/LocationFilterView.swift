@@ -31,7 +31,7 @@ struct LocationFilterView: View {
 
                 // Kategorie
                 Section("Kategorie") {
-                    ScrollView(.horizontal, showsIndicators: false) {
+                    ScrollView(.horizontal) {
                         HStack(spacing: 8) {
                             ForEach(LocationCategory.allCases, id: \.self) { category in
                                 Button {
@@ -54,6 +54,7 @@ struct LocationFilterView: View {
                         }
                         .padding(.vertical, 4)
                     }
+                    .scrollIndicators(.hidden)
                 }
 
                 // Umkreis

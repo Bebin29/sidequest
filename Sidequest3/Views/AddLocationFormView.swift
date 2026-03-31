@@ -44,7 +44,7 @@ struct AddLocationFormView: View {
 
             Section("Fotos (\(selectedImages.count))") {
                 if !selectedImages.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
+                    ScrollView(.horizontal) {
                         HStack(spacing: 10) {
                             ForEach(Array(selectedImages.enumerated()), id: \.offset) { index, image in
                                 ZStack(alignment: .topTrailing) {
@@ -73,6 +73,7 @@ struct AddLocationFormView: View {
                         }
                         .padding(.vertical, 5)
                     }
+                    .scrollIndicators(.hidden)
                 }
 
                 Button {
@@ -139,6 +140,7 @@ struct AddLocationFormView: View {
 
         .sheet(isPresented: $showImagePicker) {
             ImagePickerAppend(images: $selectedImages)
+                .presentationDragIndicator(.visible)
         }
         .fullScreenCover(isPresented: $showCamera) {
             CameraImagePicker(image: $cameraImage)

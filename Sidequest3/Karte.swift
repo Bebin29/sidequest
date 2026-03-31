@@ -118,6 +118,7 @@ struct Karte: View {
                     Task { await mapViewModel.loadLocations(userId: userId) }
                 }
             )
+            .presentationDragIndicator(.visible)
         }
         .task {
             locationManager.requestPermission()
@@ -140,6 +141,7 @@ struct Karte: View {
                         }
                     })
                 }
+                .presentationDragIndicator(.visible)
             }
         }
     }

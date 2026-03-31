@@ -221,6 +221,7 @@ struct EditProfileView: View {
              */
             .sheet(isPresented: $showImagePicker) {
                 ImagePicker(image: $selectedImage)
+                    .presentationDragIndicator(.visible)
             }
             .fullScreenCover(isPresented: $showCamera) {
                 CameraImagePicker(image: $selectedImage)

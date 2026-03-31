@@ -264,19 +264,12 @@ struct SettingsRow: View {
     let title: String
 
     var body: some View {
-        HStack {
-            Text(title)
-                .foregroundStyle(Theme.textPrimary)
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .foregroundStyle(Theme.textSecondary)
-                .font(.subheadline)
-        }
-        .padding()
-        .background(Theme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 30))
+        Text(title)
+            .foregroundStyle(Theme.textPrimary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            .background(Theme.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 30))
     }
 }
 

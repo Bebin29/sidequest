@@ -45,6 +45,7 @@ struct MyProfileView: View {
                         }
                     }
             }
+            .presentationDragIndicator(.visible)
         }
     }
 
@@ -148,7 +149,7 @@ struct MyProfileView: View {
                     Spacer()
                 }
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
+                ScrollView(.horizontal) {
                     LazyHStack(spacing: 12) {
                         ForEach(locations) { location in
                             Button { selectedLocation = location } label: {
@@ -159,6 +160,7 @@ struct MyProfileView: View {
                     }
                     .padding(.horizontal)
                 }
+                .scrollIndicators(.hidden)
             }
         }
     }

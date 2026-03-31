@@ -176,6 +176,7 @@ struct ProfileShareCardView: View {
             .sheet(isPresented: $showShareSheet) {
                 if let image = renderedImage {
                     ShareSheetView(items: [image])
+                        .presentationDragIndicator(.visible)
                 }
             }
             .task {

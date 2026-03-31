@@ -35,93 +35,93 @@ struct LocationDetailView: View {
         LocationCategory.color(for: location.category)
     }
 
-    private var imageHeight: CGFloat {
-        UIScreen.main.bounds.width * 1.15
-    }
-
     var body: some View {
-        ZStack {
-            // Warm base — material picks up this color
-            dominantColor.opacity(0.85)
-                .ignoresSafeArea()
-                .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: dominantColor.description)
+        GeometryReader { outerGeometry in
+            let imageHeight = outerGeometry.size.width * 1.15
 
-            ScrollView {
-                ZStack(alignment: .top) {
-                    // Layer 1: Image at top (stretches on top overscroll)
-                    GeometryReader { geo in
-                        let offset = geo.frame(in: .named("scroll")).minY
-                        let stretch = max(0, offset)
+            ZStack {
+                // Warm base — material picks up this color
+                dominantColor.opacity(0.85)
+                    .ignoresSafeArea()
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: dominantColor.description)
 
-                        imageCarousel
-                            .frame(width: geo.size.width, height: imageHeight + stretch)
+                ScrollView {
+                    ZStack(alignment: .top) {
+                        // Layer 1: Image at top (stretches on top overscroll)
+                        GeometryReader { geo in
+                            let offset = geo.frame(in: .named("scroll")).minY
+                            let stretch = max(0, offset)
+
+                            imageCarousel
+                                .frame(width: geo.size.width, height: imageHeight + stretch)
+                                .offset(y: -stretch)
+                        }
+                        .frame(height: imageHeight)
+
+                        // Layer 2: Gradient over image (stretches with image)
+                        GeometryReader { geo in
+                            let offset = geo.frame(in: .named("scroll")).minY
+                            let stretch = max(0, offset)
+
+                            LinearGradient(
+                                stops: [
+                                    .init(color: .clear, location: 0.0),
+                                    .init(color: .clear, location: 0.25),
+                                    .init(color: dominantColor.opacity(0.3), location: 0.5),
+                                    .init(color: dominantColor.opacity(0.75), location: 0.8),
+                                    .init(color: dominantColor.opacity(0.95), location: 1.0)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                            .frame(height: imageHeight + stretch)
                             .offset(y: -stretch)
-                    }
-                    .frame(height: imageHeight)
+                            .allowsHitTesting(false)
+                        }
+                        .frame(height: imageHeight)
 
-                    // Layer 2: Gradient over image (stretches with image)
-                    GeometryReader { geo in
-                        let offset = geo.frame(in: .named("scroll")).minY
-                        let stretch = max(0, offset)
-
-                        LinearGradient(
-                            stops: [
-                                .init(color: .clear, location: 0.0),
-                                .init(color: .clear, location: 0.25),
-                                .init(color: dominantColor.opacity(0.3), location: 0.5),
-                                .init(color: dominantColor.opacity(0.75), location: 0.8),
-                                .init(color: dominantColor.opacity(0.95), location: 1.0)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                        .frame(height: imageHeight + stretch)
-                        .offset(y: -stretch)
-                        .allowsHitTesting(false)
-                    }
-                    .frame(height: imageHeight)
-
-                    // Layer 3: Content with material background
-                    VStack(spacing: 0) {
-                        Spacer().frame(height: imageHeight - 100)
-
+                        // Layer 3: Content with material background
                         VStack(spacing: 0) {
-                            titleSection
-                            contentSections
-                            Spacer().frame(height: 40)
-                        }
-                        .background(alignment: .top) {
-                            Rectangle()
-                                .fill(.ultraThinMaterial)
-                                .mask {
-                                    VStack(spacing: 0) {
-                                        LinearGradient(
-                                            colors: [.clear, .black],
-                                            startPoint: .top,
-                                            endPoint: .bottom
-                                        )
-                                        .frame(height: 120)
-                                        Color.black
-                                        LinearGradient(
-                                            colors: [.black, .clear],
-                                            startPoint: .top,
-                                            endPoint: .bottom
-                                        )
-                                        .frame(height: 120)
+                            Spacer().frame(height: imageHeight - 100)
+
+                            VStack(spacing: 0) {
+                                titleSection
+                                contentSections
+                                Spacer().frame(height: 40)
+                            }
+                            .background(alignment: .top) {
+                                Rectangle()
+                                    .fill(.ultraThinMaterial)
+                                    .mask {
+                                        VStack(spacing: 0) {
+                                            LinearGradient(
+                                                colors: [.clear, .black],
+                                                startPoint: .top,
+                                                endPoint: .bottom
+                                            )
+                                            .frame(height: 120)
+                                            Color.black
+                                            LinearGradient(
+                                                colors: [.black, .clear],
+                                                startPoint: .top,
+                                                endPoint: .bottom
+                                            )
+                                            .frame(height: 120)
+                                        }
                                     }
-                                }
+                            }
                         }
                     }
-                }
-                
-            }
-            .coordinateSpace(name: "scroll")
-            .scrollDismissesKeyboard(.immediately)
-            
 
-            VStack {
-                floatingTopBar
-                Spacer()
+                }
+                .coordinateSpace(name: "scroll")
+                .scrollDismissesKeyboard(.immediately)
+
+
+                VStack {
+                    floatingTopBar
+                    Spacer()
+                }
             }
         }
     
@@ -482,10 +482,6 @@ struct LocationDetailView: View {
                         }
 
                         Spacer()
-
-                        Image(systemName: "chevron.right")
-                            .font(.footnote).fontWeight(.semibold)
-                            .foregroundStyle(Theme.textTertiary)
                     }
                 }
             }

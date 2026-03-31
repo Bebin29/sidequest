@@ -49,9 +49,9 @@ struct SkeletonCarouselCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .strokeBorder(Theme.border, lineWidth: 0.8)
+                .strokeBorder(Theme.border, lineWidth: 1.2)
         }
-        .shadow(color: .black.opacity(0.32), radius: 32, y: 18)
+        .shadow(color: .black.opacity(0.35), radius: 32, y: 18)
         .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
         .opacity(shimmer ? 0.4 : 1.0)
         .animation(reduceMotion ? nil : .easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: shimmer)

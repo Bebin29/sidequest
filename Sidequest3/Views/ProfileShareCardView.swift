@@ -143,7 +143,7 @@ struct ProfileShareCardView: View {
                                 .padding(.vertical, 12)
                                 .background(Theme.accent)
                                 .foregroundStyle(Theme.textPrimary)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .clipShape(RoundedRectangle(cornerRadius: Radius.small))
                         }
 
                         Button {
@@ -158,7 +158,7 @@ struct ProfileShareCardView: View {
                                 .padding(.vertical, 12)
                                 .background(Theme.imagePlaceholder)
                                 .foregroundStyle(.primary)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .clipShape(RoundedRectangle(cornerRadius: Radius.small))
                         }
                     }
                     .padding(.horizontal, 32)

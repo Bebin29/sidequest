@@ -201,7 +201,7 @@ struct MainView: View {
     /// Fixed 2:3 aspect ratio for cards (portrait, like Apple Invitations).
     private var carousel: some View {
         GeometryReader { geometry in
-            let cardWidth = geometry.size.width - 56
+            let cardWidth = max(1, geometry.size.width - 56)
             let imageHeight = cardWidth * 4.0 / 3.0
             let glassHeight: CGFloat = 140
             let cardHeight = imageHeight + glassHeight
@@ -340,7 +340,7 @@ struct MainView: View {
 
     private var skeletonView: some View {
         GeometryReader { geometry in
-            let cardWidth = geometry.size.width - 56
+            let cardWidth = max(1, geometry.size.width - 56)
             let imageHeight = cardWidth * 4.0 / 3.0
             let cardHeight = imageHeight + 140
 

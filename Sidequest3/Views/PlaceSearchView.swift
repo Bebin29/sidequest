@@ -40,7 +40,7 @@ struct PlaceSearchView: View {
                         .background(
                             // Liquid Glass Effekt
                             VisualEffectBlur(blurStyle: .systemUltraThinMaterial)
-                                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                                .clipShape(RoundedRectangle(cornerRadius: Radius.medium, style: .continuous))
                         )
                         .foregroundStyle(Theme.textPrimary)
                         .font(.headline)

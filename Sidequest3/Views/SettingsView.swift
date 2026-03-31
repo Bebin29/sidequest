@@ -72,7 +72,7 @@ struct SettingsView: View {
                                     }
                                     .padding()
                                     .background(Theme.cardBackground)
-                                    .clipShape(RoundedRectangle(cornerRadius: 30))
+                                    .clipShape(RoundedRectangle(cornerRadius: Radius.card))
                                     .padding(.horizontal)
 
                                 }
@@ -133,7 +133,7 @@ struct SettingsView: View {
 
                                         }
                                         .background(Theme.cardBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: 30))
+                                        .clipShape(RoundedRectangle(cornerRadius: Radius.card))
                                         .padding(.horizontal)
 
                                     }
@@ -167,7 +167,7 @@ struct SettingsView: View {
                                                 }
                                                 .padding()
                                                 .background(Theme.cardBackground)
-                                                .clipShape(RoundedRectangle(cornerRadius: 30))
+                                                .clipShape(RoundedRectangle(cornerRadius: Radius.card))
                                             }
                                             .padding(.horizontal)
                                         }
@@ -196,7 +196,7 @@ struct SettingsView: View {
                                             }
                                             .padding()
                                             .background(Theme.cardBackground)
-                                            .clipShape(RoundedRectangle(cornerRadius: 30))
+                                            .clipShape(RoundedRectangle(cornerRadius: Radius.card))
                                             .padding(.horizontal)
                                         }
                                     }
@@ -269,7 +269,7 @@ struct SettingsRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
             .background(Theme.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 30))
+            .clipShape(RoundedRectangle(cornerRadius: Radius.card))
     }
 }
 

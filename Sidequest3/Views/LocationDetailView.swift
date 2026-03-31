@@ -39,6 +39,7 @@ struct LocationDetailView: View {
         GeometryReader { outerGeometry in
             let imageHeight = outerGeometry.size.width * 1.15
 
+            if outerGeometry.size.width > 0 {
             ZStack {
                 // Warm base — material picks up this color
                 dominantColor.opacity(0.85)
@@ -123,8 +124,9 @@ struct LocationDetailView: View {
                     Spacer()
                 }
             }
+            } // if outerGeometry.size.width > 0
         }
-    
+
         .navigationBarHidden(true)
         .task {
             await viewModel.loadComments(locationId: location.id)
@@ -617,7 +619,7 @@ struct LocationDetailView: View {
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)
                         .background(Theme.skeletonFillLight)
-                        .clipShape(Capsule())
+                        .clipShape(RoundedRectangle(cornerRadius: Radius.medium))
 
                     Button {
                         guard let userId = currentUserId, !newComment.isEmpty else { return }

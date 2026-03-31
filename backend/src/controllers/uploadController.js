@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const sharp = require('sharp');
-const { parseBody, sendJSON, sendError } = require('../helpers');
+const { parseBody, sendJSON, sendError, MAX_UPLOAD_BODY_SIZE } = require('../helpers');
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || '/app/uploads';
 const MAX_WIDTH = 1200;
@@ -10,7 +10,7 @@ const JPEG_QUALITY = 70;
 
 async function upload(req, res) {
     try {
-        const body = await parseBody(req);
+        const body = await parseBody(req, { maxSize: MAX_UPLOAD_BODY_SIZE });
         if (!body) return sendError(res, 400, 'Request body required');
 
         const { image, extension } = body;

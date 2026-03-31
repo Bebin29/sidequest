@@ -104,9 +104,18 @@ async function getSuggestions(req, res, userId) {
 async function getFriends(req, res, userId) {
     try {
         const result = await pool.query(
-            `SELECT * FROM friendships
-             WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'
-             ORDER BY accepted_at DESC`,
+            `SELECT f.*,
+                req.display_name AS requester_display_name,
+                req.profile_image_url AS requester_profile_image_url,
+                rec.display_name AS receiver_display_name,
+                rec.profile_image_url AS receiver_profile_image_url,
+                (SELECT COUNT(*)::int FROM locations WHERE created_by = f.requester_id) AS requester_spot_count,
+                (SELECT COUNT(*)::int FROM locations WHERE created_by = f.receiver_id) AS receiver_spot_count
+             FROM friendships f
+             JOIN users req ON req.id = f.requester_id
+             JOIN users rec ON rec.id = f.receiver_id
+             WHERE (f.requester_id = $1 OR f.receiver_id = $1) AND f.status = 'accepted'
+             ORDER BY f.accepted_at DESC`,
             [userId]
         );
         sendJSON(res, 200, { data: result.rows, count: result.rowCount });

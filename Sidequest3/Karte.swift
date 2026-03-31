@@ -57,14 +57,16 @@ struct Karte: View {
                         Button {
                             showFilterSheet = true
                         } label: {
-                            Image(systemName: mapViewModel.filter.isEmpty ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
-                                .font(.title2.weight(.semibold))
-                                .foregroundStyle(.primary)
-                                .frame(width: 48, height: 48)
+                            Image(systemName: mapViewModel.filter.isEmpty
+                                  ? "line.3.horizontal.decrease.circle"
+                                  : "line.3.horizontal.decrease.circle.fill")
+                                .font(.title3.weight(.semibold))
+                                .frame(width: 50, height: 50)
                         }
 
                         Divider()
-                            .frame(width: 30)
+                            .frame(width: 26)
+                            .opacity(0.35)
 
                         Button {
                             if locationManager.authorizationStatus == .denied || locationManager.authorizationStatus == .restricted {
@@ -74,18 +76,20 @@ struct Karte: View {
                             }
                         } label: {
                             Image(systemName: "location.fill")
-                                .font(.title2.weight(.semibold))
+                                .font(.title3.weight(.semibold))
                                 .foregroundStyle(.indigo)
-                                .frame(width: 48, height: 48)
+                                .frame(width: 50, height: 50)
                         }
                     }
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .strokeBorder(.white.opacity(0.2), lineWidth: 0.5)
+                    .background(
+                        RoundedRectangle(cornerRadius: 30, style: .continuous)
+                            .fill(.ultraThinMaterial)
                     )
-                    .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 30, style: .continuous)
+                            .stroke(.white.opacity(0.25), lineWidth: 0.6)
+                    }
+                    .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
                     .padding()
                 }
             }

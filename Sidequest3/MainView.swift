@@ -104,7 +104,7 @@ struct MainView: View {
         
         
         
-        .fullScreenCover(item: $selectedLocation) { location in
+        .sheet(item: $selectedLocation) { location in
             NavigationStack {
                 LocationDetailView(location: location, currentUserId: currentUserId)
             }

@@ -35,7 +35,6 @@ struct SettingsView: View {
 
 
                                         AvatarView(url: user.profileImageUrl, size: .medium)
-                                            .frame(width: 50, height: 50)
 
                                         VStack(alignment: .leading, spacing: 4) {
 
@@ -136,6 +135,7 @@ struct SettingsView: View {
                                                     Image(systemName: "rectangle.portrait.and.arrow.right")
                                                         .foregroundStyle(Theme.destructive)
                                                         .font(.subheadline)
+                                                        .frame(width: 20)
                                                     Text("Abmelden")
                                                         .foregroundStyle(Theme.destructive)
 
@@ -170,6 +170,7 @@ struct SettingsView: View {
                                                 Image(systemName: "trash")
                                                     .foregroundStyle(Theme.destructive)
                                                     .font(.subheadline)
+                                                    .frame(width: 20)
                                                 Text("Account löschen")
                                                     .foregroundStyle(Theme.destructive)
                                                 Spacer()

@@ -386,15 +386,15 @@ struct LocationDetailView: View {
 
     private func actionButton(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 Image(systemName: icon)
-                    .font(.title2).fontWeight(.medium)
+                    .font(.title3).fontWeight(.medium)
+                    .frame(width: 28, height: 28)
                 Text(title)
                     .font(.subheadline).fontWeight(.semibold).fontDesign(.rounded)
             }
             .foregroundStyle(Theme.textPrimary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 18)
+            .frame(maxWidth: .infinity, minHeight: 70, maxHeight: 70)
         }
         .adaptiveInteractiveGlass(in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }

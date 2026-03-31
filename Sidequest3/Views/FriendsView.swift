@@ -85,23 +85,13 @@ struct FriendsView: View {
                         Image(systemName: "square.and.arrow.up")
                     }
                     .accessibilityLabel("Teilen")
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showSearch = true
                     } label: {
                         Image(systemName: "person.badge.plus")
+                            .offset(y: 4)
                     }
                     .accessibilityLabel("Freund hinzufuegen")
                 }
@@ -163,7 +153,6 @@ private struct MyProfileCard: View {
         } label: {
             HStack(spacing: 16) {
                 AvatarView(url: user.profileImageUrl, size: .medium)
-                    .frame(width: 50, height: 50)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(user.displayName)
@@ -230,6 +219,7 @@ private struct PendingRequestsSection: View {
             } label: {
                 Text("Annehmen")
                     .font(.subheadline.bold())
+                    .frame(height: 32)
             }
             .buttonStyle(.borderedProminent)
             .tint(.green)
@@ -239,7 +229,8 @@ private struct PendingRequestsSection: View {
                 Task { await onDecline(request.id) }
             } label: {
                 Image(systemName: "xmark")
-                    .font(.caption.bold())
+                    .font(.subheadline.bold())
+                    .frame(width: 32, height: 32)
             }
             .accessibilityLabel("Ablehnen")
             .buttonStyle(.bordered)

@@ -202,10 +202,11 @@ private struct PendingRequestsSection: View {
             Button {
                 Task { await onAccept(request.id) }
             } label: {
-                Text("Annehmen")
+                Image(systemName: "checkmark")
                     .font(.subheadline.bold())
-                    .frame(height: 32)
+                    .frame(width: 32, height: 32)
             }
+            .accessibilityLabel("Annehmen")
             .buttonStyle(.borderedProminent)
             .tint(.green)
             .controlSize(.small)

@@ -20,6 +20,8 @@ struct MainView: View {
     @State private var hasAppeared = false
     @State private var showSearchSheet = false
     @State private var showCardDetailViewSheet = false
+    @State private var showAddFriendSheet = false
+    @State private var friendsViewModel = FriendsViewModel()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Adaptive background color — falls back to category color
@@ -110,8 +112,12 @@ struct MainView: View {
             }
             .presentationDragIndicator(.visible)
         }
-
-        
+        .sheet(isPresented: $showAddFriendSheet) {
+            FriendSearchView(viewModel: friendsViewModel, currentUser: authViewModel.currentUser) {
+                showAddFriendSheet = false
+            }
+            .presentationDragIndicator(.visible)
+        }
 
     }
     private var header: some View {
@@ -278,6 +284,17 @@ struct MainView: View {
                     .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
+            }
+
+            Button {
+                showAddFriendSheet = true
+            } label: {
+                Label("Freunde hinzufügen", systemImage: "person.badge.plus")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 11)
+                    .background(.ultraThinMaterial, in: Capsule())
             }
         }
         .frame(maxWidth: .infinity)

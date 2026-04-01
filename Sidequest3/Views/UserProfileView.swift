@@ -222,11 +222,13 @@ struct UserProfileView: View {
 
     // MARK: - Locations
 
+    private let gridColumns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 3)
+
     private var userLocations: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Orte")
                 .font(.headline)
-                .padding(.horizontal)
+                .padding(.horizontal, 6)
 
             if locations.isEmpty {
                 HStack {
@@ -243,64 +245,49 @@ struct UserProfileView: View {
                     Spacer()
                 }
             } else {
-                ScrollView(.horizontal) {
-                    LazyHStack(spacing: 12) {
-                        ForEach(locations) { location in
-                            Button {
-                                selectedLocation = location
-                            } label: {
-                                locationCard(location)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityHint("Tippe um Details zu sehen")
+                LazyVGrid(columns: gridColumns, spacing: 6) {
+                    ForEach(locations) { location in
+                        Button {
+                            selectedLocation = location
+                        } label: {
+                            locationTile(location)
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Tippe um Details zu sehen")
                     }
-                    .padding(.horizontal)
                 }
-                .scrollIndicators(.hidden)
+                .padding(.horizontal, 6)
             }
         }
     }
 
-    private func locationCard(_ location: Location) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+    private func locationTile(_ location: Location) -> some View {
+        GeometryReader { geo in
             if let urlString = location.imageUrls.first,
                let url = URL(string: urlString) {
                 AsyncImage(url: url) { image in
                     image
                         .resizable()
                         .scaledToFill()
+                        .frame(width: geo.size.width, height: geo.size.width)
+                        .clipped()
                 } placeholder: {
                     Rectangle()
                         .fill(Theme.imagePlaceholder)
                         .overlay(ProgressView())
                 }
-                .frame(width: 140, height: 140)
-                .clipped()
             } else {
                 Rectangle()
                     .fill(Theme.imagePlaceholder)
-                    .frame(width: 140, height: 140)
                     .overlay(
                         Image(systemName: "mappin")
                             .font(.title2)
                             .foregroundStyle(.tertiary)
                     )
             }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(location.name)
-                    .font(.caption.bold())
-                    .lineLimit(2)
-                Text(location.category)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(8)
         }
-        .frame(width: 140)
-        .adaptiveGlass(in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .aspectRatio(1, contentMode: .fit)
+        .clipShape(RoundedRectangle(cornerRadius: 4))
     }
 
     // MARK: - Member Since

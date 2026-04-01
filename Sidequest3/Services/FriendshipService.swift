@@ -107,22 +107,6 @@ final class FriendshipService {
         return try JSONDecoder().decode(SingleResponse.self, from: data).data
     }
 
-    func findUserByRingCode(code: String) async throws -> User {
-        guard let url = URL(string: "\(Constants.API.baseURL)/api/users/ring-code?code=\(code)") else {
-            throw AppError.unknown(underlying: nil)
-        }
-
-        let (data, response) = try await session.data(from: url)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            throw AppError.notFound
-        }
-
-        struct SingleResponse: Codable { let data: User }
-        return try JSONDecoder().decode(SingleResponse.self, from: data).data
-    }
-
     func getSuggestions(userId: UUID) async throws -> [FriendSuggestion] {
         guard let url = URL(string: "\(Constants.API.baseURL)/api/friends/\(userId.uuidString)/suggestions") else {
             throw AppError.unknown(underlying: nil)

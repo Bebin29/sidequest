@@ -22,11 +22,9 @@ struct User: Codable, Identifiable {
     let isPrivate: Bool
     let fcmToken: String?
     let stats: [String: Int]?
-    let ringCode: String?
 
     enum CodingKeys: String, CodingKey {
         case id, email, username, bio, preferences, stats
-        case ringCode = "ring_code"
         case displayName = "display_name"
         case profileImageUrl = "profile_image_url"
         case createdAt = "created_at"

@@ -388,9 +388,6 @@ struct FriendSearchView: View {
     var currentUser: User?
     var onDismiss: () -> Void
     @State private var searchText = ""
-    @State private var showScanner = false
-    @State private var scannedUser: User?
-    @State private var showScannedUserAlert = false
 
     var body: some View {
         NavigationStack {
@@ -463,15 +460,6 @@ struct FriendSearchView: View {
                 }
 
                 Spacer()
-
-                Button {
-                    showScanner = true
-                } label: {
-                    Label("Ring-Code scannen", systemImage: "qrcode.viewfinder")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.bottom, 20)
             }
             .navigationTitle("Freund hinzufügen")
             .navigationBarTitleDisplayMode(.inline)
@@ -479,31 +467,6 @@ struct FriendSearchView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Fertig") { onDismiss() }
-                }
-            }
-            .sheet(isPresented: $showScanner) {
-                RingCodeScannerView(currentUserId: currentUser?.id) { user in
-                    scannedUser = user
-                    showScanner = false
-                    showScannedUserAlert = true
-                }
-                .presentationDragIndicator(.visible)
-            }
-            .alert("Freund hinzufügen?", isPresented: $showScannedUserAlert) {
-                Button("Anfrage senden") {
-                    guard let requesterId = currentUser?.id,
-                          let receiver = scannedUser else { return }
-                    Task {
-                        await viewModel.sendRequest(
-                            requesterId: requesterId,
-                            receiverUsername: receiver.username
-                        )
-                    }
-                }
-                Button("Abbrechen", role: .cancel) {}
-            } message: {
-                if let user = scannedUser {
-                    Text("\(user.displayName) (@\(user.username)) gefunden. Freundschaftsanfrage senden?")
                 }
             }
         }

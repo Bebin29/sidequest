@@ -43,11 +43,6 @@ function route(req, res) {
         return userController.checkUsername(req, res, parsed.query);
     }
 
-    // Ring code lookup
-    if (pathname === '/api/users/ring-code' && method === 'GET') {
-        return userController.findByRingCode(req, res, parsed.query);
-    }
-
     // Users routes
     if (pathname === '/api/users' && method === 'GET') {
         return userController.getAll(req, res, parsed.query);

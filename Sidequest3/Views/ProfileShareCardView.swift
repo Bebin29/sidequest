@@ -13,8 +13,6 @@ struct ProfileShareCardContent: View {
     let locations: [Location]
     var cardWidth: CGFloat = 360
     var cardHeight: CGFloat = 520
-    private let centerSafeRadius: CGFloat = 100 // Radius um Ring Code + Name, keine Spots hier
-
     var body: some View {
         ZStack {
             // Hintergrund
@@ -31,29 +29,35 @@ struct ProfileShareCardContent: View {
                 )
                 .frame(width: cardWidth, height: cardHeight)
 
-            // Ring + Locations
-            ZStack {
-                // Ring Code in der Mitte
-                VStack(spacing: 8) {
-                    RingCodeView(
-                        code: user.ringCode ?? String(repeating: "0", count: 72),
-                        profileImage: profileImage,
-                        initial: String(user.displayName.prefix(1)).uppercased(),
-                        size: 130
-                    )
-
-                    VStack(spacing: 2) {
-                        Text(user.displayName)
-                            .font(.title3.bold())
-                            .foregroundStyle(Theme.textPrimary)
-
-                        Text("@\(user.username)")
-                            .font(.subheadline)
-                            .foregroundStyle(Theme.textSecondary)
-                    }
+            VStack(spacing: 12) {
+                if let profileImage {
+                    Image(uiImage: profileImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 120, height: 120)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.white.opacity(0.3), lineWidth: 2))
+                } else {
+                    Circle()
+                        .fill(Color.white.opacity(0.15))
+                        .frame(width: 120, height: 120)
+                        .overlay(
+                            Text(String(user.displayName.prefix(1)).uppercased())
+                                .font(.system(size: 48, weight: .bold))
+                                .foregroundStyle(.white)
+                        )
                 }
 
-                 }
+                VStack(spacing: 2) {
+                    Text(user.displayName)
+                        .font(.title3.bold())
+                        .foregroundStyle(Theme.textPrimary)
+
+                    Text("@\(user.username)")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+            }
             .frame(width: cardWidth, height: cardHeight)
 
             // Branding unten

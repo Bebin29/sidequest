@@ -78,9 +78,19 @@ struct MainView: View {
                 }
             }
         }
-        .task {
+        .onAppear {
             guard let userId else { return }
-            await viewModel.loadFeed(userId: userId)
+            Task {
+                await viewModel.fetchLocation()
+                if viewModel.locations.isEmpty && !viewModel.isLoading {
+                    await viewModel.loadFeed(userId: userId)
+                } else {
+                    viewModel.sortByDistance()
+                }
+                // Scroll zum nächsten Ort (Anfang der Liste)
+                scrolledId = viewModel.locations.first?.id
+                viewModel.currentIndex = 0
+            }
         }
         .onChange(of: scrolledId) { _, newId in
             guard let newId else { return }

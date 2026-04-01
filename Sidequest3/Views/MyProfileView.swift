@@ -188,6 +188,7 @@ struct MyProfileView: View {
             .padding(8)
         }
         .frame(width: 140)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .glassEffect(.regular, in: .rect(cornerRadius: 14))
     }
 

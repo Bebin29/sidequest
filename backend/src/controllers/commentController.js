@@ -5,7 +5,11 @@ const notificationService = require('../services/notificationService');
 async function getByLocation(req, res, locationId) {
     try {
         const result = await pool.query(
-            'SELECT * FROM comments WHERE location_id = $1 ORDER BY created_at ASC',
+            `SELECT c.*, u.username, u.display_name, u.profile_image_url
+             FROM comments c
+             LEFT JOIN users u ON u.id = c.user_id
+             WHERE c.location_id = $1
+             ORDER BY c.created_at ASC`,
             [locationId]
         );
         sendJSON(res, 200, { data: result.rows, count: result.rowCount });

@@ -20,7 +20,6 @@ struct FeedCarouselCard: View {
                         heroImage
                     }
                     .clipped()
-                    .backgroundExtensionIfAvailable()
 
                 // Glass overlay on the bottom portion
                 VStack(spacing: 0) {

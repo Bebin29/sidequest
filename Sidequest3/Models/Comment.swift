@@ -10,6 +10,8 @@ struct Comment: Codable, Identifiable {
     let locationId: UUID
     let userId: UUID
     let username: String
+    let displayName: String?
+    let profileImageUrl: String?
     let text: String
     let createdAt: String
 
@@ -17,6 +19,8 @@ struct Comment: Codable, Identifiable {
         case id, username, text
         case locationId = "location_id"
         case userId = "user_id"
+        case displayName = "display_name"
+        case profileImageUrl = "profile_image_url"
         case createdAt = "created_at"
     }
 }

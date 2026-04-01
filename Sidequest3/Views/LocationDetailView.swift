@@ -98,6 +98,7 @@ struct LocationDetailView: View {
                 }
                 .coordinateSpace(name: "scroll")
                 .scrollDismissesKeyboard(.immediately)
+                .ignoresSafeArea(.container, edges: .top)
 
 
                 VStack {
@@ -265,7 +266,6 @@ struct LocationDetailView: View {
                 }
             }
         }
-        .backgroundExtensionIfAvailable()
     }
 
     // MARK: - Title Section (sits on glass background)

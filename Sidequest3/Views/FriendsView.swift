@@ -14,7 +14,6 @@ struct FriendsView: View {
     @State private var showRemoveConfirmation = false
     @State private var myLocationCount: Int = 0
     @Bindable var authViewModel: AuthViewModel
-    @State private var showShareCard = false
     var currentUser: User?
 
     private let locationService = LocationService()
@@ -80,14 +79,6 @@ struct FriendsView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        showShareCard = true
-                    } label: {
-                        Image(systemName: "square.and.arrow.up")
-                    }
-                    .accessibilityLabel("Teilen")
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
                         showSearch = true
                     } label: {
                         Image(systemName: "person.badge.plus")
@@ -101,12 +92,6 @@ struct FriendsView: View {
                     showSearch = false
                 }
                 .presentationDragIndicator(.visible)
-            }
-            .sheet(isPresented: $showShareCard) {
-                if let user = authViewModel.currentUser {
-                    ProfileShareCardView(user: user)
-                        .presentationDragIndicator(.visible)
-                }
             }
             .confirmationDialog(
                 "Freund wirklich entfernen?",

@@ -1,6 +1,5 @@
 //
 //  AppDelegate.swift
-//  Sidequest
 //
 
 import UIKit

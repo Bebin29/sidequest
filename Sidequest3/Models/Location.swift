@@ -14,6 +14,11 @@ enum LocationCategory: String, Codable, CaseIterable {
     case bakery = "Bäckerei"
     case fastFood = "Fast Food"
     case iceCream = "Eisdiele"
+    case hotel = "Hotel"
+    case cinema = "Kino"
+    case gym = "Fitnessstudio"
+    case spa = "Spa & Wellness"
+    case landmark = "Sehenswürdigkeit"
     case park = "Park"
     case museum = "Museum"
     case shopping = "Shopping"
@@ -30,6 +35,11 @@ enum LocationCategory: String, Codable, CaseIterable {
         case .bakery: return .yellow
         case .fastFood: return .red
         case .iceCream: return .cyan
+        case .hotel: return .blue
+        case .cinema: return .red
+        case .gym: return .mint
+        case .spa: return .purple
+        case .landmark: return .yellow
         case .park: return .green
         case .museum: return .blue
         case .shopping: return .pink

@@ -24,7 +24,7 @@ final class FeedViewModel {
     var userLocation: CLLocation?
 
     private let feedService = FeedService()
-    private let pageSize = 20
+    private let pageSize = 200
 
     // MARK: - Dominant Color
 
@@ -40,8 +40,17 @@ final class FeedViewModel {
     // MARK: - Location
 
     func fetchLocation() async {
+        let manager = CLLocationManager()
+        let status = manager.authorizationStatus
+
+        // Kein Standort verfügbar → Feed wird nach Datum sortiert
+        guard status == .authorizedWhenInUse || status == .authorizedAlways else {
+            print("[Feed] Standort nicht erlaubt (\(status.rawValue)) – Sortierung nach Datum")
+            return
+        }
+
         // Fallback: letzter bekannter Standort
-        let fallback = CLLocationManager().location
+        let fallback = manager.location
 
         do {
             for try await update in CLLocationUpdate.liveUpdates() {
@@ -64,7 +73,9 @@ final class FeedViewModel {
 
     func sortByDistance() {
         guard let userLocation else {
-            print("[Feed] Kein Standort – Sortierung übersprungen")
+            // Kein Standort → nach Erstelldatum sortieren (neu → alt)
+            locations.sort { $0.createdAt > $1.createdAt }
+            print("[Feed] Kein Standort – Sortierung nach Datum (neueste zuerst)")
             return
         }
         locations.sort { loc1, loc2 in

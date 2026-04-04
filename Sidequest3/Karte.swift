@@ -12,6 +12,7 @@ struct Karte: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var userId: UUID?
+    var isModerator: Bool = false
     @Binding var focusLocation: Location?
 
     var body: some View {
@@ -140,7 +141,7 @@ struct Karte: View {
         }) {
             if let location = mapViewModel.locations.first(where: { $0.id == selectedLocationId }) {
                 NavigationStack {
-                    LocationDetailView(location: location, currentUserId: userId, onDelete: {
+                    LocationDetailView(location: location, currentUserId: userId, isModerator: isModerator, onDelete: {
                         mapViewModel.locations.removeAll { $0.id == location.id }
                         showDetail = false
                     }, onUpdate: { updated in

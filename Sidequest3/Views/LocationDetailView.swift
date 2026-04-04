@@ -11,8 +11,10 @@ import MapKit
 struct LocationDetailView: View {
     @State var location: Location
     var currentUserId: UUID?
+    var isModerator: Bool = false
     var onDelete: (() -> Void)?
     var onUpdate: ((Location) -> Void)?
+    var onShowOnMap: ((Location) -> Void)?
 
     @State private var viewModel = LocationDetailViewModel()
     @State private var newComment = ""
@@ -29,6 +31,10 @@ struct LocationDetailView: View {
 
     private var isOwner: Bool {
         currentUserId == location.createdBy
+    }
+
+    private var canEdit: Bool {
+        isOwner || isModerator
     }
 
     private var categoryColor: Color {
@@ -167,7 +173,7 @@ struct LocationDetailView: View {
                 Spacer()
 
                 HStack(spacing: 10) {
-                    if isOwner {
+                    if canEdit {
                         if isEditing {
                             Button {
                                 isEditing = false
@@ -374,6 +380,14 @@ struct LocationDetailView: View {
                         if let url = URL(string: "tel:\(phone)") {
                             UIApplication.shared.open(url)
                         }
+                    }
+                }
+
+                if let onShowOnMap {
+                    actionButton("Karte", icon: "map.fill") {
+                        let loc = location
+                        dismiss()
+                        onShowOnMap(loc)
                     }
                 }
 

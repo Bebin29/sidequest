@@ -118,7 +118,15 @@ struct MainView: View {
         
         .sheet(item: $selectedLocation) { location in
             NavigationStack {
-                LocationDetailView(location: location, currentUserId: currentUserId)
+                LocationDetailView(
+                    location: location,
+                    currentUserId: currentUserId,
+                    isModerator: authViewModel.currentUser?.isModerator ?? false,
+                    onShowOnMap: { loc in
+                        selectedLocation = nil
+                        onShowOnMap?(loc)
+                    }
+                )
             }
             .presentationDragIndicator(.visible)
         }

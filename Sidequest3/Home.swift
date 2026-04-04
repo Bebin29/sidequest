@@ -38,7 +38,7 @@ struct Home: View {
             
             Tab("Map", systemImage: "map.fill", value: .map) {
                 NavigationStack {
-                    Karte(mapViewModel: mapViewModel, userId: authViewModel.currentUser?.id, focusLocation: $focusLocation)
+                    Karte(mapViewModel: mapViewModel, userId: authViewModel.currentUser?.id, isModerator: authViewModel.currentUser?.isModerator ?? false, focusLocation: $focusLocation)
                 }
             }
             
@@ -70,7 +70,13 @@ struct Home: View {
             NavigationStack {
                 LocationDetailView(
                     location: location,
-                    currentUserId: authViewModel.currentUser?.id
+                    currentUserId: authViewModel.currentUser?.id,
+                    isModerator: authViewModel.currentUser?.isModerator ?? false,
+                    onShowOnMap: { loc in
+                        deepLinkLocation = nil
+                        focusLocation = loc
+                        selectedTab = .map
+                    }
                 )
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {

@@ -10,3 +10,6 @@ xcuserdata/
 
 # OS
 .DS_Store
+
+# PDFs
+*.pdf

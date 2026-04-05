@@ -9,6 +9,7 @@ jest.mock('../src/db/pool', () => ({
 const userController = require('../src/controllers/userController');
 const locationController = require('../src/controllers/locationController');
 const commentController = require('../src/controllers/commentController');
+const monitoringController = require('../src/controllers/monitoringController');
 
 // --- Test Helpers ---
 
@@ -301,5 +302,42 @@ describe('commentController', () => {
         await commentController.remove({}, res, 'nonexistent');
 
         expect(res.statusCode).toBe(404);
+    });
+});
+
+// --- Monitoring Controller Tests ---
+
+describe('monitoringController', () => {
+    test('getStatus returns server info when DB is healthy', async () => {
+        mockQuery
+            .mockResolvedValueOnce({ rows: [{ server_time: '2026-04-05T12:00:00Z' }] })
+            .mockResolvedValueOnce({
+                rows: [{ users: 5, locations: 10, ratings: 3, comments: 7, friendships: 2, notifications: 1 }],
+            });
+
+        const res = mockResponse();
+        await monitoringController.getStatus({}, res);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe('ok');
+        expect(res.body.server.node_version).toBeDefined();
+        expect(res.body.server.uptime_seconds).toBeGreaterThanOrEqual(0);
+        expect(res.body.database.connected).toBe(true);
+        expect(res.body.database.response_ms).toBeGreaterThanOrEqual(0);
+        expect(res.body.tables.users).toBe(5);
+        expect(res.body.tables.locations).toBe(10);
+    });
+
+    test('getStatus returns degraded when DB is down', async () => {
+        mockQuery.mockRejectedValueOnce(new Error('connection refused'));
+
+        const res = mockResponse();
+        await monitoringController.getStatus({}, res);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe('degraded');
+        expect(res.body.database.connected).toBe(false);
+        expect(res.body.database.error).toBe('connection refused');
+        expect(res.body.tables).toBeNull();
     });
 });

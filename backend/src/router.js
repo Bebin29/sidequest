@@ -7,6 +7,7 @@ const locationController = require('./controllers/locationController');
 const commentController = require('./controllers/commentController');
 const uploadController = require('./controllers/uploadController');
 const notificationController = require('./controllers/notificationController');
+const monitoringController = require('./controllers/monitoringController');
 
 function route(req, res) {
     const parsed = url.parse(req.url, true);
@@ -26,6 +27,11 @@ function route(req, res) {
     // Health Check
     if (pathname === '/api/health' && method === 'GET') {
         return sendJSON(res, 200, { status: 'ok', timestamp: new Date().toISOString() });
+    }
+
+    // Monitoring
+    if (pathname === '/api/admin/monitoring' && method === 'GET') {
+        return monitoringController.getStatus(req, res);
     }
 
     // Auth routes
@@ -117,6 +123,12 @@ function route(req, res) {
     const pendingMatch = pathname.match(/^\/api\/friendships\/pending\/([^/]+)$/);
     if (pendingMatch && method === 'GET') {
         return friendshipController.getPendingRequests(req, res, pendingMatch[1]);
+    }
+
+    // Sent requests: GET /api/friendships/sent/:userId
+    const sentMatch = pathname.match(/^\/api\/friendships\/sent\/([^/]+)$/);
+    if (sentMatch && method === 'GET') {
+        return friendshipController.getSentRequests(req, res, sentMatch[1]);
     }
 
     // Update friendship: PATCH /api/friendships/:id

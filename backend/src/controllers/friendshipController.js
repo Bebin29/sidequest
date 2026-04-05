@@ -155,6 +155,36 @@ async function getPendingRequests(req, res, userId) {
     }
 }
 
+// Gesendete ausstehende Anfragen (mit Empfänger-Info und Mutual Count)
+async function getSentRequests(req, res, userId) {
+    try {
+        const result = await pool.query(
+            `SELECT f.*,
+                u.display_name AS receiver_display_name,
+                u.profile_image_url AS receiver_profile_image_url,
+                COALESCE(mc.mutual_count, 0)::int AS mutual_count
+            FROM friendships f
+            JOIN users u ON u.id = f.receiver_id
+            LEFT JOIN LATERAL (
+                SELECT COUNT(*)::int AS mutual_count FROM (
+                    SELECT CASE WHEN requester_id = f.receiver_id THEN receiver_id ELSE requester_id END AS fid
+                    FROM friendships WHERE (requester_id = f.receiver_id OR receiver_id = f.receiver_id) AND status = 'accepted'
+                    INTERSECT
+                    SELECT CASE WHEN requester_id = $1 THEN receiver_id ELSE requester_id END AS fid
+                    FROM friendships WHERE (requester_id = $1 OR receiver_id = $1) AND status = 'accepted'
+                ) shared
+            ) mc ON true
+            WHERE f.requester_id = $1 AND f.status = 'pending'
+            ORDER BY f.created_at DESC`,
+            [userId]
+        );
+        sendJSON(res, 200, { data: result.rows, count: result.rowCount });
+    } catch (err) {
+        console.error('getSentRequests error:', err);
+        sendError(res, 500, 'Internal server error');
+    }
+}
+
 // Anfrage akzeptieren/ablehnen
 async function updateStatus(req, res, id) {
     try {
@@ -224,4 +254,4 @@ async function searchUsers(req, res, query) {
     }
 }
 
-module.exports = { sendRequest, getFriends, getSuggestions, getPendingRequests, updateStatus, remove, searchUsers };
+module.exports = { sendRequest, getFriends, getSuggestions, getPendingRequests, getSentRequests, updateStatus, remove, searchUsers };

@@ -11,6 +11,7 @@ import AVFoundation
 final class FriendsViewModel {
     var friends: [Friendship] = []
     var pendingRequests: [Friendship] = []
+    var sentRequests: [Friendship] = []
     var suggestions: [FriendSuggestion] = []
     var searchResults: [User] = []
     var isLoading = false
@@ -36,6 +37,16 @@ final class FriendsViewModel {
     func loadPendingRequests(userId: UUID) async {
         do {
             pendingRequests = try await service.getPendingRequests(userId: userId)
+        } catch is CancellationError {
+        } catch let urlError as URLError where urlError.code == .cancelled {
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func loadSentRequests(userId: UUID) async {
+        do {
+            sentRequests = try await service.getSentRequests(userId: userId)
         } catch is CancellationError {
         } catch let urlError as URLError where urlError.code == .cancelled {
         } catch {
@@ -76,8 +87,10 @@ final class FriendsViewModel {
             AudioServicesPlayAlertSound(1407)
             successMessage = "Anfrage an @\(receiverUsername) gesendet"
             searchResults = []
-            // Suggestions neu laden (User verschwindet aus Vorschlägen)
-            await loadSuggestions(userId: requesterId)
+            // Suggestions + Sent neu laden
+            async let s: () = loadSuggestions(userId: requesterId)
+            async let r: () = loadSentRequests(userId: requesterId)
+            _ = await (s, r)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -97,6 +110,17 @@ final class FriendsViewModel {
         do {
             _ = try await service.updateStatus(friendshipId: friendshipId, status: "declined")
             await loadPendingRequests(userId: userId)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func withdrawRequest(friendshipId: UUID, userId: UUID) async {
+        do {
+            try await service.removeFriend(friendshipId: friendshipId)
+            async let s: () = loadSentRequests(userId: userId)
+            async let sg: () = loadSuggestions(userId: userId)
+            _ = await (s, sg)
         } catch {
             errorMessage = error.localizedDescription
         }

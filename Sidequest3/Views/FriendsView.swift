@@ -49,6 +49,16 @@ struct FriendsView: View {
                             )
                         }
 
+                        if !viewModel.sentRequests.isEmpty {
+                            SentRequestsSection(
+                                requests: viewModel.sentRequests,
+                                onWithdraw: { id in
+                                    guard let userId = currentUser?.id else { return }
+                                    await viewModel.withdrawRequest(friendshipId: id, userId: userId)
+                                }
+                            )
+                        }
+
                         if !viewModel.suggestions.isEmpty {
                             FriendSuggestionsSection(
                                 suggestions: viewModel.suggestions,
@@ -116,8 +126,9 @@ struct FriendsView: View {
         guard let userId = currentUser?.id else { return }
         async let f: () = viewModel.loadFriends(userId: userId)
         async let p: () = viewModel.loadPendingRequests(userId: userId)
+        async let sr: () = viewModel.loadSentRequests(userId: userId)
         async let s: () = viewModel.loadSuggestions(userId: userId)
-        _ = await (f, p, s)
+        _ = await (f, p, sr, s)
 
         if let locations = try? await locationService.fetchLocations(userId: userId) {
             myLocationCount = locations.filter { $0.createdBy == userId }.count
@@ -227,6 +238,64 @@ private struct PendingRequestsSection: View {
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 
+}
+
+// MARK: - SentRequestsSection
+
+private struct SentRequestsSection: View {
+    let requests: [Friendship]
+    let onWithdraw: (UUID) async -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Gesendet (\(requests.count))")
+                .font(.footnote)
+                .foregroundStyle(Theme.textSecondary)
+                .padding(.horizontal, 4)
+
+            ForEach(requests) { request in
+                sentCard(request)
+            }
+        }
+    }
+
+    private func sentCard(_ request: Friendship) -> some View {
+        HStack(spacing: 12) {
+            AvatarView(url: request.receiverProfileImageUrl, fallbackInitial: request.receiverUsername, size: .medium)
+
+            VStack(alignment: .leading, spacing: 2) {
+                if let displayName = request.receiverDisplayName {
+                    Text(displayName)
+                        .font(.subheadline.bold())
+                }
+                Text("@\(request.receiverUsername)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if let count = request.mutualCount, count > 0 {
+                    Text("\(count) gemeinsame Freunde")
+                        .font(.caption2)
+                        .foregroundStyle(.blue)
+                }
+            }
+
+            Spacer()
+
+            Button {
+                Task { await onWithdraw(request.id) }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.subheadline.bold())
+                    .frame(width: 32, height: 32)
+            }
+            .accessibilityLabel("Zurückziehen")
+            .buttonStyle(.bordered)
+            .tint(.red)
+            .controlSize(.small)
+        }
+        .padding()
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+    }
 }
 
 // MARK: - FriendSuggestionsSection

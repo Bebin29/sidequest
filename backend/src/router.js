@@ -8,6 +8,7 @@ const commentController = require('./controllers/commentController');
 const uploadController = require('./controllers/uploadController');
 const notificationController = require('./controllers/notificationController');
 const monitoringController = require('./controllers/monitoringController');
+const dashboardController = require('./controllers/dashboardController');
 
 function route(req, res) {
     const parsed = url.parse(req.url, true);
@@ -32,6 +33,11 @@ function route(req, res) {
     // Monitoring
     if (pathname === '/api/admin/monitoring' && method === 'GET') {
         return monitoringController.getStatus(req, res);
+    }
+
+    // Dashboard (erweiterte Monitoring-Daten)
+    if (pathname === '/api/admin/dashboard' && method === 'GET') {
+        return dashboardController.getDashboard(req, res);
     }
 
     // Auth routes

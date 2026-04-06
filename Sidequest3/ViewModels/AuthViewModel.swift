@@ -10,7 +10,6 @@ import AuthenticationServices
 final class AuthViewModel {
     var currentUser: User?
     var isAuthenticated = false
-    var needsOnboarding = false
     var isLoading = false
     var errorMessage: String?
 

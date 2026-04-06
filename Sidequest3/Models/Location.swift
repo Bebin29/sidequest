@@ -54,67 +54,7 @@ enum LocationCategory: String, Codable, CaseIterable {
     }
 }
 
-enum PriceRange: String, Codable, CaseIterable {
-    case budget = "€"
-    case moderate = "€€"
-    case upscale = "€€€"
-    case luxury = "€€€€"
-}
 
-enum NoiseLevel: String, Codable, CaseIterable {
-    case quiet = "Ruhig"
-    case moderate = "Moderat"
-    case loud = "Laut"
-    case veryLoud = "Sehr laut"
-}
-
-struct OpeningHours: Codable {
-    let monday: DayHours?
-    let tuesday: DayHours?
-    let wednesday: DayHours?
-    let thursday: DayHours?
-    let friday: DayHours?
-    let saturday: DayHours?
-    let sunday: DayHours?
-}
-
-struct DayHours: Codable {
-    let openTime: String
-    let closeTime: String
-    let isClosed: Bool
-
-    enum CodingKeys: String, CodingKey {
-        case openTime = "open_time"
-        case closeTime = "close_time"
-        case isClosed = "is_closed"
-    }
-}
-
-struct ParkingInfo: Codable {
-    let hasParking: Bool
-    let parkingType: String?
-    let isFree: Bool?
-    let notes: String?
-
-    enum CodingKeys: String, CodingKey {
-        case hasParking = "has_parking"
-        case parkingType = "parking_type"
-        case isFree = "is_free"
-        case notes
-    }
-}
-
-struct AccessibilityInfo: Codable {
-    let wheelchairAccessible: Bool
-    let hasElevator: Bool
-    let hasAccessibleRestroom: Bool
-
-    enum CodingKeys: String, CodingKey {
-        case wheelchairAccessible = "wheelchair_accessible"
-        case hasElevator = "has_elevator"
-        case hasAccessibleRestroom = "has_accessible_restroom"
-    }
-}
 
 struct Location: Codable, Identifiable, Hashable {
     static func == (lhs: Location, rhs: Location) -> Bool { lhs.id == rhs.id }
@@ -124,11 +64,7 @@ struct Location: Codable, Identifiable, Hashable {
     let address: String
     let latitude: Double
     let longitude: Double
-    let geohash: String
     let category: String
-
-    let averageRating: Double
-    let totalRatings: Int
 
     let createdAt: String
     let updatedAt: String?
@@ -137,13 +73,9 @@ struct Location: Codable, Identifiable, Hashable {
     let description: String?
 
     let imageUrls: [String]
-    let thumbnailUrl: String?
     let tags: [String]
 
     let priceRange: String?
-    let openingHours: OpeningHours?
-    let parkingInfo: ParkingInfo?
-    let accessibility: AccessibilityInfo?
 
     let noiseLevel: String?
     let wifiAvailable: Bool?
@@ -155,8 +87,6 @@ struct Location: Codable, Identifiable, Hashable {
     let instagramHandle: String?
 
     let isVerified: Bool
-    let reportCount: Int
-    let trendingScore: Double?
 
     // Creator info (from JOIN)
     let creatorUsername: String?
@@ -164,18 +94,12 @@ struct Location: Codable, Identifiable, Hashable {
     let creatorProfileImageUrl: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, name, address, latitude, longitude, geohash, category, tags, website, description
-        case averageRating = "average_rating"
-        case totalRatings = "total_ratings"
+        case id, name, address, latitude, longitude, category, tags, website, description
         case createdAt = "created_at"
         case updatedAt = "updated_at"
         case createdBy = "created_by"
         case imageUrls = "image_urls"
-        case thumbnailUrl = "thumbnail_url"
         case priceRange = "price_range"
-        case openingHours = "opening_hours"
-        case parkingInfo = "parking_info"
-        case accessibility
         case noiseLevel = "noise_level"
         case wifiAvailable = "wifi_available"
         case isDogFriendly = "is_dog_friendly"
@@ -183,8 +107,6 @@ struct Location: Codable, Identifiable, Hashable {
         case phoneNumber = "phone_number"
         case instagramHandle = "instagram_handle"
         case isVerified = "is_verified"
-        case reportCount = "report_count"
-        case trendingScore = "trending_score"
         case creatorUsername = "creator_username"
         case creatorDisplayName = "creator_display_name"
         case creatorProfileImageUrl = "creator_profile_image_url"

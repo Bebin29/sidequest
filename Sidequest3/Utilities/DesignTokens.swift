@@ -61,18 +61,3 @@ enum Radius {
     static let carousel: CGFloat = 28
 }
 
-// MARK: - Shadows
-
-extension View {
-    func shadowSubtle() -> some View {
-        self.shadow(color: .black.opacity(0.08), radius: 8, y: 4)
-    }
-
-    func shadowMedium() -> some View {
-        self.shadow(color: .black.opacity(0.20), radius: 8, y: 4)
-    }
-
-    func shadowElevated() -> some View {
-        self.shadow(color: .black.opacity(0.35), radius: 16, y: 8)
-    }
-}

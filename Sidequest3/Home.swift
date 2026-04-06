@@ -44,7 +44,10 @@ struct Home: View {
             
             Tab("Friends", systemImage: "person.2.fill", value: .friends) {
                 NavigationStack {
-                    FriendsView(authViewModel: authViewModel, currentUser: authViewModel.currentUser)
+                    FriendsView(authViewModel: authViewModel, currentUser: authViewModel.currentUser, onShowOnMap: { location in
+                        focusLocation = location
+                        selectedTab = .map
+                    })
                 }
             }
             

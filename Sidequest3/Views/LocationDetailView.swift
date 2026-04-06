@@ -470,7 +470,7 @@ struct LocationDetailView: View {
     @ViewBuilder
     private var creatorCard: some View {
         if let creatorUsername = location.creatorUsername {
-            NavigationLink(destination: UserProfileView(userId: location.createdBy, currentUserId: currentUserId)) {
+            NavigationLink(destination: UserProfileView(userId: location.createdBy, currentUserId: currentUserId, onShowOnMap: onShowOnMap)) {
                 glassCard {
                     HStack(spacing: 12) {
                         AvatarView(url: location.creatorProfileImageUrl, fallbackInitial: creatorUsername, size: .small)

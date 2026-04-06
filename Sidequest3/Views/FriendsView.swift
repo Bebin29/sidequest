@@ -15,6 +15,7 @@ struct FriendsView: View {
     @State private var myLocationCount: Int = 0
     @Bindable var authViewModel: AuthViewModel
     var currentUser: User?
+    var onShowOnMap: ((Location) -> Void)?
 
     private let locationService = LocationService()
 
@@ -31,7 +32,8 @@ struct FriendsView: View {
                             MyProfileCard(
                                 user: user,
                                 locationCount: myLocationCount,
-                                friendCount: viewModel.friends.count
+                                friendCount: viewModel.friends.count,
+                                onShowOnMap: onShowOnMap
                             )
                         }
 
@@ -75,7 +77,8 @@ struct FriendsView: View {
                             onRemove: { friendship in
                                 friendToRemove = friendship
                                 showRemoveConfirmation = true
-                            }
+                            },
+                            onShowOnMap: onShowOnMap
                         )
                     }
                     .padding(.horizontal)
@@ -142,10 +145,11 @@ private struct MyProfileCard: View {
     let user: User
     let locationCount: Int
     let friendCount: Int
+    var onShowOnMap: ((Location) -> Void)?
 
     var body: some View {
         NavigationLink {
-            MyProfileView(user: user, friendCount: friendCount)
+            MyProfileView(user: user, friendCount: friendCount, onShowOnMap: onShowOnMap)
         } label: {
             HStack(spacing: 16) {
                 AvatarView(url: user.profileImageUrl, size: .medium)
@@ -358,6 +362,7 @@ private struct FriendsListSection: View {
     let friends: [Friendship]
     let currentUserId: UUID?
     let onRemove: (Friendship) -> Void
+    var onShowOnMap: ((Location) -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -400,7 +405,7 @@ private struct FriendsListSection: View {
         let spotCount = isRequester ? friendship.receiverSpotCount : friendship.requesterSpotCount
 
         return NavigationLink {
-            UserProfileView(userId: friendId, currentUserId: currentUserId)
+            UserProfileView(userId: friendId, currentUserId: currentUserId, onShowOnMap: onShowOnMap)
         } label: {
             HStack(spacing: 12) {
                 AvatarView(url: friendImageUrl, fallbackInitial: friendUsername, size: .medium)

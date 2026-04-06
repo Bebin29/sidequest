@@ -9,6 +9,7 @@ import AudioToolbox
 struct UserProfileView: View {
     let userId: UUID
     var currentUserId: UUID?
+    var onShowOnMap: ((Location) -> Void)?
 
     @State private var user: User?
     @State private var locations: [Location] = []
@@ -81,7 +82,10 @@ struct UserProfileView: View {
         .refreshable { await loadData() }
         .sheet(item: $selectedLocation) { location in
             NavigationStack {
-                LocationDetailView(location: location, currentUserId: currentUserId)
+                LocationDetailView(location: location, currentUserId: currentUserId, onShowOnMap: onShowOnMap != nil ? { loc in
+                            selectedLocation = nil
+                            onShowOnMap?(loc)
+                        } : nil)
                     .toolbar {
                         ToolbarItem(placement: .topBarLeading) {
                             Button("Fertig") { selectedLocation = nil }

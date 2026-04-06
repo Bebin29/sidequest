@@ -1,515 +1,366 @@
 # Klassendiagramm - Sidequest
 
-## Gesamtarchitektur
+## 1. Kern-Datenmodell
 
 ```mermaid
 classDiagram
     direction TB
 
-    %% ============================================================
-    %% MODELS (Swift)
-    %% ============================================================
-
     class User {
-        +UUID id
-        +String email
-        +String username
-        +String displayName
-        +String? profileImageUrl
-        +String createdAt
-        +String? updatedAt
-        +String? lastSeenAt
-        +String? bio
-        +[String:String]? preferences
-        +[String] favoriteCategories
-        +Bool isVerified
-        +Bool isModerator
-        +Bool isPrivate
-        +String? fcmToken
-        +[String:Int]? stats
+        +id : UUID
+        +email : String
+        +username : String
+        +displayName : String
+        +profileImageUrl : String
+        +bio : String
+        +createdAt : Date
+        +updatedAt : Date
+        +lastSeenAt : Date
+        +preferences : JSON
+        +favoriteCategories : String[]
+        +isVerified : Bool
+        +isModerator : Bool
+        +isPrivate : Bool
+        +fcmToken : String
+        +stats : JSON
     }
 
     class Location {
-        +UUID id
-        +String name
-        +String address
-        +Double latitude
-        +Double longitude
-        +String geohash
-        +String category
-        +Double averageRating
-        +Int totalRatings
-        +String createdAt
-        +String? updatedAt
-        +UUID createdBy
-        +String? description
-        +[String] imageUrls
-        +String? thumbnailUrl
-        +[String] tags
-        +String? priceRange
-        +OpeningHours? openingHours
-        +ParkingInfo? parkingInfo
-        +AccessibilityInfo? accessibility
-        +String? noiseLevel
-        +Bool? wifiAvailable
-        +Bool? isDogFriendly
-        +Bool? isFamilyFriendly
-        +String? phoneNumber
-        +String? website
-        +String? instagramHandle
-        +Bool isVerified
-        +Int reportCount
-        +Double? trendingScore
-        +String? creatorUsername
-        +String? creatorDisplayName
-        +String? creatorProfileImageUrl
+        +id : UUID
+        +name : String
+        +address : String
+        +latitude : Double
+        +longitude : Double
+        +geohash : String
+        +category : String
+        +averageRating : Double
+        +totalRatings : Int
+        +createdAt : Date
+        +createdBy : UUID
+        +description : String
+        +imageUrls : String[]
+        +thumbnailUrl : String
+        +tags : String[]
+        +priceRange : String
+        +noiseLevel : String
+        +wifiAvailable : Bool
+        +isDogFriendly : Bool
+        +isFamilyFriendly : Bool
+        +phoneNumber : String
+        +website : String
+        +instagramHandle : String
+        +isVerified : Bool
+        +reportCount : Int
+        +trendingScore : Double
     }
 
     class Trip {
-        +UUID id
-        +UUID userId
-        +String username
-        +String name
-        +String? description
-        +Int locationCount
-        +String createdAt
-        +String? updatedAt
-        +String? startDate
-        +String? endDate
-        +String? coverImageUrl
-        +Bool isCollaborative
-        +Bool isPublic
-        +Int viewCount
-        +String? reminderDate
-    }
-
-    class Rating {
-        +UUID id
-        +UUID locationId
-        +String locationName
-        +UUID userId
-        +String username
-        +String? userProfileImageUrl
-        +Int rating
-        +String? comment
-        +[String] imageUrls
-        +[String] thumbnailUrls
-        +String createdAt
-        +String? updatedAt
-        +UUID? tripId
-        +Bool isVerified
-        +String? verifiedAt
-        +Int reportCount
-        +Bool isHidden
-        +Int reactionCount
-        +Int commentCount
-        +Int helpfulCount
-        +String? visitDate
-        +Double? priceSpent
-        +Bool? wouldRecommend
-    }
-
-    class Comment {
-        +UUID id
-        +UUID locationId
-        +UUID userId
-        +String username
-        +String text
-        +String createdAt
+        +id : UUID
+        +userId : UUID
+        +username : String
+        +name : String
+        +description : String
+        +locationCount : Int
+        +createdAt : Date
+        +startDate : Date
+        +endDate : Date
+        +coverImageUrl : String
+        +isCollaborative : Bool
+        +isPublic : Bool
+        +viewCount : Int
     }
 
     class Friendship {
-        +UUID id
-        +UUID requesterId
-        +UUID receiverId
-        +FriendshipStatus status
-        +String createdAt
-        +String? acceptedAt
-        +String requesterUsername
-        +String receiverUsername
-        +String? requesterDisplayName
-        +String? requesterProfileImageUrl
-        +Int? mutualCount
-        +String? receiverDisplayName
-        +String? receiverProfileImageUrl
-        +Int? requesterSpotCount
-        +Int? receiverSpotCount
+        +id : UUID
+        +requesterId : UUID
+        +receiverId : UUID
+        +status : String
+        +createdAt : Date
+        +acceptedAt : Date
+        +requesterUsername : String
+        +receiverUsername : String
     }
 
     class Notification {
-        +UUID id
-        +UUID recipientId
-        +UUID senderId
-        +String type
-        +String title
-        +String body
-        +JSON data
-        +Bool isRead
-        +String createdAt
+        +id : UUID
+        +recipientId : UUID
+        +senderId : UUID
+        +type : String
+        +title : String
+        +body : String
+        +data : JSON
+        +isRead : Bool
+        +createdAt : Date
+    }
+
+    class Rating {
+        +id : UUID
+        +locationId : UUID
+        +locationName : String
+        +userId : UUID
+        +username : String
+        +rating : Int
+        +comment : String
+        +imageUrls : String[]
+        +createdAt : Date
+        +tripId : UUID
+        +isVerified : Bool
+        +reportCount : Int
+        +isHidden : Bool
+        +reactionCount : Int
+        +helpfulCount : Int
+        +visitDate : Date
+        +priceSpent : Double
+        +wouldRecommend : Bool
+    }
+
+    class Comment {
+        +id : UUID
+        +locationId : UUID
+        +userId : UUID
+        +username : String
+        +text : String
+        +createdAt : Date
     }
 
     class FriendSuggestion {
-        +UUID id
-        +String username
-        +String? displayName
-        +String? profileImageUrl
-        +Int mutualCount
-        +[String] mutualUsernames
+        +id : UUID
+        +username : String
+        +displayName : String
+        +profileImageUrl : String
+        +mutualCount : Int
+        +mutualUsernames : String[]
     }
 
-    %% ============================================================
-    %% ENUMS
-    %% ============================================================
+    User "1" --> "*" Location : erstellt
+    User "1" --> "*" Trip : besitzt
+    User "1" --> "*" Friendship : beteiligt
+    User "1" --> "*" Notification : empfaengt
 
-    class LocationCategory {
-        <<enumeration>>
-        restaurant
-        cafe
-        bar
-        club
-        bakery
-        fastFood
-        iceCream
-        hotel
-        cinema
-        gym
-        spa
-        landmark
-        park
-        museum
-        shopping
-        viewpoint
-        beach
-        other
-        +color() Color
+    Location "1" --> "*" Rating : hat
+    Location "1" --> "*" Comment : hat
+```
+
+## 2. Location-Komposition
+
+```mermaid
+classDiagram
+    direction TB
+
+    class Location {
+        +id : UUID
+        +name : String
+        +openingHours : OpeningHours
+        +parkingInfo : ParkingInfo
+        +accessibility : AccessibilityInfo
     }
-
-    class PriceRange {
-        <<enumeration>>
-        budget
-        moderate
-        upscale
-        luxury
-    }
-
-    class NoiseLevel {
-        <<enumeration>>
-        quiet
-        moderate
-        loud
-        veryLoud
-    }
-
-    class FriendshipStatus {
-        <<enumeration>>
-        pending
-        accepted
-        declined
-        blocked
-    }
-
-    class HTTPMethod {
-        <<enumeration>>
-        get
-        post
-        put
-        delete
-    }
-
-    class AppError {
-        <<enumeration>>
-        network(Error)
-        decoding(Error)
-        server(Int, String?)
-        notFound
-        unauthorized
-        unknown(Error?)
-        +errorDescription String?
-    }
-
-    %% ============================================================
-    %% VALUE TYPES (eingebettete Structs)
-    %% ============================================================
 
     class OpeningHours {
-        +DayHours? monday
-        +DayHours? tuesday
-        +DayHours? wednesday
-        +DayHours? thursday
-        +DayHours? friday
-        +DayHours? saturday
-        +DayHours? sunday
-    }
-
-    class DayHours {
-        +String openTime
-        +String closeTime
-        +Bool isClosed
+        +monday : DayHours
+        +tuesday : DayHours
+        +wednesday : DayHours
+        +thursday : DayHours
+        +friday : DayHours
+        +saturday : DayHours
+        +sunday : DayHours
     }
 
     class ParkingInfo {
-        +Bool hasParking
-        +String? parkingType
-        +Bool? isFree
-        +String? notes
+        +hasParking : Bool
+        +parkingType : String
+        +isFree : Bool
+        +notes : String
     }
 
     class AccessibilityInfo {
-        +Bool wheelchairAccessible
-        +Bool hasElevator
-        +Bool hasAccessibleRestroom
+        +wheelchairAccessible : Bool
+        +hasElevator : Bool
+        +hasAccessibleRestroom : Bool
     }
 
-    class LocationFilter {
-        +LocationCategory? category
-        +String? search
-        +Double? latitude
-        +Double? longitude
-        +Double? radiusMeters
-        +isEmpty Bool
+    class DayHours {
+        +openTime : String
+        +closeTime : String
+        +isClosed : Bool
     }
 
-    class ServerStatus {
-        +String status
-        +String timestamp
-        +ServerInfo server
-        +DatabaseInfo database
-        +TableCounts? tables
-        +isHealthy Bool
-        +formattedUptime String
-    }
+    Location "1" *-- "1" OpeningHours
+    Location "1" *-- "1" ParkingInfo
+    Location "1" *-- "1" AccessibilityInfo
 
-    class ServerInfo {
-        +Int uptimeSeconds
-        +String nodeVersion
-        +MemoryInfo memoryMb
-    }
+    OpeningHours "1" *-- "7" DayHours
+```
 
-    class MemoryInfo {
-        +Int rss
-        +Int heapUsed
-        +Int heapTotal
-    }
+## 3. iOS-Architektur (ViewModels und Services)
 
-    class DatabaseInfo {
-        +Bool connected
-        +Int? responseMs
-        +String? serverTime
-        +String? error
-    }
-
-    class TableCounts {
-        +Int users
-        +Int locations
-        +Int ratings
-        +Int comments
-        +Int friendships
-        +Int notifications
-    }
-
-    %% ============================================================
-    %% API RESPONSE TYPES
-    %% ============================================================
-
-    class APIResponse~T~ {
-        +T data
-    }
-
-    class APIListResponse~T~ {
-        +[T] data
-        +Int count
-    }
-
-    class APIErrorResponse {
-        +String error
-    }
-
-    class APIMessageResponse {
-        +String message
-    }
-
-    class FeedResponse {
-        +[Location] data
-        +Int count
-        +Bool hasMore
-    }
-
-    %% ============================================================
-    %% VIEW MODELS
-    %% ============================================================
+```mermaid
+classDiagram
+    direction LR
 
     class AuthViewModel {
-        +User? currentUser
-        +Bool isAuthenticated
-        +Bool needsOnboarding
-        +Bool isLoading
-        +String? errorMessage
-        -AuthService authService
-        +handleAppleSignIn(Result) void
-        +signIn(String, String?, String?) async
-        +checkExistingSession() async
-        +signOut() void
-        +deleteAccount() async
-    }
-
-    class MapViewModel {
-        +[Location] locations
-        +Bool isLoading
-        +String? errorMessage
-        +LocationFilter filter
-        -LocationService locationService
-        +loadLocations(UUID) async
-        +addLocation([String:Any]) async Bool
-    }
-
-    class FeedViewModel {
-        +[Location] locations
-        +Bool isLoading
-        +Bool isLoadingMore
-        +Bool hasMore
-        +String? errorMessage
-        +Int currentIndex
-        +[UUID:Color] dominantColors
-        +CLLocation? userLocation
-        -FeedService feedService
-        +currentDominantColor Color?
-        +setDominantColor(Color, UUID) void
-        +fetchLocation() async
-        +sortByDistance() void
-        +loadFeed(UUID) async
-        +loadMore(UUID) async
-    }
-
-    class FriendsViewModel {
-        +[Friendship] friends
-        +[Friendship] pendingRequests
-        +[Friendship] sentRequests
-        +[FriendSuggestion] suggestions
-        +[User] searchResults
-        +Bool isLoading
-        +String? errorMessage
-        +String? successMessage
-        -FriendshipService service
-        +loadFriends(UUID) async
-        +loadPendingRequests(UUID) async
-        +loadSentRequests(UUID) async
-        +loadSuggestions(UUID) async
-        +searchUsers(String) async
-        +sendRequest(UUID, String) async
-        +acceptRequest(UUID, UUID) async
-        +declineRequest(UUID, UUID) async
-        +withdrawRequest(UUID, UUID) async
-        +removeFriend(UUID, UUID) async
-    }
-
-    class LocationDetailViewModel {
-        +[Comment] comments
-        +Bool isLoading
-        +String? errorMessage
-        -CommentService commentService
-        +loadComments(UUID) async
-        +addComment(UUID, UUID, String) async
-    }
-
-    class AdminViewModel {
-        +[User] users
-        +ServerStatus? serverStatus
-        +String? monitoringError
-        +Bool isLoading
-        +String? errorMessage
-        -UserService userService
-        -NetworkService networkService
-        +loadAll() async
-        +loadUsers() async
-        +loadServerStatus() async
-    }
-
-    %% ============================================================
-    %% SERVICES
-    %% ============================================================
-
-    class NetworkServiceProtocol {
-        <<interface>>
-        +request~T~(String, HTTPMethod) async T
-    }
-
-    class NetworkService {
-        -URLSession session
-        +request~T~(String, HTTPMethod) async T
+        +currentUser : User
+        +isAuthenticated : Bool
+        +needsOnboarding : Bool
+        +isLoading : Bool
+        +errorMessage : String
+        +handleAppleSignIn(result)
+        +signIn(appleUserId, email, displayName)
+        +checkExistingSession()
+        +signOut()
+        +deleteAccount()
     }
 
     class AuthService {
-        -URLSession session
-        +signInWithApple(String, String?, String?) async (User, Bool)
+        -session : URLSession
+        +signInWithApple(appleUserId, email, displayName) User
+    }
+
+    class MapViewModel {
+        +locations : Location[]
+        +isLoading : Bool
+        +filter : LocationFilter
+        +loadLocations(userId)
+        +addLocation(body)
     }
 
     class LocationService {
-        -URLSession session
-        +getLocation(UUID) async Location
-        +fetchLocations(UUID, LocationFilter) async [Location]
-        +createLocation([String:Any]) async Location
-        +updateLocation(UUID, [String:Any]) async Location
-        +deleteLocation(UUID) async
+        -session : URLSession
+        +getLocation(id) Location
+        +fetchLocations(userId, filter) Location[]
+        +createLocation(body) Location
+        +updateLocation(id, body) Location
+        +deleteLocation(id)
+    }
+
+    class FeedViewModel {
+        +locations : Location[]
+        +isLoading : Bool
+        +hasMore : Bool
+        +currentIndex : Int
+        +userLocation : CLLocation
+        +fetchLocation()
+        +sortByDistance()
+        +loadFeed(userId)
+        +loadMore(userId)
     }
 
     class FeedService {
-        -URLSession session
-        +fetchFeed(UUID, Int, Int) async FeedResponse
+        -session : URLSession
+        +fetchFeed(userId, limit, offset) FeedResponse
     }
 
-    class CommentService {
-        -URLSession session
-        +fetchComments(UUID) async [Comment]
-        +createComment(UUID, UUID, String) async Comment
+    class FriendsViewModel {
+        +friends : Friendship[]
+        +pendingRequests : Friendship[]
+        +sentRequests : Friendship[]
+        +suggestions : FriendSuggestion[]
+        +searchResults : User[]
+        +isLoading : Bool
+        +loadFriends(userId)
+        +searchUsers(query)
+        +sendRequest(requesterId, receiverUsername)
+        +acceptRequest(friendshipId, userId)
+        +declineRequest(friendshipId, userId)
+        +removeFriend(friendshipId, userId)
     }
 
     class FriendshipService {
-        -URLSession session
-        +searchUsers(String) async [User]
-        +sendRequest(UUID, String) async Friendship
-        +getFriends(UUID) async [Friendship]
-        +getPendingRequests(UUID) async [Friendship]
-        +getSentRequests(UUID) async [Friendship]
-        +updateStatus(UUID, String) async Friendship
-        +getSuggestions(UUID) async [FriendSuggestion]
-        +removeFriend(UUID) async
+        -session : URLSession
+        +searchUsers(query) User[]
+        +sendRequest(requesterId, receiverUsername) Friendship
+        +getFriends(userId) Friendship[]
+        +getPendingRequests(userId) Friendship[]
+        +getSentRequests(userId) Friendship[]
+        +updateStatus(friendshipId, status) Friendship
+        +getSuggestions(userId) FriendSuggestion[]
+        +removeFriend(friendshipId)
+    }
+
+    class LocationDetailViewModel {
+        +comments : Comment[]
+        +isLoading : Bool
+        +errorMessage : String
+        +loadComments(locationId)
+        +addComment(locationId, userId, text)
+    }
+
+    class CommentService {
+        -session : URLSession
+        +fetchComments(locationId) Comment[]
+        +createComment(locationId, userId, text) Comment
+    }
+
+    class AdminViewModel {
+        +users : User[]
+        +serverStatus : ServerStatus
+        +isLoading : Bool
+        +loadAll()
+        +loadUsers()
+        +loadServerStatus()
     }
 
     class UserService {
-        -URLSession session
-        +fetchUsers() async [User]
+        -session : URLSession
+        +fetchUsers() User[]
     }
 
-    class ProfileService {
-        -URLSession session
-        +getUser(UUID) async User
-        +checkUsername(String) async Bool
-        +updateProfile(UUID, [String:Any]) async User
+    AuthViewModel ..> AuthService
+    MapViewModel ..> LocationService
+    FeedViewModel ..> FeedService
+    FriendsViewModel ..> FriendshipService
+    LocationDetailViewModel ..> CommentService
+    AdminViewModel ..> UserService
+```
+
+## 4. Weitere iOS-Services
+
+```mermaid
+classDiagram
+    direction LR
+
+    class NetworkServiceProtocol {
+        <<interface>>
+        +request(endpoint, method) T
     }
 
-    class ImageUploadService {
-        -URLSession session
-        +upload(UIImage) async String
-        -resize(UIImage, CGFloat)$ UIImage
-    }
-
-    class PushNotificationService {
-        +Bool isAuthorized
-        +String? deviceToken
-        +DeepLinkRouter router
-        -ProfileService profileService
-        +requestAuthorization() async Bool
-        +uploadToken(UUID, String) async
+    class NetworkService {
+        -session : URLSession
+        +request(endpoint, method) T
     }
 
     class DependencyContainer {
-        +NetworkServiceProtocol networkService
-        +init(NetworkServiceProtocol)
+        +networkService : NetworkServiceProtocol
     }
 
-    %% ============================================================
-    %% BACKEND CONTROLLERS (Node.js)
-    %% ============================================================
+    class ProfileService {
+        -session : URLSession
+        +getUser(id) User
+        +checkUsername(username) Bool
+        +updateProfile(userId, body) User
+    }
+
+    class ImageUploadService {
+        -session : URLSession
+        +upload(image) String
+    }
+
+    class PushNotificationService {
+        +isAuthorized : Bool
+        +deviceToken : String
+        +requestAuthorization() Bool
+        +uploadToken(userId, token)
+    }
+
+    NetworkService ..|> NetworkServiceProtocol : implementiert
+    DependencyContainer --> NetworkServiceProtocol
+    PushNotificationService ..> ProfileService
+```
+
+## 5. Backend-Architektur (Controller und Services)
+
+```mermaid
+classDiagram
+    direction LR
 
     class AuthController {
         <<controller>>
@@ -518,22 +369,22 @@ classDiagram
 
     class UserController {
         <<controller>>
-        +getAll(req, res, query)
+        +getAll(req, res)
         +getById(req, res, id)
         +create(req, res)
         +update(req, res, id)
         +remove(req, res, id)
-        +checkUsername(req, res, query)
+        +checkUsername(req, res)
     }
 
     class LocationController {
         <<controller>>
-        +getAll(req, res, query)
+        +getAll(req, res)
         +getById(req, res, id)
         +create(req, res)
         +update(req, res, id)
         +remove(req, res, id)
-        +getFeed(req, res, query)
+        +getFeed(req, res)
     }
 
     class CommentController {
@@ -546,18 +397,17 @@ classDiagram
     class FriendshipController {
         <<controller>>
         +sendRequest(req, res)
-        +getSuggestions(req, res, userId)
         +getFriends(req, res, userId)
         +getPendingRequests(req, res, userId)
         +getSentRequests(req, res, userId)
         +updateStatus(req, res, id)
         +remove(req, res, id)
-        +searchUsers(req, res, query)
+        +searchUsers(req, res)
     }
 
     class NotificationController {
         <<controller>>
-        +getByUser(req, res, userId, query)
+        +getByUser(req, res, userId)
         +getUnreadCount(req, res, userId)
         +markRead(req, res, id)
         +markAllRead(req, res, userId)
@@ -573,13 +423,8 @@ classDiagram
         +upload(req, res)
     }
 
-    %% ============================================================
-    %% BACKEND SERVICES (Node.js)
-    %% ============================================================
-
     class NotificationService {
         <<service>>
-        +isEnabled(preferences, type) Bool
         +createAndSend(options)
         +notifyFriendRequest(senderId, receiverId)
         +notifyFriendAccepted(accepterId, requesterId)
@@ -589,116 +434,96 @@ classDiagram
 
     class APNsService {
         <<service>>
-        -KEY_PATH
-        -KEY_ID
-        -TEAM_ID
-        -BUNDLE_ID
+        -KEY_ID : String
+        -TEAM_ID : String
+        -BUNDLE_ID : String
         +isConfigured() Bool
-        +getSigningKey()
-        +getToken()
-        +getClient()
+        +getToken() String
         +sendPush(deviceToken, options)
     }
 
-    %% ============================================================
-    %% BEZIEHUNGEN: Models
-    %% ============================================================
+    LocationController ..> NotificationService
+    CommentController ..> NotificationService
+    FriendshipController ..> NotificationService
+    NotificationService ..> APNsService
+```
 
-    User "1" --> "*" Location : erstellt
-    User "1" --> "*" Rating : verfasst
-    User "1" --> "*" Comment : schreibt
-    User "1" --> "*" Trip : besitzt
-    User "1" --> "*" Notification : empfaengt
+## 6. Monitoring-Struktur
 
-    Location "1" --> "*" Rating : hat
-    Location "1" --> "*" Comment : hat
-    Location "*" --> "1" LocationCategory : gehoert zu
-    Location "1" --> "1" OpeningHours : hat
-    Location "1" --> "1" ParkingInfo : hat
-    Location "1" --> "1" AccessibilityInfo : hat
+```mermaid
+classDiagram
+    direction TB
 
-    OpeningHours "1" --> "*" DayHours : enthaelt
+    class ServerStatus {
+        +status : String
+        +timestamp : String
+        +isHealthy() Bool
+        +formattedUptime() String
+    }
 
-    Rating "*" --> "0..1" Trip : gehoert zu
+    class ServerInfo {
+        +uptimeSeconds : Int
+        +nodeVersion : String
+    }
 
-    Friendship --> User : requester
-    Friendship --> User : receiver
-    Friendship --> FriendshipStatus : hat Status
+    class MemoryInfo {
+        +rss : Int
+        +heapUsed : Int
+        +heapTotal : Int
+    }
 
-    FriendSuggestion --> User : vorgeschlagen
+    class DatabaseInfo {
+        +connected : Bool
+        +responseMs : Int
+        +serverTime : String
+    }
 
-    Notification --> User : sender
-    Notification --> User : empfaenger
+    class TableCounts {
+        +users : Int
+        +locations : Int
+        +ratings : Int
+        +comments : Int
+        +friendships : Int
+        +notifications : Int
+    }
 
-    Trip "1" --> "*" User : Teilnehmer
+    ServerStatus "1" *-- "1" ServerInfo
+    ServerStatus "1" *-- "1" DatabaseInfo
+    ServerStatus "1" *-- "1" TableCounts
+    ServerInfo "1" *-- "1" MemoryInfo
+```
 
-    ServerStatus --> ServerInfo : enthaelt
-    ServerStatus --> DatabaseInfo : enthaelt
-    ServerStatus --> TableCounts : enthaelt
-    ServerInfo --> MemoryInfo : enthaelt
+## 7. API-Antworttypen
 
-    %% ============================================================
-    %% BEZIEHUNGEN: ViewModel -> Service
-    %% ============================================================
+```mermaid
+classDiagram
+    direction LR
 
-    AuthViewModel --> AuthService : nutzt
-    MapViewModel --> LocationService : nutzt
-    FeedViewModel --> FeedService : nutzt
-    FriendsViewModel --> FriendshipService : nutzt
-    LocationDetailViewModel --> CommentService : nutzt
-    AdminViewModel --> UserService : nutzt
-    AdminViewModel --> NetworkService : nutzt
-    PushNotificationService --> ProfileService : nutzt
+    class APIResponse~T~ {
+        +data : T
+    }
 
-    %% ============================================================
-    %% BEZIEHUNGEN: ViewModel -> Model
-    %% ============================================================
+    class APIListResponse~T~ {
+        +data : T[]
+        +count : Int
+    }
 
-    AuthViewModel --> User : verwaltet
-    MapViewModel --> Location : verwaltet
-    MapViewModel --> LocationFilter : verwendet
-    FeedViewModel --> Location : verwaltet
-    FriendsViewModel --> Friendship : verwaltet
-    FriendsViewModel --> FriendSuggestion : verwaltet
-    FriendsViewModel --> User : sucht
-    LocationDetailViewModel --> Comment : verwaltet
-    AdminViewModel --> User : verwaltet
-    AdminViewModel --> ServerStatus : verwaltet
+    class APIErrorResponse {
+        +error : String
+    }
 
-    %% ============================================================
-    %% BEZIEHUNGEN: Service Interfaces
-    %% ============================================================
+    class FeedResponse {
+        +data : Location[]
+        +count : Int
+        +hasMore : Bool
+    }
 
-    NetworkService ..|> NetworkServiceProtocol : implementiert
-    DependencyContainer --> NetworkServiceProtocol : haelt
-
-    %% ============================================================
-    %% BEZIEHUNGEN: Service -> Model
-    %% ============================================================
-
-    LocationService --> Location : liefert
-    LocationService --> LocationFilter : filtert mit
-    FeedService --> FeedResponse : liefert
-    CommentService --> Comment : liefert
-    FriendshipService --> Friendship : liefert
-    FriendshipService --> FriendSuggestion : liefert
-    FriendshipService --> User : liefert
-    UserService --> User : liefert
-    ProfileService --> User : liefert
-    AuthService --> User : liefert
-
-    %% ============================================================
-    %% BEZIEHUNGEN: Backend Controller -> Service
-    %% ============================================================
-
-    LocationController --> NotificationService : nutzt
-    CommentController --> NotificationService : nutzt
-    FriendshipController --> NotificationService : nutzt
-    NotificationService --> APNsService : nutzt
-
-    %% ============================================================
-    %% BEZIEHUNGEN: API Response Generics
-    %% ============================================================
-
-    FeedResponse --> Location : enthaelt
+    class LocationFilter {
+        +category : String
+        +search : String
+        +latitude : Double
+        +longitude : Double
+        +radiusMeters : Double
+        +isEmpty() Bool
+    }
 ```

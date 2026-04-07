@@ -45,7 +45,7 @@ async function sendRequest(req, res) {
             result = await pool.query(
                 `UPDATE friendships SET requester_id = $1, receiver_id = $2,
                     requester_username = $3, receiver_username = $4,
-                    status = 'pending', updated_at = NOW()
+                    status = 'pending', accepted_at = NULL
                  WHERE id = $5 RETURNING *`,
                 [requester_id, receiver_id, requester.rows[0].username, receiver.rows[0].username, existing.rows[0].id]
             );

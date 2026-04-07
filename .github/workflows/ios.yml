@@ -44,6 +44,7 @@ jobs:
       - name: Publish test results
         uses: kishikawakatsumi/xcresulttool@v1
         if: always()
+        continue-on-error: true
         with:
           path: TestResults.xcresult
           title: iOS Tests

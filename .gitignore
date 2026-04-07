@@ -6,7 +6,7 @@ xcuserdata/
 *.puml
 
 # IDE / Editor Settings
-.claude/settings.local.json
+.claude/
 
 # OS
 .DS_Store

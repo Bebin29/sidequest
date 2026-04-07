@@ -3,6 +3,7 @@
  *
  * Diese Tests laufen gegen die echte Datenbank (kein Mocking).
  * Ein Test-Server wird auf einem zufälligen Port gestartet.
+ * Jeder Test räumt NUR seine eigenen Daten auf — keine globalen DELETEs.
  */
 
 require('dotenv').config();
@@ -10,14 +11,26 @@ const http = require('http');
 const route = require('../src/router');
 const pool = require('../src/db/pool');
 
+// Sicherheitscheck: Nie gegen Produktions-DB laufen
+const dbHost = process.env.DB_HOST || '';
+if (!['localhost', '127.0.0.1'].includes(dbHost)) {
+    throw new Error(
+        `ABBRUCH: DB_HOST ist "${dbHost}" — Integration Tests duerfen nur gegen localhost laufen (SSH-Tunnel noetig). Niemals direkt gegen den Server!`
+    );
+}
+
 jest.setTimeout(30000);
 
 let server;
 let baseURL;
 
+// Sammelt alle IDs die in Tests erstellt werden, damit afterEach sie aufräumt
+let createdUserIds = [];
+let createdFriendshipIds = [];
+
 // --- HTTP Helper ---
 
-function request(method, path, body) {
+function req(method, path, body) {
     return new Promise((resolve, reject) => {
         const options = {
             hostname: 'localhost',
@@ -27,7 +40,7 @@ function request(method, path, body) {
             headers: { 'Content-Type': 'application/json' },
         };
 
-        const req = http.request(options, (res) => {
+        const r = http.request(options, (res) => {
             let data = '';
             res.on('data', (chunk) => { data += chunk; });
             res.on('end', () => {
@@ -38,19 +51,32 @@ function request(method, path, body) {
             });
         });
 
-        req.on('error', reject);
+        r.on('error', reject);
 
         if (body) {
-            req.write(JSON.stringify(body));
+            r.write(JSON.stringify(body));
         }
-        req.end();
+        r.end();
     });
+}
+
+// Erstellt einen Test-User und merkt sich die ID zum Aufräumen
+async function createTestUser(email, username, displayName) {
+    const res = await req('POST', '/api/users', {
+        email,
+        username,
+        display_name: displayName,
+    });
+    if (res.body && res.body.data && res.body.data.id) {
+        createdUserIds.push(res.body.data.id);
+    }
+    return res;
 }
 
 // --- Setup & Teardown ---
 
 beforeAll((done) => {
-    server = http.createServer((req, res) => route(req, res));
+    server = http.createServer((r, res) => route(r, res));
     server.listen(0, () => {
         const port = server.address().port;
         baseURL = `http://localhost:${port}`;
@@ -63,15 +89,17 @@ afterAll(async () => {
     await pool.end();
 });
 
-beforeEach(async () => {
-    // Reihenfolge beachten wegen Foreign Keys
-    await pool.query('DELETE FROM notifications');
-    await pool.query('DELETE FROM comments');
-    await pool.query('DELETE FROM ratings');
-    await pool.query('DELETE FROM friendships');
-    await pool.query('DELETE FROM locations');
-    await pool.query('DELETE FROM trips');
-    await pool.query('DELETE FROM users');
+afterEach(async () => {
+    // Nur die in diesem Test erstellten Daten aufräumen (Foreign-Key-Reihenfolge)
+    for (const id of createdFriendshipIds) {
+        await pool.query('DELETE FROM friendships WHERE id = $1', [id]).catch(() => {});
+    }
+    for (const id of createdUserIds) {
+        await pool.query('DELETE FROM friendships WHERE requester_id = $1 OR receiver_id = $1', [id]).catch(() => {});
+        await pool.query('DELETE FROM users WHERE id = $1', [id]).catch(() => {});
+    }
+    createdUserIds = [];
+    createdFriendshipIds = [];
 });
 
 // =============================================
@@ -81,11 +109,9 @@ beforeEach(async () => {
 describe('Integration: User CRUD', () => {
     test('erstellt, liest, aktualisiert und löscht einen User', async () => {
         // 1. User erstellen
-        const create = await request('POST', '/api/users', {
-            email: 'integration@test.de',
-            username: 'integrationuser',
-            display_name: 'Integration Test',
-        });
+        const create = await createTestUser(
+            'integration@test.de', 'integrationuser', 'Integration Test'
+        );
         expect(create.status).toBe(201);
         expect(create.body.data.username).toBe('integrationuser');
         expect(create.body.data.id).toBeDefined();
@@ -93,13 +119,13 @@ describe('Integration: User CRUD', () => {
         const userId = create.body.data.id;
 
         // 2. User abrufen
-        const get = await request('GET', `/api/users/${userId}`);
+        const get = await req('GET', `/api/users/${userId}`);
         expect(get.status).toBe(200);
         expect(get.body.data.email).toBe('integration@test.de');
         expect(get.body.data.display_name).toBe('Integration Test');
 
         // 3. User aktualisieren
-        const update = await request('PUT', `/api/users/${userId}`, {
+        const update = await req('PUT', `/api/users/${userId}`, {
             username: 'updateduser',
             bio: 'Neues Bio',
         });
@@ -108,31 +134,23 @@ describe('Integration: User CRUD', () => {
         expect(update.body.data.bio).toBe('Neues Bio');
 
         // 4. Aktualisierung prüfen
-        const getUpdated = await request('GET', `/api/users/${userId}`);
+        const getUpdated = await req('GET', `/api/users/${userId}`);
         expect(getUpdated.status).toBe(200);
         expect(getUpdated.body.data.username).toBe('updateduser');
 
         // 5. User löschen
-        const del = await request('DELETE', `/api/users/${userId}`);
+        const del = await req('DELETE', `/api/users/${userId}`);
         expect(del.status).toBe(200);
 
         // 6. User nicht mehr auffindbar
-        const getDeleted = await request('GET', `/api/users/${userId}`);
+        const getDeleted = await req('GET', `/api/users/${userId}`);
         expect(getDeleted.status).toBe(404);
     });
 
     test('doppelter Username gibt 409 zurück', async () => {
-        await request('POST', '/api/users', {
-            email: 'alice@test.de',
-            username: 'alice',
-            display_name: 'Alice',
-        });
+        await createTestUser('alice-dup@test.de', 'alice_dup_test', 'Alice');
 
-        const duplicate = await request('POST', '/api/users', {
-            email: 'alice2@test.de',
-            username: 'alice',
-            display_name: 'Alice Zwei',
-        });
+        const duplicate = await createTestUser('alice-dup2@test.de', 'alice_dup_test', 'Alice Zwei');
 
         expect(duplicate.status).toBe(409);
     });
@@ -147,43 +165,35 @@ describe('Integration: Friendship Flow', () => {
     let bobId;
 
     beforeEach(async () => {
-        // Zwei User erstellen
-        const alice = await request('POST', '/api/users', {
-            email: 'alice@test.de',
-            username: 'alice',
-            display_name: 'Alice',
-        });
+        const alice = await createTestUser('alice-fr@test.de', 'alice_fr_test', 'Alice');
         aliceId = alice.body.data.id;
 
-        const bob = await request('POST', '/api/users', {
-            email: 'bob@test.de',
-            username: 'bob',
-            display_name: 'Bob',
-        });
+        const bob = await createTestUser('bob-fr@test.de', 'bob_fr_test', 'Bob');
         bobId = bob.body.data.id;
     });
 
     test('kompletter Friendship-Lifecycle: anfragen → akzeptieren → entfernen', async () => {
         // 1. Alice schickt Freundschaftsanfrage an Bob
-        const sendReq = await request('POST', '/api/friendships', {
+        const sendRes = await req('POST', '/api/friendships', {
             requester_id: aliceId,
-            receiver_username: 'bob',
+            receiver_username: 'bob_fr_test',
         });
-        expect(sendReq.status).toBe(201);
-        expect(sendReq.body.data.status).toBe('pending');
-        expect(sendReq.body.data.requester_id).toBe(aliceId);
-        expect(sendReq.body.data.receiver_id).toBe(bobId);
+        expect(sendRes.status).toBe(201);
+        expect(sendRes.body.data.status).toBe('pending');
+        expect(sendRes.body.data.requester_id).toBe(aliceId);
+        expect(sendRes.body.data.receiver_id).toBe(bobId);
 
-        const friendshipId = sendReq.body.data.id;
+        const friendshipId = sendRes.body.data.id;
+        createdFriendshipIds.push(friendshipId);
 
         // 2. Bob sieht die ausstehende Anfrage
-        const pending = await request('GET', `/api/friendships/pending/${bobId}`);
+        const pending = await req('GET', `/api/friendships/pending/${bobId}`);
         expect(pending.status).toBe(200);
         expect(pending.body.data).toHaveLength(1);
-        expect(pending.body.data[0].requester_username).toBe('alice');
+        expect(pending.body.data[0].requester_username).toBe('alice_fr_test');
 
         // 3. Bob akzeptiert die Anfrage
-        const accept = await request('PATCH', `/api/friendships/${friendshipId}`, {
+        const accept = await req('PATCH', `/api/friendships/${friendshipId}`, {
             status: 'accepted',
         });
         expect(accept.status).toBe(200);
@@ -191,48 +201,49 @@ describe('Integration: Friendship Flow', () => {
         expect(accept.body.data.accepted_at).toBeDefined();
 
         // 4. Alice sieht Bob in ihrer Freundesliste
-        const friends = await request('GET', `/api/friends/${aliceId}`);
+        const friends = await req('GET', `/api/friends/${aliceId}`);
         expect(friends.status).toBe(200);
         expect(friends.body.data).toHaveLength(1);
 
         // 5. Freundschaft entfernen
-        const remove = await request('DELETE', `/api/friendships/${friendshipId}`);
+        const remove = await req('DELETE', `/api/friendships/${friendshipId}`);
         expect(remove.status).toBe(200);
 
         // 6. Freundesliste ist leer
-        const empty = await request('GET', `/api/friends/${aliceId}`);
+        const empty = await req('GET', `/api/friends/${aliceId}`);
         expect(empty.status).toBe(200);
         expect(empty.body.data).toHaveLength(0);
     });
 
     test('Anfrage ablehnen und erneut senden funktioniert', async () => {
         // 1. Anfrage senden
-        const send1 = await request('POST', '/api/friendships', {
+        const send1 = await req('POST', '/api/friendships', {
             requester_id: aliceId,
-            receiver_username: 'bob',
+            receiver_username: 'bob_fr_test',
         });
         expect(send1.status).toBe(201);
+        createdFriendshipIds.push(send1.body.data.id);
 
         // 2. Bob lehnt ab
-        const decline = await request('PATCH', `/api/friendships/${send1.body.data.id}`, {
+        const decline = await req('PATCH', `/api/friendships/${send1.body.data.id}`, {
             status: 'declined',
         });
         expect(decline.status).toBe(200);
         expect(decline.body.data.status).toBe('declined');
 
         // 3. Alice kann erneut anfragen (declined wird zurückgesetzt)
-        const send2 = await request('POST', '/api/friendships', {
+        const send2 = await req('POST', '/api/friendships', {
             requester_id: aliceId,
-            receiver_username: 'bob',
+            receiver_username: 'bob_fr_test',
         });
         expect(send2.status).toBe(201);
         expect(send2.body.data.status).toBe('pending');
     });
 
     test('Freundschaftsanfrage an sich selbst gibt 400', async () => {
-        const self = await request('POST', '/api/friendships', {
+        const self = await req('POST', '/api/friendships', {
             requester_id: aliceId,
-            receiver_username: 'alice',
+            receiver_username: 'alice_fr_test',
         });
         expect(self.status).toBe(400);
     });

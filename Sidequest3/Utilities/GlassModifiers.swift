@@ -31,6 +31,7 @@ private struct LiquidGlassChrome<S: InsettableShape>: ViewModifier {
                         ),
                         lineWidth: 0.75
                     )
+                    .allowsHitTesting(false)
             }
             .overlay {
                 shape

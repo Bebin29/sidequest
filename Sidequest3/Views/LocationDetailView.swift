@@ -425,16 +425,7 @@ struct LocationDetailView: View {
     // MARK: - Description Card
 
     private func descriptionCard(_ text: String) -> some View {
-        glassCard {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Beschreibung")
-                    .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
-                    .foregroundStyle(Theme.textPrimary)
-                Text(text)
-                    .font(.subheadline).fontWeight(.regular).fontDesign(.rounded)
-                    .foregroundStyle(Theme.textSecondary)
-            }
-        }
+        ExpandableDescriptionCard(text: text, accentColor: dominantColor)
     }
 
     // MARK: - Edit Section
@@ -694,6 +685,46 @@ struct LocationDetailView: View {
         } catch {
             print("Reload failed: \(error)")
         }
+    }
+}
+
+// MARK: - Expandable Description
+
+private struct ExpandableDescriptionCard: View {
+    let text: String
+    let accentColor: Color
+    @State private var expanded = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var isTruncatable: Bool {
+        text.count > 100 || text.contains("\n")
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Beschreibung")
+                .font(.subheadline).fontWeight(.bold).fontDesign(.rounded)
+                .foregroundStyle(Theme.textPrimary)
+            Text(text)
+                .font(.subheadline).fontWeight(.regular).fontDesign(.rounded)
+                .foregroundStyle(Theme.textSecondary)
+                .lineLimit(expanded ? nil : 3)
+
+            if isTruncatable {
+                Button {
+                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) {
+                        expanded.toggle()
+                    }
+                } label: {
+                    Text(expanded ? "Weniger" : "Mehr anzeigen")
+                        .font(.caption).fontWeight(.semibold).fontDesign(.rounded)
+                        .foregroundStyle(accentColor)
+                }
+            }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .adaptiveGlass(in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 }
 

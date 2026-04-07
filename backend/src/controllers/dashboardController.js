@@ -196,9 +196,18 @@ async function getDashboard(req, res) {
                 categories: categoryDist.rows
             },
             social_analytics: {
-                friendships: friendshipStats.rows[0],
-                network: networkDensity.rows[0] || { avg_friends_per_user: 0, max_friends: 0 },
-                comments: commentStats.rows[0]
+                friendships: {
+                    ...friendshipStats.rows[0],
+                    avg_accept_hours: parseFloat(friendshipStats.rows[0].avg_accept_hours) || null
+                },
+                network: {
+                    ...(networkDensity.rows[0] || { max_friends: 0 }),
+                    avg_friends_per_user: parseFloat((networkDensity.rows[0] || {}).avg_friends_per_user) || 0
+                },
+                comments: {
+                    ...commentStats.rows[0],
+                    avg_per_location: parseFloat(commentStats.rows[0].avg_per_location) || null
+                }
             },
             activity_feed: activityFeed.rows.map(r => ({
                 type: r.type,

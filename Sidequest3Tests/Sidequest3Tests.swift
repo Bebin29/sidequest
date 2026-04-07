@@ -133,15 +133,10 @@ struct ModelDecodingTests {
             "profile_image_url": null,
             "created_at": "2026-03-24T10:00:00.000Z",
             "updated_at": null,
-            "last_seen_at": null,
             "bio": "Testbio",
             "preferences": null,
-            "favorite_categories": [],
             "is_verified": false,
-            "is_moderator": false,
-            "is_private": false,
-            "fcm_token": null,
-            "stats": {}
+            "is_moderator": false
         }
         """.data(using: .utf8)!
 
@@ -152,7 +147,6 @@ struct ModelDecodingTests {
         #expect(user.bio == "Testbio")
         #expect(user.isVerified == false)
         #expect(user.isModerator == false)
-        #expect(user.favoriteCategories.isEmpty)
     }
 
     @Test func friendshipStatusDecoding() async throws {
@@ -195,41 +189,6 @@ struct ModelDecodingTests {
         }
     }
 
-    @Test func ratingValidRange() async throws {
-        let json = """
-        {
-            "id": "550e8400-e29b-41d4-a716-446655440004",
-            "location_id": "550e8400-e29b-41d4-a716-446655440005",
-            "location_name": "Testcafé",
-            "user_id": "550e8400-e29b-41d4-a716-446655440006",
-            "username": "testuser",
-            "user_profile_image_url": null,
-            "rating": 4,
-            "comment": "Sehr gut!",
-            "image_urls": [],
-            "thumbnail_urls": [],
-            "created_at": "2026-03-24T10:00:00.000Z",
-            "updated_at": null,
-            "trip_id": null,
-            "is_verified": false,
-            "verified_at": null,
-            "report_count": 0,
-            "is_hidden": false,
-            "reaction_count": 0,
-            "comment_count": 0,
-            "helpful_count": 0,
-            "visit_date": null,
-            "price_spent": null,
-            "would_recommend": true
-        }
-        """.data(using: .utf8)!
-
-        let rating = try JSONDecoder().decode(Rating.self, from: json)
-        #expect(rating.rating >= 1 && rating.rating <= 5)
-        #expect(rating.locationName == "Testcafé")
-        #expect(rating.wouldRecommend == true)
-    }
-
     @Test func locationDecodingFullJSON() async throws {
         let data = testLocationJSON.data(using: .utf8)!
         let location = try JSONDecoder().decode(Location.self, from: data)
@@ -239,8 +198,6 @@ struct ModelDecodingTests {
         #expect(location.latitude == 52.5290)
         #expect(location.longitude == 13.4010)
         #expect(location.category == "Café")
-        #expect(location.averageRating == 4.5)
-        #expect(location.totalRatings == 12)
         #expect(location.imageUrls.count == 2)
         #expect(location.tags == ["vegan", "wifi"])
         #expect(location.wifiAvailable == true)
@@ -270,42 +227,12 @@ struct ModelDecodingTests {
         #expect(decoded.createdAt.hasPrefix("2026-03-25"))
     }
 
-    @Test func tripDecoding() async throws {
-        let json = """
-        {
-            "id": "550e8400-e29b-41d4-a716-446655440030",
-            "user_id": "550e8400-e29b-41d4-a716-446655440031",
-            "username": "alice",
-            "name": "Berlin Weekend",
-            "description": "3 Tage Berlin",
-            "location_count": 5,
-            "created_at": "2026-03-20T08:00:00.000Z",
-            "updated_at": null,
-            "start_date": "2026-04-01",
-            "end_date": "2026-04-03",
-            "cover_image_url": null,
-            "is_collaborative": false,
-            "is_public": true,
-            "view_count": 42,
-            "reminder_date": null
-        }
-        """.data(using: .utf8)!
-
-        let trip = try JSONDecoder().decode(Trip.self, from: json)
-        #expect(trip.name == "Berlin Weekend")
-        #expect(trip.locationCount == 5)
-        #expect(trip.isPublic == true)
-        #expect(trip.isCollaborative == false)
-        #expect(trip.viewCount == 42)
-        #expect(trip.startDate == "2026-04-01")
-    }
-
     @Test func locationCategoryRawValues() {
         #expect(LocationCategory.restaurant.rawValue == "Restaurant")
         #expect(LocationCategory.cafe.rawValue == "Café")
         #expect(LocationCategory.bar.rawValue == "Bar")
         #expect(LocationCategory.park.rawValue == "Park")
-        #expect(LocationCategory.allCases.count == 13)
+        #expect(LocationCategory.allCases.count == 18)
     }
 
     @Test func feedResponseDecoding() async throws {

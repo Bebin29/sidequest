@@ -15,5 +15,4 @@ disabled_rules:
   - nesting
 
 opt_in_rules:
-  - empty_count
   - force_unwrapping

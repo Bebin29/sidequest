@@ -102,7 +102,7 @@ struct LocationFilterView: View {
             }
             .onAppear {
                 // Bestehende Filter laden
-                selectedCategory = mapViewModel.filter.category
+                selectedCategory = mapViewModel.filter.category.flatMap { LocationCategory(rawValue: $0) }
                 searchText = mapViewModel.filter.search ?? ""
                 if let radius = mapViewModel.filter.radiusMeters {
                     useRadius = true
@@ -113,7 +113,7 @@ struct LocationFilterView: View {
     }
 
     private func applyFilters() {
-        mapViewModel.filter.category = selectedCategory
+        mapViewModel.filter.category = selectedCategory?.rawValue
         mapViewModel.filter.search = searchText.isEmpty ? nil : searchText
 
         if useRadius, let lat = userLatitude, let lon = userLongitude, radiusKm > 0 {

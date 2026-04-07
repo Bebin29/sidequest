@@ -29,7 +29,17 @@ jobs:
         run: cd backend && npm ci
 
       - name: Run tests
-        run: cd backend && npm test
+        run: cd backend && npm run test:ci
+        env:
+          JEST_JUNIT_OUTPUT_DIR: backend/test-results
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Backend Tests
+          path: backend/test-results/junit.xml
+          reporter: jest-junit
 
   deploy:
     needs: test

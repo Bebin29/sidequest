@@ -35,8 +35,8 @@ async function sendRequest(req, res) {
         // Prüfen ob eine abgelehnte Anfrage existiert — wenn ja, zurücksetzen
         const existing = await pool.query(
             `SELECT * FROM friendships
-             WHERE LEAST(requester_id, receiver_id) = LEAST($1, $2)
-               AND GREATEST(requester_id, receiver_id) = GREATEST($1, $2)`,
+             WHERE LEAST(requester_id::text, receiver_id::text) = LEAST($1::text, $2::text)
+               AND GREATEST(requester_id::text, receiver_id::text) = GREATEST($1::text, $2::text)`,
             [requester_id, receiver_id]
         );
 

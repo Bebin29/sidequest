@@ -9,7 +9,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "jest --verbose"
+    "test": "jest --verbose",
+    "test:ci": "jest --verbose --ci --reporters=default --reporters=jest-junit"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +24,7 @@
     "sharp": "^0.33.0"
   },
   "devDependencies": {
-    "jest": "^30.3.0"
+    "jest": "^30.3.0",
+    "jest-junit": "^16.0.0"
   }
 }

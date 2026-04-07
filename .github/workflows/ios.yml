@@ -34,7 +34,15 @@ jobs:
             -destination 'platform=iOS Simulator,name=iPhone 16' \
             -only-testing:Sidequest3Tests \
             -configuration Debug \
+            -resultBundlePath TestResults \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Publish test results
+        uses: kishikawakatsumi/xcresulttool@v1
+        if: always()
+        with:
+          path: TestResults.xcresult
+          title: iOS Tests
 
   swiftlint:
     runs-on: macos-latest

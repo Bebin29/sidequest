@@ -6,6 +6,9 @@ const friendshipController = require('./controllers/friendshipController');
 const locationController = require('./controllers/locationController');
 const commentController = require('./controllers/commentController');
 const uploadController = require('./controllers/uploadController');
+const notificationController = require('./controllers/notificationController');
+const monitoringController = require('./controllers/monitoringController');
+const dashboardController = require('./controllers/dashboardController');
 
 function route(req, res) {
     const parsed = url.parse(req.url, true);
@@ -27,6 +30,16 @@ function route(req, res) {
         return sendJSON(res, 200, { status: 'ok', timestamp: new Date().toISOString() });
     }
 
+    // Monitoring
+    if (pathname === '/api/admin/monitoring' && method === 'GET') {
+        return monitoringController.getStatus(req, res);
+    }
+
+    // Dashboard (erweiterte Monitoring-Daten)
+    if (pathname === '/api/admin/dashboard' && method === 'GET') {
+        return dashboardController.getDashboard(req, res);
+    }
+
     // Auth routes
     if (pathname === '/api/auth/apple' && method === 'POST') {
         return authController.signInWithApple(req, res);
@@ -40,11 +53,6 @@ function route(req, res) {
     // Username availability check
     if (pathname === '/api/users/check-username' && method === 'GET') {
         return userController.checkUsername(req, res, parsed.query);
-    }
-
-    // Ring code lookup
-    if (pathname === '/api/users/ring-code' && method === 'GET') {
-        return userController.findByRingCode(req, res, parsed.query);
     }
 
     // Users routes
@@ -110,6 +118,12 @@ function route(req, res) {
         return friendshipController.sendRequest(req, res);
     }
 
+    // Friend suggestions: GET /api/friends/:userId/suggestions (muss vor friendsMatch stehen)
+    const suggestionsMatch = pathname.match(/^\/api\/friends\/([^/]+)\/suggestions$/);
+    if (suggestionsMatch && method === 'GET') {
+        return friendshipController.getSuggestions(req, res, suggestionsMatch[1]);
+    }
+
     // Friends list: GET /api/friends/:userId
     const friendsMatch = pathname.match(/^\/api\/friends\/([^/]+)$/);
     if (friendsMatch && method === 'GET') {
@@ -122,12 +136,36 @@ function route(req, res) {
         return friendshipController.getPendingRequests(req, res, pendingMatch[1]);
     }
 
+    // Sent requests: GET /api/friendships/sent/:userId
+    const sentMatch = pathname.match(/^\/api\/friendships\/sent\/([^/]+)$/);
+    if (sentMatch && method === 'GET') {
+        return friendshipController.getSentRequests(req, res, sentMatch[1]);
+    }
+
     // Update friendship: PATCH /api/friendships/:id
     const friendshipIdMatch = pathname.match(/^\/api\/friendships\/([^/]+)$/);
     if (friendshipIdMatch) {
         const id = friendshipIdMatch[1];
         if (method === 'PATCH') return friendshipController.updateStatus(req, res, id);
         if (method === 'DELETE') return friendshipController.remove(req, res, id);
+    }
+
+    // Notifications routes (spezifische vor generischen)
+    const notifUnreadMatch = pathname.match(/^\/api\/notifications\/([^/]+)\/unread-count$/);
+    if (notifUnreadMatch && method === 'GET') {
+        return notificationController.getUnreadCount(req, res, notifUnreadMatch[1]);
+    }
+
+    const notifReadAllMatch = pathname.match(/^\/api\/notifications\/([^/]+)\/read-all$/);
+    if (notifReadAllMatch && method === 'POST') {
+        return notificationController.markAllRead(req, res, notifReadAllMatch[1]);
+    }
+
+    const notifUserMatch = pathname.match(/^\/api\/notifications\/([^/]+)$/);
+    if (notifUserMatch) {
+        const id = notifUserMatch[1];
+        if (method === 'GET') return notificationController.getByUser(req, res, id, parsed.query);
+        if (method === 'PATCH') return notificationController.markRead(req, res, id);
     }
 
     // Upload

@@ -1,13 +1,16 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { parseBody, sendJSON, sendError } = require('../helpers');
+const sharp = require('sharp');
+const { parseBody, sendJSON, sendError, MAX_UPLOAD_BODY_SIZE } = require('../helpers');
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || '/app/uploads';
+const MAX_WIDTH = 1200;
+const JPEG_QUALITY = 70;
 
 async function upload(req, res) {
     try {
-        const body = await parseBody(req);
+        const body = await parseBody(req, { maxSize: MAX_UPLOAD_BODY_SIZE });
         if (!body) return sendError(res, 400, 'Request body required');
 
         const { image, extension } = body;
@@ -16,12 +19,18 @@ async function upload(req, res) {
             return sendError(res, 400, 'image (base64) is required');
         }
 
-        const ext = extension || 'jpg';
-        const filename = `${crypto.randomUUID()}.${ext}`;
+        const filename = `${crypto.randomUUID()}.jpg`;
         const filepath = path.join(UPLOAD_DIR, filename);
 
         const buffer = Buffer.from(image, 'base64');
-        fs.writeFileSync(filepath, buffer);
+
+        // Resize to max 1200px wide and compress as JPEG
+        const compressed = await sharp(buffer)
+            .resize(MAX_WIDTH, null, { withoutEnlargement: true })
+            .jpeg({ quality: JPEG_QUALITY })
+            .toBuffer();
+
+        fs.writeFileSync(filepath, compressed);
 
         const imageUrl = `${process.env.BASE_URL || 'http://217.154.243.150'}/uploads/${filename}`;
 

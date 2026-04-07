@@ -8,138 +8,72 @@ import AuthenticationServices
 
 struct LoginView: View {
     @Bindable var authViewModel: AuthViewModel
-    let size = UIScreen.main.bounds.width / 3.5
-    
+
+
+    private let imageNames = [
+        ["IMGSTART01", "IMGSTART02", "IMGSTART03"],
+        ["IMGSTART04", "IMGSTART05", "IMGSTART06"],
+        ["IMGSTART07", "IMGSTART08", "IMGSTART03"]
+    ]
+
     var body: some View {
-        NavigationStack {
-            ZStack {
-                VStack {
-                          Text("Sidequest")
-                              .font(.title)
-                              .fontWeight(.bold)
-                              .foregroundColor(Color(.systemIndigo))
-                          Text("Entdecke und teile Orte mit Freunden")
-                              .font(.headline)
-                              .fontWeight(.bold)
-                              .foregroundColor(Color(.systemIndigo))
-                          Spacer()
-                          
-                          HStack {
-                              Image("IMGSTART01")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                                  .padding(.top)
-                              Image("IMGSTART02")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                                  .padding(.top)
-                              Image("IMGSTART03")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                                  .padding(.top)
-                          }
-                          .padding(.horizontal)
-                          HStack {
-                              Image("IMGSTART04")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                              Image("IMGSTART05")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                                  
-                              Image("IMGSTART06")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                                  
-                          }
-                          .padding(.horizontal)
-                          HStack {
-                              Image("IMGSTART07")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                                  .padding(.bottom)
-                              Image("IMGSTART08")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                                  .padding(.bottom)
-                              Image("IMGSTART09")
-                                  .resizable()
-                                  .scaledToFill()
-                                  .frame(width: size, height: size)
-                                  .cornerRadius(20)
-                                  .padding(.bottom)
-                          }
-                          .padding(.horizontal)
-                          
-                          Spacer()
-                          if authViewModel.isLoading {
-                              ProgressView()
-                          } else {
-                              SignInWithAppleButton(
-                                  .signIn,
-                                  onRequest: { request in
-                                      request.requestedScopes = [.fullName, .email]
-                                  },
-                                  onCompletion: { result in
-                                      authViewModel.handleAppleSignIn(result: result)
-                                  }
-                              )
-                              .signInWithAppleButtonStyle(.whiteOutline)
-                              .frame(height: 50)
-                              .padding(.horizontal)
-                              
-                          }
+        GeometryReader { geometry in
+            let padding: CGFloat = 16
+            let spacing: CGFloat = 12
+            let size = (geometry.size.width - padding * 2 - spacing * 2) / 3
 
-                          if let error = authViewModel.errorMessage {
-                              Text(error)
-                                  .font(.caption)
-                                  .foregroundStyle(.red)
-                          }
-                          /*NavigationLink() {
-                              Text("Registrieren")
-                                  .frame(maxWidth: .infinity)
-                                  .padding()
-                                  .background(Color.colorText)
-                                  .foregroundColor(.colorHintergrund)
-                                  .cornerRadius(20)
-                                  .fontWeight(.semibold)
+            VStack(spacing: spacing) {
+                Text("Sidequest")
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .foregroundStyle(Theme.accent)
+                Text("Entdecke und teile Orte mit Freunden")
+                    .font(.headline)
+                    .fontWeight(.bold)
+                    .foregroundStyle(Theme.accent)
 
-                          }
-                          .padding(.horizontal)
-                          
-                          NavigationLink(destination: LoginView()) {
-                              Text("Anmelden")
-                                  .frame(maxWidth: .infinity)
-                                  .padding()
-                                  .background(Color.colorText)
-                                  .foregroundColor(.colorHintergrund)
-                                  .cornerRadius(20)
-                                  .fontWeight(.semibold)
+                Spacer()
 
-                          }
-                          .padding(.horizontal)
-                           
-*/
-                          Spacer()
-                      }
-                      .padding()
+                ForEach(imageNames, id: \.self) { row in
+                    HStack(spacing: spacing) {
+                        ForEach(row, id: \.self) { name in
+                            Image(name)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: size, height: size)
+                                .clipped()
+                                .clipShape(RoundedRectangle(cornerRadius: 25))
+                                .shadow(radius: 10)
+                                .accessibilityHidden(true)
+                        }
+                    }
                 }
+
+                Spacer()
+
+                if authViewModel.isLoading {
+                    ProgressView()
+                } else {
+                    SignInWithAppleButton(.signIn) { request in
+                        request.requestedScopes = [.fullName, .email]
+                    } onCompletion: { result in
+                        authViewModel.handleAppleSignIn(result: result)
+                    }
+                    .signInWithAppleButtonStyle(.whiteOutline)
+                    .frame(height: 50)
+                    .padding(.horizontal)
+                }
+
+                if let error = authViewModel.errorMessage {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(Theme.destructive)
+                }
+
+                Spacer()
+            }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }

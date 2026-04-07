@@ -3,7 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>NSCameraUsageDescription</key>
-	<string>Sidequest benötigt Zugriff auf die Kamera, um Fotos aufzunehmen.</string>
+	<string>Sidequest benötigt Zugriff auf deine Kamera, um Fotos von Orten aufzunehmen.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Sidequest benötigt deinen Standort, um Orte in deiner Nähe auf der Karte anzuzeigen.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

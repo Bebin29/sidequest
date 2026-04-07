@@ -12,12 +12,18 @@ final class FriendshipService {
         self.session = session
     }
 
+    private func freshRequest(url: URL) -> URLRequest {
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        return request
+    }
+
     func searchUsers(query: String) async throws -> [User] {
         guard let url = URL(string: "\(Constants.API.baseURL)/api/users/search?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)") else {
             throw AppError.unknown(underlying: nil)
         }
 
-        let (data, response) = try await session.data(from: url)
+        let (data, response) = try await session.data(for: freshRequest(url: url))
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -59,7 +65,7 @@ final class FriendshipService {
             throw AppError.unknown(underlying: nil)
         }
 
-        let (data, response) = try await session.data(from: url)
+        let (data, response) = try await session.data(for: freshRequest(url: url))
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -75,7 +81,23 @@ final class FriendshipService {
             throw AppError.unknown(underlying: nil)
         }
 
-        let (data, response) = try await session.data(from: url)
+        let (data, response) = try await session.data(for: freshRequest(url: url))
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw AppError.server(statusCode: (response as? HTTPURLResponse)?.statusCode ?? 0, message: nil)
+        }
+
+        let decoded = try JSONDecoder().decode(FriendshipsResponse.self, from: data)
+        return decoded.data
+    }
+
+    func getSentRequests(userId: UUID) async throws -> [Friendship] {
+        guard let url = URL(string: "\(Constants.API.baseURL)/api/friendships/sent/\(userId.uuidString)") else {
+            throw AppError.unknown(underlying: nil)
+        }
+
+        let (data, response) = try await session.data(for: freshRequest(url: url))
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -107,20 +129,20 @@ final class FriendshipService {
         return try JSONDecoder().decode(SingleResponse.self, from: data).data
     }
 
-    func findUserByRingCode(code: String) async throws -> User {
-        guard let url = URL(string: "\(Constants.API.baseURL)/api/users/ring-code?code=\(code)") else {
+    func getSuggestions(userId: UUID) async throws -> [FriendSuggestion] {
+        guard let url = URL(string: "\(Constants.API.baseURL)/api/friends/\(userId.uuidString)/suggestions") else {
             throw AppError.unknown(underlying: nil)
         }
 
-        let (data, response) = try await session.data(from: url)
+        let (data, response) = try await session.data(for: freshRequest(url: url))
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
-            throw AppError.notFound
+            throw AppError.server(statusCode: (response as? HTTPURLResponse)?.statusCode ?? 0, message: nil)
         }
 
-        struct SingleResponse: Codable { let data: User }
-        return try JSONDecoder().decode(SingleResponse.self, from: data).data
+        let decoded = try JSONDecoder().decode(FriendSuggestionsResponse.self, from: data)
+        return decoded.data
     }
 
     func removeFriend(friendshipId: UUID) async throws {

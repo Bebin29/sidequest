@@ -5,11 +5,11 @@
 
 import SwiftUI
 import AudioToolbox
-import AVFoundation
 
 struct UserProfileView: View {
     let userId: UUID
     var currentUserId: UUID?
+    var onShowOnMap: ((Location) -> Void)?
 
     @State private var user: User?
     @State private var locations: [Location] = []
@@ -82,13 +82,17 @@ struct UserProfileView: View {
         .refreshable { await loadData() }
         .sheet(item: $selectedLocation) { location in
             NavigationStack {
-                LocationDetailView(location: location, currentUserId: currentUserId)
+                LocationDetailView(location: location, currentUserId: currentUserId, onShowOnMap: onShowOnMap != nil ? { loc in
+                            selectedLocation = nil
+                            onShowOnMap?(loc)
+                        } : nil)
                     .toolbar {
                         ToolbarItem(placement: .topBarLeading) {
                             Button("Fertig") { selectedLocation = nil }
                         }
                     }
             }
+            .presentationDragIndicator(.visible)
         }
     }
 
@@ -96,24 +100,9 @@ struct UserProfileView: View {
 
     private func profileHeader(user: User) -> some View {
         VStack(spacing: 12) {
-            Group {
-                if let urlString = user.profileImageUrl,
-                   let url = URL(string: urlString) {
-                    AsyncImage(url: url) { image in
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    } placeholder: {
-                        profilePlaceholder
-                    }
-                } else {
-                    profilePlaceholder
-                }
-            }
-            .frame(width: 96, height: 96)
-            .clipShape(Circle())
-            .overlay(Circle().stroke(Color(.systemGray4), lineWidth: 0.5))
-            .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
+            AvatarView(url: user.profileImageUrl, fallbackInitial: user.displayName, size: .large)
+                .overlay(Circle().stroke(Theme.imagePlaceholder, lineWidth: 0.5))
+                .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
 
             VStack(spacing: 4) {
                 HStack(spacing: 6) {
@@ -123,6 +112,7 @@ struct UserProfileView: View {
                         Image(systemName: "checkmark.seal.fill")
                             .foregroundStyle(.blue)
                             .font(.subheadline)
+                            .accessibilityLabel("Verifiziert")
                     }
                 }
 
@@ -183,23 +173,20 @@ struct UserProfileView: View {
                 } label: {
                     Label("Freund hinzufügen", systemImage: "person.badge.plus")
                         .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Theme.textPrimary)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(Color.indigo)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .padding(.vertical, 10)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(GlassProminentButtonStyle(color: Theme.accent))
                 .disabled(friendActionInProgress)
 
             case .pendingSent:
                 Label("Anfrage gesendet", systemImage: "clock")
                     .font(.subheadline.weight(.semibold))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(Color(.systemGray5))
                     .foregroundStyle(.secondary)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .adaptiveGlass(in: Capsule())
 
             case .pendingReceived:
                 HStack(spacing: 8) {
@@ -208,36 +195,31 @@ struct UserProfileView: View {
                     } label: {
                         Text("Annehmen")
                             .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.textPrimary)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(Color.indigo)
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .padding(.vertical, 10)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(GlassProminentButtonStyle(color: Theme.accent))
 
                     Button {
                         Task { await declineFriendRequest() }
                     } label: {
                         Text("Ablehnen")
                             .font(.subheadline.weight(.semibold))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(Color(.systemGray5))
                             .foregroundStyle(.primary)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(GlassButtonStyle())
                 }
 
             case .accepted:
                 Label("Befreundet", systemImage: "person.2.fill")
                     .font(.subheadline.weight(.semibold))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(Color(.systemGray5))
                     .foregroundStyle(.primary)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .adaptiveInteractiveGlass(in: Capsule())
             }
         }
     }
@@ -245,82 +227,9 @@ struct UserProfileView: View {
     // MARK: - Locations
 
     private var userLocations: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Orte")
-                .font(.headline)
-                .padding(.horizontal)
-
-            if locations.isEmpty {
-                HStack {
-                    Spacer()
-                    VStack(spacing: 8) {
-                        Image(systemName: "mappin.slash")
-                            .font(.title)
-                            .foregroundStyle(.tertiary)
-                        Text("Noch keine Orte")
-                            .font(.subheadline)
-                            .foregroundStyle(.tertiary)
-                    }
-                    .padding(.vertical, 24)
-                    Spacer()
-                }
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: 12) {
-                        ForEach(locations) { location in
-                            Button {
-                                selectedLocation = location
-                            } label: {
-                                locationCard(location)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.horizontal)
-                }
-            }
+        LocationGrid(locations: locations, title: "Orte") { location in
+            selectedLocation = location
         }
-    }
-
-    private func locationCard(_ location: Location) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if let urlString = location.imageUrls.first,
-               let url = URL(string: urlString) {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .scaledToFill()
-                } placeholder: {
-                    Rectangle()
-                        .fill(Color(.systemGray5))
-                        .overlay(ProgressView())
-                }
-                .frame(width: 140, height: 140)
-                .clipped()
-            } else {
-                Rectangle()
-                    .fill(Color(.systemGray5))
-                    .frame(width: 140, height: 140)
-                    .overlay(
-                        Image(systemName: "mappin")
-                            .font(.title2)
-                            .foregroundStyle(.tertiary)
-                    )
-            }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(location.name)
-                    .font(.caption.bold())
-                    .lineLimit(1)
-                Text(location.category)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(8)
-        }
-        .frame(width: 140)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     // MARK: - Member Since
@@ -335,31 +244,25 @@ struct UserProfileView: View {
         }
     }
 
-    private func memberSinceText(from dateString: String) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-        formatter.locale = Locale(identifier: "de_DE")
+    private static let parseFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        f.locale = Locale(identifier: "de_DE")
+        return f
+    }()
 
-        // Try with fractional seconds
-        if let date = formatter.date(from: String(dateString.prefix(19))) {
-            let display = DateFormatter()
-            display.dateFormat = "MMMM yyyy"
-            display.locale = Locale(identifier: "de_DE")
-            return "Mitglied seit \(display.string(from: date))"
+    private static let displayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMMM yyyy"
+        f.locale = Locale(identifier: "de_DE")
+        return f
+    }()
+
+    private func memberSinceText(from dateString: String) -> String {
+        if let date = Self.parseFormatter.date(from: String(dateString.prefix(19))) {
+            return "Mitglied seit \(Self.displayFormatter.string(from: date))"
         }
         return "Mitglied"
-    }
-
-    // MARK: - Placeholder
-
-    private var profilePlaceholder: some View {
-        Circle()
-            .fill(Color(.systemGray4))
-            .overlay(
-                Image(systemName: "person.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(.white)
-            )
     }
 
     // MARK: - Data Loading
@@ -386,9 +289,7 @@ struct UserProfileView: View {
         defer { friendActionInProgress = false }
         do {
             _ = try await friendshipService.sendRequest(requesterId: currentUserId, receiverUsername: username)
-            try? AVAudioSession.sharedInstance().setCategory(.playback)
-            try? AVAudioSession.sharedInstance().setActive(true)
-            AudioServicesPlayAlertSound(1407)
+            AudioServicesPlaySystemSound(1407)
             await loadData()
         } catch {}
     }

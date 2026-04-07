@@ -10,13 +10,38 @@ on:
     paths:
       - 'backend/**'
 
+permissions:
+  contents: read
+  checks: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: sidequest_test
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U testuser -d sidequest_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Run migrations
+        run: |
+          for f in backend/migrations/*.sql; do
+            PGPASSWORD=testpass psql -h localhost -U testuser -d sidequest_test -f "$f" || true
+          done
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -29,7 +54,22 @@ jobs:
         run: cd backend && npm ci
 
       - name: Run tests
-        run: cd backend && npm test
+        run: cd backend && npm run test:ci
+        env:
+          JEST_JUNIT_OUTPUT_DIR: test-results
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: sidequest_test
+          DB_USER: testuser
+          DB_PASSWORD: testpass
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Backend Tests
+          path: backend/test-results/junit.xml
+          reporter: jest-junit
 
   deploy:
     needs: test

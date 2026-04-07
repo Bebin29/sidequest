@@ -11,15 +11,7 @@ struct LocationPin: View {
     var body: some View {
         VStack(spacing: 0) {
             if let urlString = imageUrl, let url = URL(string: urlString) {
-                /*
-                 Image(systemName: "triangle.fill")
-                     .font(.system(size: 10))
-                     .foregroundStyle(.white)
-                     .rotationEffect(.degrees(180))
-                     .offset(y: 54)
-                     .shadow(radius: 3)
-                 */
-                AsyncImage(url: url) { image in
+                CachedAsyncImage(url: url) { image in
                     image
                         .resizable()
                         .scaledToFill()
@@ -27,7 +19,7 @@ struct LocationPin: View {
                         .clipShape(Circle())
                 } placeholder: {
                     Circle()
-                        .fill(Color(.systemGray5))
+                        .fill(Theme.imagePlaceholder)
                         .frame(width: 44, height: 44)
                         .overlay(ProgressView().controlSize(.small))
                 }
@@ -39,13 +31,14 @@ struct LocationPin: View {
                     .frame(width: 44, height: 44)
                     .overlay(
                         Image(systemName: "mappin.and.ellipse")
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.textPrimary)
                             .font(.body.bold())
                     )
                     .overlay(Circle().stroke(.white, lineWidth: 2))
                     .shadow(radius: 3)
             }
         }
+        .accessibilityLabel("Standort-Pin")
     }
 }
 #Preview {

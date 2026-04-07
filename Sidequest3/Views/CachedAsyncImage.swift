@@ -23,6 +23,7 @@ private enum ImageCacheStore {
 
 struct CachedAsyncImage<Content: View, Placeholder: View>: View {
     let url: URL?
+    var onLoad: ((UIImage) -> Void)? = nil
     @ViewBuilder let content: (Image) -> Content
     @ViewBuilder let placeholder: () -> Placeholder
 
@@ -45,12 +46,17 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
             }
         }
         .task(id: url) {
+            // Reset state when URL changes (MapKit annotation view recycling)
+            image = nil
+            isLoading = false
+            failed = false
+            retryCount = 0
             await loadImage()
         }
     }
 
     private func loadImage() async {
-        guard let url, image == nil else { return }
+        guard let url else { return }
         guard !isLoading else { return }
         isLoading = true
         failed = false
@@ -61,6 +67,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         if let cached = ImageCacheStore.cache.cachedResponse(for: request),
            let uiImage = UIImage(data: cached.data) {
             self.image = uiImage
+            onLoad?(uiImage)
             isLoading = false
             return
         }
@@ -72,6 +79,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
                 let cachedResponse = CachedURLResponse(response: response, data: data)
                 ImageCacheStore.cache.storeCachedResponse(cachedResponse, for: request)
                 self.image = uiImage
+                onLoad?(uiImage)
             } else {
                 failed = true
             }

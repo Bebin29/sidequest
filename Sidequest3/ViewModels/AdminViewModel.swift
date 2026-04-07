@@ -4,22 +4,28 @@
 //
 
 import Foundation
+import os
 
 @Observable
 final class AdminViewModel {
-    var users: [User] = []
+    var dashboard: DashboardData?
     var isLoading = false
     var errorMessage: String?
 
-    private let userService = UserService()
+    private let networkService = NetworkService()
 
-    func loadUsers() async {
+    func loadDashboard() async {
         isLoading = true
         errorMessage = nil
 
         do {
-            users = try await userService.fetchUsers()
+            dashboard = try await networkService.request(
+                endpoint: "api/admin/dashboard",
+                method: .get
+            )
         } catch {
+            Logger(subsystem: "Sidequest", category: "Admin")
+                .error("Dashboard fetch failed: \(error)")
             errorMessage = error.localizedDescription
         }
 

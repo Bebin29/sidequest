@@ -12,21 +12,12 @@ struct LocationFilterView: View {
     var onApply: () -> Void
     @Environment(\.dismiss) private var dismiss
 
-    @State private var selectedCategory: String?
+    @State private var selectedCategory: LocationCategory?
     @State private var searchText: String = ""
     @State private var radiusKm: Double = 0
     @State private var useRadius: Bool = false
-    @State private var customCategories: [String] = []
 
     private let radiusOptions: [Double] = [1, 2, 5, 10, 25, 50]
-    private let locationService = LocationService()
-
-    private var allCategories: [String] {
-        let custom = customCategories.filter { name in
-            !CategoryHelper.predefinedNames.contains(name)
-        }
-        return CategoryHelper.predefinedNames + custom
-    }
 
     var body: some View {
         NavigationStack {
@@ -40,9 +31,9 @@ struct LocationFilterView: View {
 
                 // Kategorie
                 Section("Kategorie") {
-                    ScrollView(.horizontal, showsIndicators: false) {
+                    ScrollView(.horizontal) {
                         HStack(spacing: 8) {
-                            ForEach(allCategories, id: \.self) { category in
+                            ForEach(LocationCategory.allCases, id: \.self) { category in
                                 Button {
                                     if selectedCategory == category {
                                         selectedCategory = nil
@@ -50,23 +41,21 @@ struct LocationFilterView: View {
                                         selectedCategory = category
                                     }
                                 } label: {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: CategoryHelper.icon(for: category))
-                                            .font(.caption2)
-                                        Text(category)
-                                            .font(.subheadline)
-                                    }
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(selectedCategory == category ? Color.indigo : Color(.systemGray5))
-                                    .foregroundStyle(selectedCategory == category ? .white : .primary)
-                                    .clipShape(Capsule())
+                                    Text(category.rawValue)
+                                        .font(.subheadline)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 6)
+                                        .background(selectedCategory == category ? Theme.accent : Theme.imagePlaceholder)
+                                        .foregroundStyle(selectedCategory == category ? .white : .primary)
+                                        .clipShape(Capsule())
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityAddTraits(selectedCategory == category ? .isSelected : [])
                             }
                         }
                         .padding(.vertical, 4)
                     }
+                    .scrollIndicators(.hidden)
                 }
 
                 // Umkreis
@@ -75,8 +64,8 @@ struct LocationFilterView: View {
 
                     if useRadius {
                         Picker("Radius", selection: $radiusKm) {
-                            ForEach(radiusOptions, id: \.self) { kilometers in
-                                Text("\(Int(kilometers)) km").tag(kilometers)
+                            ForEach(radiusOptions, id: \.self) { km in
+                                Text("\(Int(km)) km").tag(km)
                             }
                         }
                         .pickerStyle(.segmented)
@@ -84,7 +73,7 @@ struct LocationFilterView: View {
                         if userLatitude == nil {
                             Text("Standort nicht verfügbar")
                                 .font(.caption)
-                                .foregroundStyle(.red)
+                                .foregroundStyle(Theme.destructive)
                         }
                     }
                 }
@@ -94,13 +83,6 @@ struct LocationFilterView: View {
                     Button("Filter zurücksetzen", role: .destructive) {
                         resetFilters()
                     }
-                }
-            }
-            .task {
-                do {
-                    customCategories = try await locationService.fetchCategories()
-                } catch {
-                    print("Failed to load categories:", error)
                 }
             }
             .navigationTitle("Filter")
@@ -120,7 +102,7 @@ struct LocationFilterView: View {
             }
             .onAppear {
                 // Bestehende Filter laden
-                selectedCategory = mapViewModel.filter.category
+                selectedCategory = mapViewModel.filter.category.flatMap { LocationCategory(rawValue: $0) }
                 searchText = mapViewModel.filter.search ?? ""
                 if let radius = mapViewModel.filter.radiusMeters {
                     useRadius = true
@@ -131,7 +113,7 @@ struct LocationFilterView: View {
     }
 
     private func applyFilters() {
-        mapViewModel.filter.category = selectedCategory
+        mapViewModel.filter.category = selectedCategory?.rawValue
         mapViewModel.filter.search = searchText.isEmpty ? nil : searchText
 
         if useRadius, let lat = userLatitude, let lon = userLongitude, radiusKm > 0 {

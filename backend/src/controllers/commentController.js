@@ -1,5 +1,6 @@
 const pool = require('../db/pool');
 const { parseBody, sendJSON, sendError } = require('../helpers');
+const notificationService = require('../services/notificationService');
 
 async function getByLocation(req, res, locationId) {
     try {
@@ -39,6 +40,10 @@ async function create(req, res) {
         );
 
         sendJSON(res, 201, { data: result.rows[0] });
+
+        // Push-Benachrichtigung an Location-Owner (fire-and-forget)
+        notificationService.notifyNewComment(user_id, location_id)
+            .catch(err => console.error('notify new_comment error:', err.message));
     } catch (err) {
         console.error('create comment error:', err);
         sendError(res, 500, 'Internal server error');

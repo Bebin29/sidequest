@@ -1,0 +1,15 @@
+# Xcode
+*.xcuserstate
+xcuserdata/
+
+# PlantUML Quelldateien (nur PNGs committen)
+*.puml
+
+# IDE / Editor Settings
+.claude/
+
+# OS
+.DS_Store
+
+# PDFs
+*.pdf

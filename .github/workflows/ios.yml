@@ -6,23 +6,27 @@ on:
   push:
     branches: [develop, main]
 
+permissions:
+  contents: read
+  checks: write
+
 jobs:
   build-and-test:
-    runs-on: macos-latest
+    runs-on: macos-26
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+        run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
 
       - name: Build
         run: |
           xcodebuild build \
             -project Sidequest3.xcodeproj \
             -scheme Sidequest3 \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO
 
@@ -31,10 +35,19 @@ jobs:
           xcodebuild test \
             -project Sidequest3.xcodeproj \
             -scheme Sidequest3 \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
             -only-testing:Sidequest3Tests \
             -configuration Debug \
+            -resultBundlePath TestResults \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Publish test results
+        uses: kishikawakatsumi/xcresulttool@v1
+        if: always()
+        continue-on-error: true
+        with:
+          path: TestResults.xcresult
+          title: iOS Tests
 
   swiftlint:
     runs-on: macos-latest

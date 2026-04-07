@@ -32,12 +32,31 @@ async function sendRequest(req, res) {
             return sendError(res, 404, 'Requester not found');
         }
 
-        const result = await pool.query(
-            `INSERT INTO friendships (requester_id, receiver_id, requester_username, receiver_username)
-             VALUES ($1, $2, $3, $4)
-             RETURNING *`,
-            [requester_id, receiver_id, requester.rows[0].username, receiver.rows[0].username]
+        // Prüfen ob eine abgelehnte Anfrage existiert — wenn ja, zurücksetzen
+        const existing = await pool.query(
+            `SELECT * FROM friendships
+             WHERE LEAST(requester_id, receiver_id) = LEAST($1, $2)
+               AND GREATEST(requester_id, receiver_id) = GREATEST($1, $2)`,
+            [requester_id, receiver_id]
         );
+
+        let result;
+        if (existing.rowCount > 0 && existing.rows[0].status === 'declined') {
+            result = await pool.query(
+                `UPDATE friendships SET requester_id = $1, receiver_id = $2,
+                    requester_username = $3, receiver_username = $4,
+                    status = 'pending', updated_at = NOW()
+                 WHERE id = $5 RETURNING *`,
+                [requester_id, receiver_id, requester.rows[0].username, receiver.rows[0].username, existing.rows[0].id]
+            );
+        } else {
+            result = await pool.query(
+                `INSERT INTO friendships (requester_id, receiver_id, requester_username, receiver_username)
+                 VALUES ($1, $2, $3, $4)
+                 RETURNING *`,
+                [requester_id, receiver_id, requester.rows[0].username, receiver.rows[0].username]
+            );
+        }
 
         sendJSON(res, 201, { data: result.rows[0] });
 

@@ -6,6 +6,10 @@ on:
   push:
     branches: [develop, main]
 
+permissions:
+  contents: read
+  checks: write
+
 jobs:
   build-and-test:
     runs-on: macos-latest

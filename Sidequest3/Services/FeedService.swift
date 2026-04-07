@@ -19,6 +19,7 @@ final class FeedService {
     }
 
     func fetchFeed(userId: UUID, limit: Int = 20, offset: Int = 0) async throws -> FeedResponse {
+        // swiftlint:disable:next force_unwrapping
         var components = URLComponents(string: "\(Constants.API.baseURL)/api/feed")!
         components.queryItems = [
             URLQueryItem(name: "user_id", value: userId.uuidString),

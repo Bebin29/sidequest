@@ -77,6 +77,11 @@ function route(req, res) {
         return locationController.getFeed(req, res, parsed.query);
     }
 
+    // Categories
+    if (pathname === '/api/categories' && method === 'GET') {
+        return locationController.getCategories(req, res);
+    }
+
     // Locations routes
     if (pathname === '/api/locations' && method === 'GET') {
         return locationController.getAll(req, res, parsed.query);

@@ -234,4 +234,16 @@ async function getFeed(req, res, query) {
     }
 }
 
-module.exports = { getAll, getById, create, update, remove, getFeed };
+async function getCategories(req, res) {
+    try {
+        const result = await pool.query(
+            'SELECT DISTINCT category FROM locations ORDER BY category'
+        );
+        sendJSON(res, 200, { data: result.rows.map(r => r.category) });
+    } catch (err) {
+        console.error('getCategories error:', err);
+        sendError(res, 500, 'Internal server error');
+    }
+}
+
+module.exports = { getAll, getById, create, update, remove, getFeed, getCategories };

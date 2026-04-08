@@ -36,7 +36,7 @@ final class FeedViewModel {
     func setDominantColor(_ color: Color, for locationId: UUID) {
         dominantColors[locationId] = color
     }
-
+ 
     // MARK: - Location
 
     func fetchLocation() async {

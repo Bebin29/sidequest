@@ -1,10 +1,17 @@
 # Sidequest im Rahmen von LF10a
 
-Sidequest existierte vor diesem Lernfeld. Diese Datei hält fest, wie die bestehende Codebasis in
-den Auftrag passt, was das für den Design-Thinking-Prozess bedeutet und wo die echten Lücken
-liegen.
+Sidequest war bereits das Projekt in **Lernfeld 08**. Diese Datei hält fest, wie die bestehende
+Codebasis in den Auftrag von LF10a passt, was das für den Design-Thinking-Prozess bedeutet und
+wo die echten Lücken liegen.
 
 **Status:** Die Weiterarbeit an Sidequest ist vom Lehrerteam freigegeben.
+
+Die abgehakten Anforderungen in `Sidequest3/docs/sessions/2026-03-23.md` beziehen sich auf den
+LF08-Kriterienkatalog, nicht auf LF10a. Die Formulierungen überlappen sich teilweise (etwa
+„Planungsboard mit dem Lehrerteam teilen"), die Kataloge sind aber verschieden — LF08 drehte
+sich um Continuous-Delivery-Pipeline, Prototyp und Open- vs. Closed-Source, LF10a um Design
+Thinking, Geschäftsprozess und Design Patterns. Was in LF08 erfüllt war, gilt hier also nicht
+automatisch als erledigt.
 
 ## Was Sidequest ist
 

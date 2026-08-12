@@ -15,6 +15,12 @@ Die Weiterarbeit an der bestehenden Codebasis ist mit dem Lehrerteam abgestimmt 
 | [abnahmekriterien.md](abnahmekriterien.md) | MoSCoW-Katalog aller Teilhandlungen — die eigentliche Bewertungsgrundlage |
 | [sidequest-einordnung.md](sidequest-einordnung.md) | Wie Sidequest in den Rahmen passt, wo die Lücken sind, was zu tun ist |
 
+Dieser Ordner hält den **statischen Rahmen** — Auftrag, Sprints, Kompetenzen, Kriterien. Die
+laufende Projektdokumentation liegt in Notion:
+[Lernfeld 10](https://app.notion.com/p/3ba599d2ba6281eb8266e967758589c6). Dort werden Zeitplan,
+ToDos, Persona, Empathy Map, Customer Journey, Business Canvas und die Retro-Notizen gepflegt —
+alles, woran die Gruppe gemeinsam arbeitet und was sich täglich ändert.
+
 ## Was das Lernfeld verlangt (KMK-Rahmenlehrplan)
 
 Zeitrichtwert 80 Stunden, aufgeteilt auf 15 Schultage. Die Kompetenzbeschreibung im Kern:

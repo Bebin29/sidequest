@@ -2,6 +2,13 @@ const url = require('url');
 const { sendJSON, sendError } = require('./helpers');
 const userController = require('./controllers/userController');
 const authController = require('./controllers/authController');
+const friendshipController = require('./controllers/friendshipController');
+const locationController = require('./controllers/locationController');
+const commentController = require('./controllers/commentController');
+const uploadController = require('./controllers/uploadController');
+const notificationController = require('./controllers/notificationController');
+const monitoringController = require('./controllers/monitoringController');
+const dashboardController = require('./controllers/dashboardController');
 
 function route(req, res) {
     const parsed = url.parse(req.url, true);
@@ -23,9 +30,29 @@ function route(req, res) {
         return sendJSON(res, 200, { status: 'ok', timestamp: new Date().toISOString() });
     }
 
+    // Monitoring
+    if (pathname === '/api/admin/monitoring' && method === 'GET') {
+        return monitoringController.getStatus(req, res);
+    }
+
+    // Dashboard (erweiterte Monitoring-Daten)
+    if (pathname === '/api/admin/dashboard' && method === 'GET') {
+        return dashboardController.getDashboard(req, res);
+    }
+
     // Auth routes
     if (pathname === '/api/auth/apple' && method === 'POST') {
         return authController.signInWithApple(req, res);
+    }
+
+    // User search (muss vor /api/users/:id stehen)
+    if (pathname === '/api/users/search' && method === 'GET') {
+        return friendshipController.searchUsers(req, res, parsed.query);
+    }
+
+    // Username availability check
+    if (pathname === '/api/users/check-username' && method === 'GET') {
+        return userController.checkUsername(req, res, parsed.query);
     }
 
     // Users routes
@@ -43,6 +70,107 @@ function route(req, res) {
         if (method === 'GET') return userController.getById(req, res, id);
         if (method === 'PUT') return userController.update(req, res, id);
         if (method === 'DELETE') return userController.remove(req, res, id);
+    }
+
+    // Feed
+    if (pathname === '/api/feed' && method === 'GET') {
+        return locationController.getFeed(req, res, parsed.query);
+    }
+
+    // Categories
+    if (pathname === '/api/categories' && method === 'GET') {
+        return locationController.getCategories(req, res);
+    }
+
+    // Locations routes
+    if (pathname === '/api/locations' && method === 'GET') {
+        return locationController.getAll(req, res, parsed.query);
+    }
+    if (pathname === '/api/locations' && method === 'POST') {
+        return locationController.create(req, res);
+    }
+
+    const locationIdMatch = pathname.match(/^\/api\/locations\/([^/]+)$/);
+    if (locationIdMatch) {
+        const id = locationIdMatch[1];
+        if (method === 'GET') return locationController.getById(req, res, id);
+        if (method === 'PUT') return locationController.update(req, res, id);
+        if (method === 'DELETE') return locationController.remove(req, res, id);
+    }
+
+    // Comments routes: GET /api/locations/:id/comments
+    const commentsMatch = pathname.match(/^\/api\/locations\/([^/]+)\/comments$/);
+    if (commentsMatch) {
+        if (method === 'GET') return commentController.getByLocation(req, res, commentsMatch[1]);
+    }
+
+    if (pathname === '/api/comments' && method === 'POST') {
+        return commentController.create(req, res);
+    }
+
+    const commentIdMatch = pathname.match(/^\/api\/comments\/([^/]+)$/);
+    if (commentIdMatch && method === 'DELETE') {
+        return commentController.remove(req, res, commentIdMatch[1]);
+    }
+
+    // Friendships routes
+    if (pathname === '/api/friendships' && method === 'POST') {
+        return friendshipController.sendRequest(req, res);
+    }
+
+    // Friend suggestions: GET /api/friends/:userId/suggestions (muss vor friendsMatch stehen)
+    const suggestionsMatch = pathname.match(/^\/api\/friends\/([^/]+)\/suggestions$/);
+    if (suggestionsMatch && method === 'GET') {
+        return friendshipController.getSuggestions(req, res, suggestionsMatch[1]);
+    }
+
+    // Friends list: GET /api/friends/:userId
+    const friendsMatch = pathname.match(/^\/api\/friends\/([^/]+)$/);
+    if (friendsMatch && method === 'GET') {
+        return friendshipController.getFriends(req, res, friendsMatch[1]);
+    }
+
+    // Pending requests: GET /api/friendships/pending/:userId
+    const pendingMatch = pathname.match(/^\/api\/friendships\/pending\/([^/]+)$/);
+    if (pendingMatch && method === 'GET') {
+        return friendshipController.getPendingRequests(req, res, pendingMatch[1]);
+    }
+
+    // Sent requests: GET /api/friendships/sent/:userId
+    const sentMatch = pathname.match(/^\/api\/friendships\/sent\/([^/]+)$/);
+    if (sentMatch && method === 'GET') {
+        return friendshipController.getSentRequests(req, res, sentMatch[1]);
+    }
+
+    // Update friendship: PATCH /api/friendships/:id
+    const friendshipIdMatch = pathname.match(/^\/api\/friendships\/([^/]+)$/);
+    if (friendshipIdMatch) {
+        const id = friendshipIdMatch[1];
+        if (method === 'PATCH') return friendshipController.updateStatus(req, res, id);
+        if (method === 'DELETE') return friendshipController.remove(req, res, id);
+    }
+
+    // Notifications routes (spezifische vor generischen)
+    const notifUnreadMatch = pathname.match(/^\/api\/notifications\/([^/]+)\/unread-count$/);
+    if (notifUnreadMatch && method === 'GET') {
+        return notificationController.getUnreadCount(req, res, notifUnreadMatch[1]);
+    }
+
+    const notifReadAllMatch = pathname.match(/^\/api\/notifications\/([^/]+)\/read-all$/);
+    if (notifReadAllMatch && method === 'POST') {
+        return notificationController.markAllRead(req, res, notifReadAllMatch[1]);
+    }
+
+    const notifUserMatch = pathname.match(/^\/api\/notifications\/([^/]+)$/);
+    if (notifUserMatch) {
+        const id = notifUserMatch[1];
+        if (method === 'GET') return notificationController.getByUser(req, res, id, parsed.query);
+        if (method === 'PATCH') return notificationController.markRead(req, res, id);
+    }
+
+    // Upload
+    if (pathname === '/api/uploads' && method === 'POST') {
+        return uploadController.upload(req, res);
     }
 
     // 404

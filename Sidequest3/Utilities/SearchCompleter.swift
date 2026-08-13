@@ -1,3 +1,8 @@
+//
+//  SearchCompleter.swift
+//  Sidequest
+//
+
 import SwiftUI
 import MapKit
 import CoreLocation
